@@ -7,15 +7,16 @@ const handleConnect = async () => {
     setStatusMessage('Connecting to Shopify...');
   
     try {
-      const response = await fetch('https://nibutreb-5jrx07zn7-daniel-joseph-bertubins-projects.vercel.app/api/shopify-proxy', {
-        method: 'POST',
+      // Prepare the Basic Auth header
+      const apiKey = "your-shopify-api-key"; // Replace with your API Key
+      const authHeader = `Basic ${btoa(`${apiKey}:${shopifyApiPassword}`)}`;
+  
+      const response = await fetch(`https://${shopifyStoreUrl}/admin/api/2024-01/products.json`, {
+        method: 'GET',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': authHeader,
         },
-        body: JSON.stringify({
-          storeUrl: shopifyStoreUrl,
-          apiPassword: shopifyApiPassword,
-        }),
       });
   
       if (!response.ok) {
@@ -26,16 +27,18 @@ const handleConnect = async () => {
   
       setStatusMessage('Data fetched successfully. Importing...');
   
+      // Map Shopify data to your table's format
       const formattedData = shopifyData.products.map((product) => ({
         id: product.id,
         name: product.title,
-        price: `$${product.variants[0].price}`,
+        price: `$${product.variants[0].price}`, // Assuming the first variant's price
         status: product.status === 'active' ? 'Ready' : 'Not Ready',
         category: product.product_type || 'Uncategorized',
       }));
   
       setStatusMessage('Shopify connection successful. Data has been imported.');
   
+      // Pass collected data to parent for further processing
       if (typeof onShopifyConnect === 'function') {
         onShopifyConnect({
           storeUrl: shopifyStoreUrl,
@@ -43,7 +46,7 @@ const handleConnect = async () => {
         });
       }
   
-      setTimeout(() => onClose(), 2000);
+      setTimeout(() => onClose(), 2000); // Close modal after a delay
     } catch (error) {
       setStatusMessage(`Failed to connect to Shopify: ${error.message}`);
     }
