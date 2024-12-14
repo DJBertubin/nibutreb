@@ -1,0 +1,38 @@
+
+
+.sidebar h2 {
+  text-align: center;
+  margin-bottom: 20px;
+  font-weight: 500;
+  font-size: 1.25rem;
+  color: #ffffff;
+}
+
+.sidebar ul {
+  list-style: none;
+  padding: 0;
+}
+
+.sidebar ul li {
+  margin: 10px 0;
+}
+
+.sidebar ul li a {
+  color: #ffffff;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  border-radius: 5px;
+  transition: all 0.3s;
+}
+
+.sidebar ul li a i {
+  margin-right: 10px;
+  font-size: 1.2rem;
+}
+
+.sidebar ul li a:hover {
+  background-color: #495057;
+  color: #ffffff;
+}
