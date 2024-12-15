@@ -18,7 +18,7 @@ export default async function handler(req, res) {
         const response = await fetch(shopifyApiUrl, {
             method: 'GET',
             headers: {
-                'X-Shopify-Access-Token': apiPassword,
+                Authorization: `Basic ${Buffer.from(`${apiKey}:${apiPassword}`).toString('base64')}`,
                 'Content-Type': 'application/json',
             },
         });
