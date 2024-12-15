@@ -14,15 +14,15 @@
 .modal-content {
     background: #ffffff;
     border-radius: 12px;
-    padding: 20px;
-    width: 90%; /* Adjusted for responsive design */
-    max-width: 400px; /* Ensure it doesn't stretch too wide */
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    padding: 25px;
+    width: 90%;
+    max-width: 400px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     text-align: center;
 }
 
 .modal-content h2 {
-    font-size: 1.5rem;
+    font-size: 1.75rem;
     font-weight: 600;
     margin-bottom: 20px;
     color: #333333;
@@ -36,29 +36,33 @@
 }
 
 .integration-buttons button {
-    padding: 10px 20px;
+    padding: 12px 25px;
     border: 2px solid transparent;
     border-radius: 8px;
-    background-color: #f4f4f4;
-    color: #333;
+    background-color: #007bff;
+    color: #ffffff;
     font-size: 1rem;
     font-weight: 500;
     cursor: pointer;
     transition: all 0.3s ease;
 }
 
-.integration-buttons button.active {
-    background-color: #007bff;
-    color: #ffffff;
-    border-color: #007bff;
+.integration-buttons button:hover {
+    background-color: #0056b3;
 }
 
-.integration-buttons button:hover {
-    background-color: #e0e0e0;
+.integration-buttons button.active {
+    background-color: #0056b3;
+    color: #ffffff;
+    border-color: #0056b3;
 }
 
 .shopify-form, .walmart-form {
     margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
 }
 
 .shopify-form h3, .walmart-form h3 {
@@ -70,7 +74,8 @@
 
 .shopify-form input, .walmart-form input {
     width: 100%;
-    padding: 10px;
+    max-width: 350px;
+    padding: 12px;
     margin-bottom: 15px;
     border: 1px solid #ccc;
     border-radius: 6px;
@@ -81,7 +86,8 @@
 
 .shopify-form button, .walmart-form button {
     width: 100%;
-    padding: 10px;
+    max-width: 350px;
+    padding: 12px;
     border: none;
     border-radius: 6px;
     background-color: #007bff;
@@ -98,7 +104,7 @@
 
 .close-modal {
     margin-top: 20px;
-    padding: 10px 20px;
+    padding: 12px 25px;
     border: none;
     border-radius: 6px;
     background-color: #dc3545;

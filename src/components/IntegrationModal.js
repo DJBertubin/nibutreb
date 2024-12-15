@@ -1,110 +1,85 @@
-/* File: src/components/IntegrationModal.css */
+import React, { useState } from 'react';
+import './IntegrationModal.css';
 
-.integration-modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 1000;
-}
+export default function IntegrationModal({ onClose }) {
+    const [activeSource, setActiveSource] = useState('');
+    const [shopifyUrl, setShopifyUrl] = useState('');
+    const [shopifyPassword, setShopifyPassword] = useState('');
+    const [statusMessage, setStatusMessage] = useState('');
 
-.modal-content {
-    background: #ffffff;
-    border-radius: 12px;
-    padding: 20px;
-    width: 400px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    text-align: center;
-}
+    const handleSourceClick = (source) => {
+        setActiveSource(source);
+        setStatusMessage('');
+    };
 
-.modal-content h2 {
-    font-size: 1.5rem;
-    font-weight: 600;
-    margin-bottom: 20px;
-    color: #333333;
-}
+    const handleShopifyConnect = async () => {
+        setStatusMessage('Connecting to Shopify...');
+        try {
+            const response = await fetch('/api/shopify-proxy', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    storeUrl: shopifyUrl,
+                    apiPassword: shopifyPassword,
+                }),
+            });
 
-.integration-buttons {
-    display: flex;
-    gap: 10px;
-    justify-content: center;
-    margin-bottom: 20px;
-}
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Failed to connect to Shopify');
+            }
 
-.integration-buttons button {
-    padding: 10px 20px;
-    border: 2px solid transparent;
-    border-radius: 8px;
-    background-color: #007bff;
-    color: #ffffff;
-    font-size: 1rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
+            const data = await response.json();
+            setStatusMessage('Successfully connected to Shopify!');
+            console.log('Fetched data:', data);
+        } catch (error) {
+            setStatusMessage(`Failed to connect to Shopify: ${error.message}`);
+        }
+    };
 
-.integration-buttons button:hover {
-    background-color: #0056b3;
-}
+    return (
+        <div className="integration-modal">
+            <div className="modal-content">
+                <h2>Add New Source</h2>
+                <div className="integration-buttons">
+                    <button
+                        className={activeSource === 'shopify' ? 'active' : ''}
+                        onClick={() => handleSourceClick('shopify')}
+                    >
+                        Shopify
+                    </button>
+                    <button
+                        className={activeSource === 'walmart' ? 'active' : ''}
+                        onClick={() => handleSourceClick('walmart')}
+                    >
+                        Walmart
+                    </button>
+                </div>
 
-.shopify-form, .walmart-form {
-    margin-top: 20px;
-}
+                {activeSource === 'shopify' && (
+                    <div className="shopify-form">
+                        <h3>Shopify Integration</h3>
+                        <input
+                            type="text"
+                            placeholder="Store URL (e.g., example.myshopify.com)"
+                            value={shopifyUrl}
+                            onChange={(e) => setShopifyUrl(e.target.value)}
+                        />
+                        <input
+                            type="password"
+                            placeholder="Your Shopify API Password"
+                            value={shopifyPassword}
+                            onChange={(e) => setShopifyPassword(e.target.value)}
+                        />
+                        <button onClick={handleShopifyConnect}>Connect</button>
+                        {statusMessage && <p>{statusMessage}</p>}
+                    </div>
+                )}
 
-.shopify-form h3, .walmart-form h3 {
-    font-size: 1.25rem;
-    font-weight: 500;
-    margin-bottom: 15px;
-    color: #333333;
-}
-
-.shopify-form input, .walmart-form input {
-    width: 100%;
-    padding: 10px;
-    margin-bottom: 15px;
-    border: 1px solid #ccc;
-    border-radius: 6px;
-    font-size: 1rem;
-    color: #333;
-}
-
-.shopify-form button, .walmart-form button {
-    width: 100%;
-    padding: 10px;
-    border: none;
-    border-radius: 8px;
-    background-color: #007bff;
-    color: #ffffff;
-    font-size: 1rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-    box-shadow: 0 4px 6px rgba(0, 123, 255, 0.3);
-}
-
-.shopify-form button:hover, .walmart-form button:hover {
-    background-color: #0056b3;
-    box-shadow: 0 4px 8px rgba(0, 123, 255, 0.4);
-}
-
-.close-modal {
-    margin-top: 20px;
-    padding: 10px 20px;
-    border: none;
-    border-radius: 8px;
-    background-color: #dc3545;
-    color: #ffffff;
-    font-size: 1rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-}
-
-.close-modal:hover {
-    background-color: #a71d2a;
+                <button className="close-modal" onClick={onClose}>Close</button>
+            </div>
+        </div>
+    );
 }
