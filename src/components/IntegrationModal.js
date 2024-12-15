@@ -1,54 +1,72 @@
-const handleConnect = async () => {
-    if (!shopifyStoreUrl || !shopifyApiPassword) {
-      setStatusMessage('Please fill in all required fields to connect to Shopify.');
-      return;
-    }
-  
-    setStatusMessage('Connecting to Shopify...');
-  
+import React, { useState } from 'react';
+
+const IntegrationModal = ({ onClose }) => {
+  const [storeUrl, setStoreUrl] = useState('');
+  const [apiKey, setApiKey] = useState('');
+  const [apiPassword, setApiPassword] = useState('');
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+
+  const handleConnect = async () => {
+    setError('');
+    setSuccess('');
+
     try {
-      // Prepare the Basic Auth header
-      const apiKey = "your-shopify-api-key"; // Replace with your API Key
-      const authHeader = `Basic ${btoa(`${apiKey}:${shopifyApiPassword}`)}`;
-  
-      const response = await fetch(`https://${shopifyStoreUrl}/admin/api/2024-01/products.json`, {
-        method: 'GET',
+      const response = await fetch('/api/shopify-proxy', {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': authHeader,
         },
+        body: JSON.stringify({
+          storeUrl,
+          apiPassword,
+        }),
       });
-  
+
+      const data = await response.json();
+
       if (!response.ok) {
-        throw new Error(`Error fetching data: ${response.statusText}`);
+        setError(data.error || 'Failed to connect to Shopify');
+      } else {
+        setSuccess('Connected to Shopify successfully!');
+        console.log('Fetched Products:', data.products);
+        // TODO: Populate your table here with `data.products`
       }
-  
-      const shopifyData = await response.json();
-  
-      setStatusMessage('Data fetched successfully. Importing...');
-  
-      // Map Shopify data to your table's format
-      const formattedData = shopifyData.products.map((product) => ({
-        id: product.id,
-        name: product.title,
-        price: `$${product.variants[0].price}`, // Assuming the first variant's price
-        status: product.status === 'active' ? 'Ready' : 'Not Ready',
-        category: product.product_type || 'Uncategorized',
-      }));
-  
-      setStatusMessage('Shopify connection successful. Data has been imported.');
-  
-      // Pass collected data to parent for further processing
-      if (typeof onShopifyConnect === 'function') {
-        onShopifyConnect({
-          storeUrl: shopifyStoreUrl,
-          data: formattedData,
-        });
-      }
-  
-      setTimeout(() => onClose(), 2000); // Close modal after a delay
-    } catch (error) {
-      setStatusMessage(`Failed to connect to Shopify: ${error.message}`);
+    } catch (err) {
+      setError('An unexpected error occurred.');
+      console.error('Frontend Error:', err);
     }
   };
-  
+
+  return (
+    <div className="integration-modal">
+      <div className="modal-content">
+        <h3>Shopify Integration</h3>
+        <label>
+          Store URL:
+          <input
+            type="text"
+            value={storeUrl}
+            onChange={(e) => setStoreUrl(e.target.value)}
+            placeholder="example.myshopify.com"
+          />
+        </label>
+        <label>
+          API Password:
+          <input
+            type="password"
+            value={apiPassword}
+            onChange={(e) => setApiPassword(e.target.value)}
+            placeholder="Your Shopify API Password"
+          />
+        </label>
+        <button onClick={handleConnect}>Connect</button>
+        <button onClick={onClose}>Close</button>
+        {error && <p style={{ color: 'red' }}>{error}</p>}
+        {success && <p style={{ color: 'green' }}>{success}</p>}
+      </div>
+    </div>
+  );
+};
+
+export default IntegrationModal;
