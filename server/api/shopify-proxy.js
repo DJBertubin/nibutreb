@@ -1,3 +1,5 @@
+// File: server/api/shopify-proxy.js
+
 import fetch from 'node-fetch';
 
 export default async function handler(req, res) {
@@ -24,14 +26,25 @@ export default async function handler(req, res) {
 
         if (!response.ok) {
             const errorText = await response.text();
-            console.error('Shopify API Error:', errorText);
+            console.error('Shopify API Error Response:', errorText);
             return res.status(response.status).json({ error: `Shopify API error: ${errorText}` });
         }
 
-        const data = await response.json();
-        res.status(200).json({ products: data.products });
+        // Handle potential empty or malformed responses
+        const responseBody = await response.text();
+        try {
+            const data = JSON.parse(responseBody);
+            if (!data.products) {
+                throw new Error('No products found in the response');
+            }
+            res.status(200).json({ products: data.products });
+        } catch (parseError) {
+            console.error('JSON Parse Error:', parseError.message);
+            console.error('Response Body:', responseBody);
+            return res.status(500).json({ error: 'Unexpected response format from Shopify API.' });
+        }
     } catch (error) {
-        console.error('Error connecting to Shopify API:', error);
+        console.error('Error connecting to Shopify API:', error.message);
         res.status(500).json({ error: 'Failed to connect to Shopify API.' });
     }
 }

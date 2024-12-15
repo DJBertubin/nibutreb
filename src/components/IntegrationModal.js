@@ -4,6 +4,7 @@ import './IntegrationModal.css';
 export default function IntegrationModal({ onClose }) {
     const [activeSource, setActiveSource] = useState('');
     const [shopifyUrl, setShopifyUrl] = useState('');
+    const [shopifyApiKey, setShopifyApiKey] = useState('');
     const [shopifyPassword, setShopifyPassword] = useState('');
     const [statusMessage, setStatusMessage] = useState('');
 
@@ -22,6 +23,7 @@ export default function IntegrationModal({ onClose }) {
                 },
                 body: JSON.stringify({
                     storeUrl: shopifyUrl,
+                    apiKey: shopifyApiKey,
                     apiPassword: shopifyPassword,
                 }),
             });
@@ -66,6 +68,12 @@ export default function IntegrationModal({ onClose }) {
                             placeholder="Store URL (e.g., example.myshopify.com)"
                             value={shopifyUrl}
                             onChange={(e) => setShopifyUrl(e.target.value)}
+                        />
+                        <input
+                            type="text"
+                            placeholder="Your Shopify API Key"
+                            value={shopifyApiKey}
+                            onChange={(e) => setShopifyApiKey(e.target.value)}
                         />
                         <input
                             type="password"
