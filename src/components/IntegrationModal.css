@@ -9,78 +9,104 @@
     align-items: center;
     justify-content: center;
     z-index: 1000;
-  }
-  
-  .modal-content {
-    background: #fff;
+}
+
+.modal-content {
+    background: #ffffff;
+    border-radius: 12px;
     padding: 20px;
-    border-radius: 10px;
     width: 400px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     text-align: center;
-  }
-  
-  .modal-title {
+}
+
+.modal-content h2 {
     font-size: 1.5rem;
     font-weight: 600;
     margin-bottom: 20px;
+    color: #333333;
+}
+
+.integration-buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+.integration-buttons button {
+    padding: 10px 20px;
+    border: 2px solid transparent;
+    border-radius: 8px;
+    background-color: #f4f4f4;
     color: #333;
-  }
-  
-  .input-group {
-    margin-bottom: 15px;
-    text-align: left;
-  }
-  
-  .input-group label {
-    display: block;
-    margin-bottom: 5px;
+    font-size: 1rem;
     font-weight: 500;
-    color: #555;
-  }
-  
-  .input-group input {
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.integration-buttons button.active {
+    background-color: #007bff;
+    color: #ffffff;
+    border-color: #007bff;
+}
+
+.integration-buttons button:hover {
+    background-color: #e0e0e0;
+}
+
+.shopify-form, .walmart-form {
+    margin-top: 20px;
+}
+
+.shopify-form h3, .walmart-form h3 {
+    font-size: 1.25rem;
+    font-weight: 500;
+    margin-bottom: 15px;
+    color: #333333;
+}
+
+.shopify-form input, .walmart-form input {
     width: 100%;
     padding: 10px;
-    font-size: 1rem;
+    margin-bottom: 15px;
     border: 1px solid #ccc;
-    border-radius: 5px;
-    box-sizing: border-box;
-  }
-  
-  .modal-actions {
-    display: flex;
-    justify-content: space-between;
-    margin-top: 20px;
-  }
-  
-  .connect-button {
+    border-radius: 6px;
+    font-size: 1rem;
+    color: #333;
+}
+
+.shopify-form button, .walmart-form button {
+    width: 100%;
+    padding: 10px;
+    border: none;
+    border-radius: 6px;
     background-color: #007bff;
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 5px;
-    cursor: pointer;
+    color: #ffffff;
     font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
     transition: background-color 0.3s ease;
-  }
-  
-  .connect-button:hover {
+}
+
+.shopify-form button:hover, .walmart-form button:hover {
     background-color: #0056b3;
-  }
-  
-  .close-button {
-    background-color: #dc3545;
-    color: white;
-    border: none;
+}
+
+.close-modal {
+    margin-top: 20px;
     padding: 10px 20px;
-    border-radius: 5px;
-    cursor: pointer;
+    border: none;
+    border-radius: 6px;
+    background-color: #dc3545;
+    color: #ffffff;
     font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
     transition: background-color 0.3s ease;
-  }
-  
-  .close-button:hover {
+}
+
+.close-modal:hover {
     background-color: #a71d2a;
-  }
-  
+}
