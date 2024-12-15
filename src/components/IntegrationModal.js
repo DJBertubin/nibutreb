@@ -1,69 +1,47 @@
 import React, { useState } from 'react';
+import './IntegrationModal.css';
 
-const IntegrationModal = ({ onClose }) => {
+const IntegrationModal = ({ onClose, onConnect }) => {
   const [storeUrl, setStoreUrl] = useState('');
-  const [apiKey, setApiKey] = useState('');
   const [apiPassword, setApiPassword] = useState('');
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
 
-  const handleConnect = async () => {
-    setError('');
-    setSuccess('');
-
-    try {
-      const response = await fetch('/api/shopify-proxy', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          storeUrl,
-          apiPassword,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        setError(data.error || 'Failed to connect to Shopify');
-      } else {
-        setSuccess('Connected to Shopify successfully!');
-        console.log('Fetched Products:', data.products);
-        // TODO: Populate your table here with `data.products`
-      }
-    } catch (err) {
-      setError('An unexpected error occurred.');
-      console.error('Frontend Error:', err);
+  const handleConnect = () => {
+    if (!storeUrl || !apiPassword) {
+      alert('Please fill in all fields.');
+      return;
     }
+
+    onConnect({ storeUrl, apiPassword });
   };
 
   return (
     <div className="integration-modal">
       <div className="modal-content">
-        <h3>Shopify Integration</h3>
-        <label>
-          Store URL:
+        <h2 className="modal-title">Shopify Integration</h2>
+        <div className="input-group">
+          <label htmlFor="storeUrl">Store URL:</label>
           <input
             type="text"
+            id="storeUrl"
+            placeholder="example.myshopify.com"
             value={storeUrl}
             onChange={(e) => setStoreUrl(e.target.value)}
-            placeholder="example.myshopify.com"
           />
-        </label>
-        <label>
-          API Password:
+        </div>
+        <div className="input-group">
+          <label htmlFor="apiPassword">API Password:</label>
           <input
             type="password"
+            id="apiPassword"
+            placeholder="Your Shopify API Password"
             value={apiPassword}
             onChange={(e) => setApiPassword(e.target.value)}
-            placeholder="Your Shopify API Password"
           />
-        </label>
-        <button onClick={handleConnect}>Connect</button>
-        <button onClick={onClose}>Close</button>
-        {error && <p style={{ color: 'red' }}>{error}</p>}
-        {success && <p style={{ color: 'green' }}>{success}</p>}
+        </div>
+        <div className="modal-actions">
+          <button className="connect-button" onClick={handleConnect}>Connect</button>
+          <button className="close-button" onClick={onClose}>Close</button>
+        </div>
       </div>
     </div>
   );

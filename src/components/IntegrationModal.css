@@ -15,78 +15,72 @@
     background: #fff;
     padding: 20px;
     border-radius: 10px;
+    width: 400px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
     text-align: center;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
   }
   
-  .tabs {
-    display: flex;
-    justify-content: center;
-    gap: 10px;
+  .modal-title {
+    font-size: 1.5rem;
+    font-weight: 600;
     margin-bottom: 20px;
+    color: #333;
   }
   
-  .tab {
-    padding: 10px 20px;
-    border: none;
-    background: #007bff;
-    color: white;
-    border-radius: 5px;
-    cursor: pointer;
-  }
-  
-  .tab.active {
-    background: #0056b3;
-  }
-  
-  .tab-content {
-    margin-top: 20px;
-  }
-  
-  .tab-content form label {
-    display: block;
+  .input-group {
     margin-bottom: 15px;
+    text-align: left;
   }
   
-  .tab-content form input {
-    width: 100%;
-    padding: 8px;
-    border-radius: 5px;
-    border: 1px solid #ced4da;
-    margin-top: 5px;
-  }
-  
-  .connect-btn {
-    margin-top: 15px;
-    padding: 10px 20px;
-    background: #007bff;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-  }
-  
-  .connect-btn:hover {
-    background: #0056b3;
-  }
-  
-  .status-message {
-    margin-top: 15px;
-    font-size: 0.9rem;
+  .input-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
     color: #555;
   }
   
-  .close-modal {
-    margin-top: 15px;
-    padding: 10px 20px;
-    background: #dc3545;
-    color: white;
-    border: none;
+  .input-group input {
+    width: 100%;
+    padding: 10px;
+    font-size: 1rem;
+    border: 1px solid #ccc;
     border-radius: 5px;
-    cursor: pointer;
+    box-sizing: border-box;
   }
   
-  .close-modal:hover {
-    background: #a71d2a;
+  .modal-actions {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+  }
+  
+  .connect-button {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background-color 0.3s ease;
+  }
+  
+  .connect-button:hover {
+    background-color: #0056b3;
+  }
+  
+  .close-button {
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background-color 0.3s ease;
+  }
+  
+  .close-button:hover {
+    background-color: #a71d2a;
   }
   
