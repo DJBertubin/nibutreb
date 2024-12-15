@@ -1,41 +1,40 @@
-// --- api/shopify-proxy.js ---
+// --- shopify-proxy.js ---
+
+import fetch from 'node-fetch';
 
 export default async function handler(req, res) {
-    try {
-      // Log the incoming request data for debugging
-      console.log('Incoming request body:', req.body);
-  
-      const { storeUrl, apiPassword } = req.body;
-  
-      if (!storeUrl || !apiPassword) {
-        console.error('Missing storeUrl or apiPassword.');
-        return res.status(400).json({ error: 'Missing storeUrl or apiPassword.' });
-      }
-  
-      const apiEndpoint = `https://${storeUrl}/admin/api/2024-01/products.json`;
-      console.log(`Attempting to connect to Shopify API at ${apiEndpoint}`);
-  
-      const response = await fetch(apiEndpoint, {
-        method: 'GET',
-        headers: {
-          Authorization: `Basic ${Buffer.from(`:${apiPassword}`).toString('base64')}`,
-          'Content-Type': 'application/json',
-        },
-      });
-  
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error(`Shopify API error (${response.status}):`, errorText);
-        return res.status(response.status).json({ error: errorText });
-      }
-  
-      const data = await response.json();
-      console.log('Fetched data from Shopify:', data);
-  
-      res.status(200).json(data);
-    } catch (error) {
-      console.error('Unexpected error:', error.message);
-      res.status(500).json({ error: 'Internal server error.' });
-    }
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed. Use POST instead.' });
   }
-  
+
+  const { storeUrl, apiPassword } = req.body;
+
+  if (!storeUrl || !apiPassword) {
+    return res.status(400).json({ error: 'Missing required fields: storeUrl and apiPassword.' });
+  }
+
+  try {
+    const shopifyApiUrl = `https://${storeUrl}/admin/api/2024-01/products.json`;
+
+    const response = await fetch(shopifyApiUrl, {
+      method: 'GET',
+      headers: {
+        Authorization: `Basic ${Buffer.from(`${apiPassword}`).toString('base64')}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Shopify API Error:', errorText);
+      return res.status(response.status).json({ error: `Shopify API error: ${errorText}` });
+    }
+
+    const data = await response.json();
+
+    res.status(200).json({ products: data.products });
+  } catch (error) {
+    console.error('Error connecting to Shopify API:', error);
+    res.status(500).json({ error: 'Failed to connect to Shopify API.' });
+  }
+}
