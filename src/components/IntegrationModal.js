@@ -46,13 +46,13 @@ const IntegrationModal = ({ onClose }) => {
                 <h2>Add New Source</h2>
                 <div className="source-buttons">
                     <button
-                        className={activeSource === 'shopify' ? 'active' : ''}
+                        className={`source-button ${activeSource === 'shopify' ? 'active' : ''}`}
                         onClick={() => handleSourceClick('shopify')}
                     >
                         Shopify
                     </button>
                     <button
-                        className={activeSource === 'walmart' ? 'active' : ''}
+                        className={`source-button ${activeSource === 'walmart' ? 'active' : ''}`}
                         onClick={() => handleSourceClick('walmart')}
                     >
                         Walmart
@@ -89,7 +89,7 @@ const IntegrationModal = ({ onClose }) => {
                                 onChange={(e) => setApiPassword(e.target.value)}
                             />
                         </label>
-                        <button onClick={handleShopifyConnect}>Connect</button>
+                        <button className="connect-button" onClick={handleShopifyConnect}>Connect</button>
                         <p>{statusMessage}</p>
                     </div>
                 )}
