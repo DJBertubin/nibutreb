@@ -6,54 +6,46 @@ export default async function handler(req, res) {
           return res.status(400).json({ error: 'Missing required fields: storeUrl, apiKey, and apiPassword.' });
       }
 
+      // Shopify API URL
       const shopifyApiUrl = `https://${storeUrl}/admin/api/2024-01/products.json`;
+
+      // Authorization Header for Basic Auth
       const authHeader = Buffer.from(`${apiKey}:${apiPassword}`).toString('base64');
 
       try {
-          console.log('🔎 Sending request to Shopify API:', shopifyApiUrl);
+          console.log('🔎 Requesting Shopify API:', shopifyApiUrl);
 
+          // Make request to Shopify API
           const response = await fetch(shopifyApiUrl, {
-              method: 'GET', // Shopify API requires GET for product fetching
+              method: 'GET',
               headers: {
                   'Content-Type': 'application/json',
-                  'Authorization': `Basic ${authHeader}`, // Using API Key + Password
+                  'Authorization': `Basic ${authHeader}`,
               },
           });
 
-          console.log('📡 Response Status:', response.status);
-
-          const responseText = await response.text();
-          console.log('📄 Raw Shopify API Response:', responseText);
+          // Log response status
+          console.log('📡 Shopify Response Status:', response.status);
 
           if (!response.ok) {
-              console.error('❌ Shopify API Error:', responseText);
+              const errorText = await response.text();
+              console.error('❌ Shopify API Error Response:', errorText);
               throw new Error(`Error fetching Shopify products: ${response.statusText}`);
           }
 
-          let data;
-          try {
-              data = JSON.parse(responseText);
-          } catch (error) {
-              console.error('❗ Failed to parse JSON:', responseText);
-              throw new Error('Invalid JSON response from Shopify API.');
-          }
+          // Parse the JSON response
+          const data = await response.json();
+          console.log('✅ Shopify Products Fetched:', data);
 
-          if (!data || !data.products) {
-              throw new Error('Shopify API returned no products.');
-          }
-
-          console.log('✅ Fetched Data:', data);
-
+          // Send the response back to the frontend
           return res.status(200).json(data);
       } catch (error) {
-          console.error('⚠️ Shopify API Error:', error.message);
+          console.error('❗ Shopify API Error:', error.message);
           return res.status(500).json({ error: error.message || 'Failed to fetch Shopify products.' });
       }
   } else {
       res.setHeader('Allow', ['POST']);
-      console.log(`🚫 Invalid Method: ${req.method}`);
+      console.log(`🚫 Invalid Method Used: ${req.method}`);
       return res.status(405).json({ error: `Method ${req.method} Not Allowed` });
   }
 }
-
-import './IntegrationModal.css';
