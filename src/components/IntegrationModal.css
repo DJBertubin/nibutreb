@@ -1,3 +1,5 @@
+/* File: src/components/IntegrationModal.css */
+
 .integration-modal {
     position: fixed;
     top: 0;
@@ -38,22 +40,16 @@
     padding: 10px 20px;
     border: 2px solid transparent;
     border-radius: 8px;
-    background-color: #f4f4f4;
-    color: #333;
+    background-color: #007bff;
+    color: #ffffff;
     font-size: 1rem;
     font-weight: 500;
     cursor: pointer;
     transition: all 0.3s ease;
 }
 
-.integration-buttons button.active {
-    background-color: #007bff;
-    color: #ffffff;
-    border-color: #007bff;
-}
-
 .integration-buttons button:hover {
-    background-color: #e0e0e0;
+    background-color: #0056b3;
 }
 
 .shopify-form, .walmart-form {
@@ -81,24 +77,26 @@
     width: 100%;
     padding: 10px;
     border: none;
-    border-radius: 6px;
+    border-radius: 8px;
     background-color: #007bff;
     color: #ffffff;
     font-size: 1rem;
     font-weight: 500;
     cursor: pointer;
     transition: background-color 0.3s ease;
+    box-shadow: 0 4px 6px rgba(0, 123, 255, 0.3);
 }
 
 .shopify-form button:hover, .walmart-form button:hover {
     background-color: #0056b3;
+    box-shadow: 0 4px 8px rgba(0, 123, 255, 0.4);
 }
 
 .close-modal {
     margin-top: 20px;
     padding: 10px 20px;
     border: none;
-    border-radius: 6px;
+    border-radius: 8px;
     background-color: #dc3545;
     color: #ffffff;
     font-size: 1rem;

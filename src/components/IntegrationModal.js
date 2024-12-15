@@ -1,93 +1,110 @@
-import React, { useState } from "react";
-import "./IntegrationModal.css";
+/* File: src/components/IntegrationModal.css */
 
-const IntegrationModal = ({ onClose }) => {
-    const [selectedSource, setSelectedSource] = useState("");
-    const [storeUrl, setStoreUrl] = useState("");
-    const [apiKey, setApiKey] = useState("");
-    const [apiPassword, setApiPassword] = useState("");
+.integration-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
 
-    const handleConnect = async () => {
-        if (selectedSource === "Shopify") {
-            try {
-                const response = await fetch("/api/shopify-proxy", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify({
-                        storeUrl,
-                        apiPassword,
-                    }),
-                });
+.modal-content {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 20px;
+    width: 400px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    text-align: center;
+}
 
-                if (response.ok) {
-                    const data = await response.json();
-                    console.log("Data fetched:", data);
-                    alert("Shopify integration successful!");
-                } else {
-                    const error = await response.json();
-                    console.error("Error fetching Shopify data:", error);
-                    alert(`Failed to connect to Shopify: ${error.error}`);
-                }
-            } catch (err) {
-                console.error("Connection error:", err);
-                alert("An unexpected error occurred. Please try again.");
-            }
-        }
-    };
+.modal-content h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 20px;
+    color: #333333;
+}
 
-    return (
-        <div className="integration-modal">
-            <div className="modal-content">
-                <h2>Add New Source</h2>
-                <div className="integration-buttons">
-                    <button
-                        className={selectedSource === "Shopify" ? "active" : ""}
-                        onClick={() => setSelectedSource("Shopify")}
-                    >
-                        Shopify
-                    </button>
-                    <button
-                        className={selectedSource === "Walmart" ? "active" : ""}
-                        onClick={() => setSelectedSource("Walmart")}
-                    >
-                        Walmart
-                    </button>
-                </div>
+.integration-buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-bottom: 20px;
+}
 
-                {selectedSource === "Shopify" && (
-                    <div className="shopify-form">
-                        <h3>Shopify Integration</h3>
-                        <input
-                            type="text"
-                            placeholder="example.myshopify.com"
-                            value={storeUrl}
-                            onChange={(e) => setStoreUrl(e.target.value)}
-                        />
-                        <input
-                            type="password"
-                            placeholder="Your Shopify API Password"
-                            value={apiPassword}
-                            onChange={(e) => setApiPassword(e.target.value)}
-                        />
-                        <button onClick={handleConnect}>Connect</button>
-                    </div>
-                )}
+.integration-buttons button {
+    padding: 10px 20px;
+    border: 2px solid transparent;
+    border-radius: 8px;
+    background-color: #007bff;
+    color: #ffffff;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
 
-                {selectedSource === "Walmart" && (
-                    <div className="walmart-form">
-                        <h3>Walmart Integration</h3>
-                        <p>Walmart integration form will go here.</p>
-                    </div>
-                )}
+.integration-buttons button:hover {
+    background-color: #0056b3;
+}
 
-                <button className="close-modal" onClick={onClose}>
-                    Close
-                </button>
-            </div>
-        </div>
-    );
-};
+.shopify-form, .walmart-form {
+    margin-top: 20px;
+}
 
-export default IntegrationModal;
+.shopify-form h3, .walmart-form h3 {
+    font-size: 1.25rem;
+    font-weight: 500;
+    margin-bottom: 15px;
+    color: #333333;
+}
+
+.shopify-form input, .walmart-form input {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 1rem;
+    color: #333;
+}
+
+.shopify-form button, .walmart-form button {
+    width: 100%;
+    padding: 10px;
+    border: none;
+    border-radius: 8px;
+    background-color: #007bff;
+    color: #ffffff;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    box-shadow: 0 4px 6px rgba(0, 123, 255, 0.3);
+}
+
+.shopify-form button:hover, .walmart-form button:hover {
+    background-color: #0056b3;
+    box-shadow: 0 4px 8px rgba(0, 123, 255, 0.4);
+}
+
+.close-modal {
+    margin-top: 20px;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    background-color: #dc3545;
+    color: #ffffff;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.close-modal:hover {
+    background-color: #a71d2a;
+}
