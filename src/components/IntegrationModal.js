@@ -13,8 +13,32 @@ const IntegrationModal = ({ onClose }) => {
         setStatusMessage('');
     };
 
-    const handleShopifyConnect = () => {
-        setStatusMessage('Shopify integration feature is currently disabled.');
+    const handleShopifyConnect = async () => {
+        setStatusMessage('Connecting to Shopify...');
+        try {
+            const response = await fetch('/api/shopify-proxy', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    storeUrl,
+                    apiKey,
+                    apiPassword,
+                }),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Failed to connect to Shopify');
+            }
+
+            const data = await response.json();
+            setStatusMessage('Shopify data fetched successfully.');
+            console.log(data.products);
+        } catch (error) {
+            setStatusMessage(`Failed to connect to Shopify: ${error.message}`);
+        }
     };
 
     return (
