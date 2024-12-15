@@ -1,4 +1,3 @@
-import './IntegrationModal.css';
 import React, { useState } from 'react';
 
 const IntegrationModal = ({ onClose }) => {
@@ -16,7 +15,7 @@ const IntegrationModal = ({ onClose }) => {
     const handleShopifyConnect = async () => {
         setStatusMessage('Connecting to Shopify...');
         try {
-            const response = await fetch(`/api/shopify-proxy`, {
+            const response = await fetch('/api/shopify-proxy', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -28,16 +27,17 @@ const IntegrationModal = ({ onClose }) => {
                 }),
             });
 
+            const data = await response.json();
+
             if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.error || 'Failed to connect to Shopify');
+                throw new Error(data.error || 'Failed to connect to Shopify');
             }
 
-            const data = await response.json();
             setStatusMessage('Shopify data fetched successfully.');
-            console.log(data.products);
+            console.log('Shopify Products:', data.products);
         } catch (error) {
             setStatusMessage(`Failed to connect to Shopify: ${error.message}`);
+            console.error(error);
         }
     };
 
@@ -90,19 +90,16 @@ const IntegrationModal = ({ onClose }) => {
                                 onChange={(e) => setApiPassword(e.target.value)}
                             />
                         </label>
-                        <button className="connect-button" onClick={handleShopifyConnect}>Connect</button>
+                        <button className="connect-button" onClick={handleShopifyConnect}>
+                            Connect
+                        </button>
                         <p>{statusMessage}</p>
                     </div>
                 )}
 
-                {activeSource === 'walmart' && (
-                    <div className="walmart-integration">
-                        <h3>Walmart Integration</h3>
-                        <p>Walmart integration form goes here.</p>
-                    </div>
-                )}
-
-                <button className="close-modal" onClick={onClose}>Close</button>
+                <button className="close-modal" onClick={onClose}>
+                    Close
+                </button>
             </div>
         </div>
     );
