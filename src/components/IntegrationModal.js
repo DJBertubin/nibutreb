@@ -16,7 +16,7 @@ const IntegrationModal = ({ onClose }) => {
     const handleShopifyConnect = async () => {
         setStatusMessage('Connecting to Shopify...');
         try {
-            const response = await fetch('/api/shopify-proxy', {
+            const response = await fetch('https://{storeUrl}/admin/api/2024-01/products.json', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
