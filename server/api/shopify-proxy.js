@@ -17,13 +17,26 @@ export default async function handler(req, res) {
 
           console.log('Response Status:', response.status);
 
+          const responseText = await response.text();
+          console.log('Raw Shopify API Response:', responseText);
+
           if (!response.ok) {
-              const errorText = await response.text();
-              console.error('Error Response from Shopify:', errorText);
+              console.error('Error Response from Shopify:', responseText);
               throw new Error(`Error fetching Shopify products: ${response.statusText}`);
           }
 
-          const data = await response.json();
+          let data;
+          try {
+              data = JSON.parse(responseText);
+          } catch (error) {
+              console.error('Failed to parse JSON:', responseText);
+              throw new Error('Invalid JSON response from Shopify API.');
+          }
+
+          if (!data || !data.products) {
+              throw new Error('Shopify API returned no products.');
+          }
+
           console.log('Fetched Data:', data);
 
           return res.status(200).json(data);
