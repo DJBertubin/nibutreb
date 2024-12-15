@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
-import './IntegrationModal.css';
 
-export default function IntegrationModal({ onClose }) {
-    const [activeSource, setActiveSource] = useState('');
-    const [shopifyUrl, setShopifyUrl] = useState('');
-    const [shopifyApiKey, setShopifyApiKey] = useState('');
-    const [shopifyPassword, setShopifyPassword] = useState('');
+const IntegrationModal = ({ onClose }) => {
+    const [activeSource, setActiveSource] = useState(null);
+    const [storeUrl, setStoreUrl] = useState('');
+    const [apiKey, setApiKey] = useState('');
+    const [apiPassword, setApiPassword] = useState('');
     const [statusMessage, setStatusMessage] = useState('');
 
     const handleSourceClick = (source) => {
@@ -16,15 +15,15 @@ export default function IntegrationModal({ onClose }) {
     const handleShopifyConnect = async () => {
         setStatusMessage('Connecting to Shopify...');
         try {
-            const response = await fetch('/api/shopify-proxy', {
+            const response = await fetch(`/api/shopify-proxy`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    storeUrl: shopifyUrl,
-                    apiKey: shopifyApiKey,
-                    apiPassword: shopifyPassword,
+                    storeUrl,
+                    apiKey,
+                    apiPassword,
                 }),
             });
 
@@ -34,8 +33,8 @@ export default function IntegrationModal({ onClose }) {
             }
 
             const data = await response.json();
-            setStatusMessage('Successfully connected to Shopify!');
-            console.log('Fetched data:', data);
+            setStatusMessage('Shopify data fetched successfully.');
+            console.log(data.products);
         } catch (error) {
             setStatusMessage(`Failed to connect to Shopify: ${error.message}`);
         }
@@ -45,7 +44,7 @@ export default function IntegrationModal({ onClose }) {
         <div className="integration-modal">
             <div className="modal-content">
                 <h2>Add New Source</h2>
-                <div className="integration-buttons">
+                <div className="source-buttons">
                     <button
                         className={activeSource === 'shopify' ? 'active' : ''}
                         onClick={() => handleSourceClick('shopify')}
@@ -61,28 +60,44 @@ export default function IntegrationModal({ onClose }) {
                 </div>
 
                 {activeSource === 'shopify' && (
-                    <div className="shopify-form">
+                    <div className="shopify-integration">
                         <h3>Shopify Integration</h3>
-                        <input
-                            type="text"
-                            placeholder="Store URL (e.g., example.myshopify.com)"
-                            value={shopifyUrl}
-                            onChange={(e) => setShopifyUrl(e.target.value)}
-                        />
-                        <input
-                            type="text"
-                            placeholder="Your Shopify API Key"
-                            value={shopifyApiKey}
-                            onChange={(e) => setShopifyApiKey(e.target.value)}
-                        />
-                        <input
-                            type="password"
-                            placeholder="Your Shopify API Password"
-                            value={shopifyPassword}
-                            onChange={(e) => setShopifyPassword(e.target.value)}
-                        />
+                        <label>
+                            Store URL:
+                            <input
+                                type="text"
+                                placeholder="example.myshopify.com"
+                                value={storeUrl}
+                                onChange={(e) => setStoreUrl(e.target.value)}
+                            />
+                        </label>
+                        <label>
+                            API Key:
+                            <input
+                                type="text"
+                                placeholder="Your Shopify API Key"
+                                value={apiKey}
+                                onChange={(e) => setApiKey(e.target.value)}
+                            />
+                        </label>
+                        <label>
+                            API Password:
+                            <input
+                                type="password"
+                                placeholder="Your Shopify API Password"
+                                value={apiPassword}
+                                onChange={(e) => setApiPassword(e.target.value)}
+                            />
+                        </label>
                         <button onClick={handleShopifyConnect}>Connect</button>
-                        {statusMessage && <p>{statusMessage}</p>}
+                        <p>{statusMessage}</p>
+                    </div>
+                )}
+
+                {activeSource === 'walmart' && (
+                    <div className="walmart-integration">
+                        <h3>Walmart Integration</h3>
+                        <p>Walmart integration form goes here.</p>
                     </div>
                 )}
 
@@ -90,4 +105,6 @@ export default function IntegrationModal({ onClose }) {
             </div>
         </div>
     );
-}
+};
+
+export default IntegrationModal;
