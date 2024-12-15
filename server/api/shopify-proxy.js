@@ -1,5 +1,3 @@
-// --- shopify-proxy.js ---
-
 import fetch from 'node-fetch';
 
 export default async function handler(req, res) {
@@ -19,7 +17,7 @@ export default async function handler(req, res) {
     const response = await fetch(shopifyApiUrl, {
       method: 'GET',
       headers: {
-        Authorization: `Basic ${Buffer.from(`${apiPassword}`).toString('base64')}`,
+        Authorization: `Basic ${Buffer.from(`:${apiPassword}`).toString('base64')}`,
         'Content-Type': 'application/json',
       },
     });
