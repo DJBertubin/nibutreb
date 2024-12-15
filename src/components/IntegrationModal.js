@@ -1,3 +1,4 @@
+import './IntegrationModal.css';
 import React, { useState } from 'react';
 
 const IntegrationModal = ({ onClose }) => {

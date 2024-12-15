@@ -1,12 +1,10 @@
-/* File: src/components/IntegrationModal.css */
-
 .integration-modal {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.7);
+    background-color: rgba(0, 0, 0, 0.5);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -14,91 +12,96 @@
 }
 
 .modal-content {
-    background-color: #ffffff;
-    border-radius: 10px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
-    padding: 20px 30px;
+    background: #fff;
+    padding: 20px;
+    border-radius: 12px;
     width: 400px;
-    animation: fadeIn 0.3s ease-in-out;
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
+    text-align: center;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
 }
 
 h2 {
-    font-size: 1.8rem;
-    font-weight: bold;
-    margin: 0;
-    text-align: center;
-    color: #333333;
+    font-size: 1.5rem;
+    margin-bottom: 20px;
+    color: #333;
 }
 
 .source-buttons {
     display: flex;
-    gap: 10px;
-    justify-content: center;
+    justify-content: space-around;
+    margin-bottom: 20px;
 }
 
-.source-buttons button {
-    padding: 10px 20px;
-    font-size: 1rem;
+.source-button {
+    flex: 1;
+    margin: 0 5px;
+    padding: 10px 15px;
     border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-}
-
-.source-buttons button.active {
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: bold;
+    color: #fff;
     background-color: #007bff;
-    color: white;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
 }
 
-.source-buttons button:not(.active):hover {
-    background-color: #f0f0f0;
+.source-button.active {
+    background-color: #0056b3;
+    transform: scale(1.05);
 }
 
-.shopify-integration, .walmart-integration {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
+.source-button:hover {
+    background-color: #0056b3;
 }
 
-label {
+.shopify-integration label,
+.walmart-integration label {
+    display: block;
+    text-align: left;
     font-size: 0.9rem;
-    color: #555555;
+    margin-bottom: 5px;
+    color: #333;
 }
 
-input {
-    padding: 10px;
-    border: 1px solid #cccccc;
-    border-radius: 5px;
-    font-size: 1rem;
+.shopify-integration input,
+.walmart-integration input {
     width: 100%;
-}
-
-input:focus {
-    border-color: #007bff;
-    outline: none;
-}
-
-button {
-    background-color: #007bff;
-    color: white;
-    font-size: 1rem;
     padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 1rem;
+    box-sizing: border-box;
+}
+
+.connect-button {
+    width: 100%;
+    padding: 10px 15px;
+    font-size: 1rem;
+    color: #fff;
+    background-color: #007bff;
     border: none;
-    border-radius: 5px;
+    border-radius: 8px;
     cursor: pointer;
     transition: background-color 0.3s ease;
 }
 
-button:hover {
+.connect-button:hover {
     background-color: #0056b3;
 }
 
 .close-modal {
-    align-self: flex-end;
+    width: 100%;
+    padding: 10px 15px;
+    margin-top: 10px;
+    font-size: 1rem;
+    color: #fff;
     background-color: #dc3545;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
 }
 
 .close-modal:hover {
@@ -106,18 +109,7 @@ button:hover {
 }
 
 p {
+    margin-top: 10px;
     font-size: 0.9rem;
-    color: #333333;
-    margin: 0;
-}
-
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: scale(0.95);
-    }
-    to {
-        opacity: 1;
-        transform: scale(1);
-    }
+    color: #555;
 }
