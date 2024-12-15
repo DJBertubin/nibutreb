@@ -16,21 +16,18 @@ const IntegrationModal = ({ onClose }) => {
     const handleShopifyConnect = async () => {
         setStatusMessage('Connecting to Shopify...');
         try {
-            const response = await fetch('https://{storeUrl}/admin/api/2024-01/products.json', {
-                method: 'POST',
+            const apiUrl = `https://${storeUrl}/admin/api/2024-01/products.json`; // Dynamic URL with storeUrl
+            const response = await fetch(apiUrl, {
+                method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
+                    'Authorization': `Basic ${btoa(`${apiKey}:${apiPassword}`)}`,
                 },
-                body: JSON.stringify({
-                    storeUrl,
-                    apiKey,
-                    apiPassword,
-                }),
             });
 
             if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.error || 'Failed to connect to Shopify');
+                const errorData = await response.text();
+                throw new Error(errorData || 'Failed to connect to Shopify');
             }
 
             const data = await response.json();
