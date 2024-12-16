@@ -1,23 +1,18 @@
 import React, { useState } from 'react';
 import Sidebar from '../components/Sidebar';
 import ProductList from '../components/ProductList';
-import MarketplaceDropdowns from '../components/MarketplaceDropdowns';
-import ClientProfile from '../components/ClientProfile';
 import IntegrationModal from '../components/IntegrationModal';
 
 const AdminDashboard = () => {
   const [showIntegrationModal, setShowIntegrationModal] = useState(false);
-  const [integrationType, setIntegrationType] = useState('');
-  const [productData, setProductData] = useState([]); // State to hold imported product data
+  const [productData, setProductData] = useState([]);
 
-  const handleShowModal = (type) => {
-    setIntegrationType(type);
+  const handleShowModal = () => {
     setShowIntegrationModal(true);
   };
 
   const handleCloseModal = () => {
     setShowIntegrationModal(false);
-    setIntegrationType('');
   };
 
   const handleShopifyConnect = ({ data }) => {
@@ -28,20 +23,13 @@ const AdminDashboard = () => {
     <div className="dashboard">
       <Sidebar userType="Admin" />
       <div className="main-content">
-        <ClientProfile name="Jane Doe" clientId="98765" imageUrl="https://via.placeholder.com/100" />
-        <MarketplaceDropdowns onAddNewSource={handleShowModal} />
-        <div className="content">
-          <h2 className="section-title">Products Overview</h2>
-          <div className="products-table">
-            <ProductList products={productData} /> {/* Pass product data to ProductList */}
-          </div>
-        </div>
+        <h2>Admin Dashboard</h2>
+        <button className="connect-source-button" onClick={handleShowModal}>
+          Add New Source
+        </button>
+        <ProductList products={productData} />
         {showIntegrationModal && (
-          <IntegrationModal
-            type={integrationType}
-            onClose={handleCloseModal}
-            onShopifyConnect={handleShopifyConnect} // Pass the connect handler
-          />
+          <IntegrationModal onClose={handleCloseModal} onShopifyConnect={handleShopifyConnect} />
         )}
       </div>
     </div>
