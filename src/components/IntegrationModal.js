@@ -36,7 +36,7 @@ const IntegrationModal = ({ onClose }) => {
                     }
                 }
             }`;
-
+    
             const response = await fetch(apiUrl, {
                 method: 'POST',
                 headers: {
@@ -45,25 +45,38 @@ const IntegrationModal = ({ onClose }) => {
                 },
                 body: JSON.stringify({ query }),
             });
-
+    
+            // Check if the request failed
             if (!response.ok) {
-                const errorData = await response.text();
-                throw new Error(errorData || 'Failed to connect to Shopify');
+                const errorText = await response.text();
+                throw new Error(`Request failed: ${errorText || response.statusText}`);
             }
-
+    
             const data = await response.json();
-
-            // Validate response structure
-            if (!data?.data?.products?.edges) {
-                throw new Error('Invalid response structure from Shopify');
+    
+            // Log the raw response for debugging
+            console.log('Shopify Response:', data);
+    
+            // Validate response structure step by step
+            if (!data || !data.data) {
+                throw new Error('No data field in Shopify response.');
             }
-
+            if (!data.data.products) {
+                throw new Error('No products field in Shopify response.');
+            }
+            if (!data.data.products.edges || !Array.isArray(data.data.products.edges)) {
+                throw new Error('Products.edges is missing or not an array.');
+            }
+    
+            // Successfully fetched products
             setStatusMessage('Shopify data fetched successfully.');
             console.log(data.data.products.edges);
         } catch (error) {
+            console.error('Error connecting to Shopify:', error);
             setStatusMessage(`Failed to connect to Shopify: ${error.message}`);
         }
     };
+    
 
     return (
         <div className="integration-modal">
