@@ -28,7 +28,10 @@ const IntegrationModal = ({ onClose }) => {
                                     node {
                                         id
                                         title
-                                        price
+                                        price {
+                                            amount
+                                            currencyCode
+                                        }
                                     }
                                 }
                             }
