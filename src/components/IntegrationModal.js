@@ -54,7 +54,7 @@ const IntegrationModal = ({ onClose }) => {
             const data = await response.json();
 
             // Validate response structure
-            if (!data || !data.data || !data.data.products) {
+            if (!data?.data?.products?.edges) {
                 throw new Error('Invalid response structure from Shopify');
             }
 
