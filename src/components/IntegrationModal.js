@@ -6,6 +6,7 @@ const IntegrationModal = ({ onClose }) => {
     const [storeUrl, setStoreUrl] = useState('');
     const [storefrontAccessToken, setStorefrontAccessToken] = useState('');
     const [statusMessage, setStatusMessage] = useState('');
+    const [fetchedProducts, setFetchedProducts] = useState([]);
 
     const handleSourceClick = (source) => {
         setActiveSource(source);
@@ -15,27 +16,23 @@ const IntegrationModal = ({ onClose }) => {
     const handleShopifyConnect = async () => {
         setStatusMessage('Connecting to Shopify...');
         try {
-            const apiUrl = `https://${storeUrl}/api/2023-10/graphql.json`; // Shopify Storefront API endpoint (use latest version)
-
-            const query = `query {
+            const apiUrl = `https://${storeUrl}/api/2024-01/graphql.json`; // Shopify Storefront API endpoint
+            const query = `{
                 products(first: 10) {
                     edges {
                         node {
                             id
                             title
-                            description
-                            priceRange {
-                                minVariantPrice {
-                                    amount
-                                    currencyCode
-                                }
-                            }
+                            descriptionHtml
                             variants(first: 5) {
                                 edges {
                                     node {
                                         id
                                         title
-                                        price
+                                        price {
+                                            amount
+                                            currencyCode
+                                        }
                                     }
                                 }
                             }
@@ -61,17 +58,18 @@ const IntegrationModal = ({ onClose }) => {
 
             const data = await response.json();
 
-            // Log the entire response for debugging
-            console.log('Shopify Full Response:', data);
-
             if (!data?.data?.products?.edges) {
                 console.error('Full Shopify Response (debug):', data);
                 throw new Error('Invalid response structure from Shopify.');
             }
 
+            // Extract product data
+            const products = data.data.products.edges.map(edge => edge.node);
+            setFetchedProducts(products);
+
             // Success
             setStatusMessage('Shopify data fetched successfully.');
-            console.log('Fetched Products:', data.data.products.edges);
+            console.log('Fetched Products:', products);
         } catch (error) {
             console.error('Error Connecting to Shopify:', error);
             setStatusMessage(`Failed to connect to Shopify: ${error.message}`);
@@ -120,6 +118,26 @@ const IntegrationModal = ({ onClose }) => {
                         </label>
                         <button className="connect-button" onClick={handleShopifyConnect}>Connect</button>
                         <p>{statusMessage}</p>
+
+                        {fetchedProducts.length > 0 && (
+                            <div className="fetched-products">
+                                <h4>Fetched Products:</h4>
+                                <ul>
+                                    {fetchedProducts.map(product => (
+                                        <li key={product.id}>
+                                            <strong>{product.title}</strong>
+                                            <ul>
+                                                {product.variants.edges.map(variant => (
+                                                    <li key={variant.node.id}>
+                                                        Variant: {variant.node.title} - {variant.node.price.amount} {variant.node.price.currencyCode}
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        )}
                     </div>
                 )}
 
