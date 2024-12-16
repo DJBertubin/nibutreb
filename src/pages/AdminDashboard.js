@@ -8,7 +8,7 @@ import IntegrationModal from '../components/IntegrationModal';
 const AdminDashboard = () => {
   const [showIntegrationModal, setShowIntegrationModal] = useState(false);
   const [integrationType, setIntegrationType] = useState('');
-  const [productData, setProductData] = useState([]);
+  const [productData, setProductData] = useState([]); // State to hold imported product data
 
   const handleShowModal = (type) => {
     setIntegrationType(type);
@@ -21,7 +21,7 @@ const AdminDashboard = () => {
   };
 
   const handleShopifyConnect = ({ data }) => {
-    setProductData(data);
+    setProductData(data); // Update state with fetched product data
   };
 
   return (
@@ -33,14 +33,14 @@ const AdminDashboard = () => {
         <div className="content">
           <h2 className="section-title">Products Overview</h2>
           <div className="products-table">
-            <ProductList products={productData} />
+            <ProductList products={productData} /> {/* Pass product data to ProductList */}
           </div>
         </div>
         {showIntegrationModal && (
           <IntegrationModal
             type={integrationType}
             onClose={handleCloseModal}
-            onShopifyConnect={handleShopifyConnect}
+            onShopifyConnect={handleShopifyConnect} // Pass the connect handler
           />
         )}
       </div>

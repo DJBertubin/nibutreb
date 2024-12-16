@@ -16,31 +16,26 @@ const IntegrationModal = ({ onClose, onShopifyConnect }) => {
         setStatusMessage('Connecting to Shopify...');
         try {
             const apiUrl = `https://${storeUrl}/api/2024-01/graphql.json`; // Shopify Storefront API endpoint
-            const query = `
-                {
-                    products(first: 10) {
-                        edges {
-                            node {
-                                id
-                                title
-                                totalInventory
-                                variants(first: 5) {
-                                    edges {
-                                        node {
-                                            id
-                                            title
-                                            price {
-                                                amount
-                                                currencyCode
-                                            }
-                                            inventoryQuantity
+            const query = `{
+                products(first: 10) {
+                    edges {
+                        node {
+                            id
+                            title
+                            variants(first: 1) {
+                                edges {
+                                    node {
+                                        price {
+                                            amount
+                                            currencyCode
                                         }
                                     }
                                 }
                             }
                         }
                     }
-                }`;
+                }
+            }`;
 
             const response = await fetch(apiUrl, {
                 method: 'POST',
