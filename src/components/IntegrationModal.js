@@ -15,7 +15,7 @@ const IntegrationModal = ({ onClose, onFetchSuccess }) => {
     };
 
     const validateShopifyUrl = (url) => {
-        const regex = /^([a-zA-Z0-9][a-zA-Z0-9-_]*\.myshopify\.com)$/;
+        const regex = /^[a-zA-Z0-9][a-zA-Z0-9-_]*\.myshopify\.com$/;
         return regex.test(url);
     };
 
@@ -27,27 +27,25 @@ const IntegrationModal = ({ onClose, onFetchSuccess }) => {
             return;
         }
 
-        try {
-            const apiUrl = `https://${storeUrl}/api/2024-01/graphql.json`;
-            const query = {
-                query: `{
-                    products(first: 10) {
-                        edges {
-                            node {
-                                id
-                                title
-                                description
-                                priceRange {
-                                    minVariantPrice {
-                                        amount
-                                        currencyCode
-                                    }
-                                }
-                            }
-                        }
+        const apiUrl = `https://${storeUrl}/api/2024-01/graphql.json`;
+        const query = `{
+            products(first: 5) {
+                edges {
+                    node {
+                        id
+                        title
+                        description
                     }
-                }`
-            };
+                }
+            }
+        }`;
+
+        try {
+            console.log('API URL:', apiUrl);
+            console.log('Headers:', {
+                'Content-Type': 'application/json',
+                'X-Shopify-Storefront-Access-Token': storefrontAccessToken
+            });
 
             const response = await fetch(apiUrl, {
                 method: 'POST',
@@ -55,26 +53,27 @@ const IntegrationModal = ({ onClose, onFetchSuccess }) => {
                     'Content-Type': 'application/json',
                     'X-Shopify-Storefront-Access-Token': storefrontAccessToken,
                 },
-                body: JSON.stringify(query),
+                body: JSON.stringify({ query }),
             });
 
             if (!response.ok) {
                 const errorText = await response.text();
-                console.error('Error Response:', errorText);
-                throw new Error(`Request failed: ${response.status} - ${response.statusText}`);
+                console.error('Fetch failed:', errorText);
+                throw new Error(`Fetch failed: ${response.status} - ${response.statusText}`);
             }
 
             const result = await response.json();
-            if (!result?.data?.products) {
-                throw new Error('No products found in the response. Verify API access permissions.');
+            console.log('Shopify Response:', result);
+
+            if (!result?.data?.products?.edges) {
+                throw new Error('No products found. Verify API permissions.');
             }
 
-            console.log('Shopify Response:', result);
             setStatusMessage('Shopify data fetched successfully!');
             onFetchSuccess(result.data.products.edges);
             onClose();
         } catch (error) {
-            console.error('Connection Error:', error);
+            console.error('Shopify Connection Error:', error);
             setStatusMessage(`Failed to connect: ${error.message}`);
         }
     };
