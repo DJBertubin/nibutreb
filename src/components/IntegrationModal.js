@@ -36,7 +36,7 @@ const IntegrationModal = ({ onClose }) => {
                     }
                 }
             }`;
-    
+
             const response = await fetch(apiUrl, {
                 method: 'POST',
                 headers: {
@@ -45,38 +45,41 @@ const IntegrationModal = ({ onClose }) => {
                 },
                 body: JSON.stringify({ query }),
             });
-    
-            // Check if the request failed
+
+            // Check for non-200 responses
             if (!response.ok) {
                 const errorText = await response.text();
-                throw new Error(`Request failed: ${errorText || response.statusText}`);
+                console.error('Shopify Response Error:', errorText);
+                throw new Error(`Request failed: ${response.status} - ${response.statusText}`);
             }
-    
+
+            // Parse the JSON response
             const data = await response.json();
-    
-            // Log the raw response for debugging
-            console.log('Shopify Response:', data);
-    
-            // Validate response structure step by step
+
+            // Log the entire response for debugging
+            console.log('Shopify Full Response:', data);
+
+            // Validate the response structure
             if (!data || !data.data) {
                 throw new Error('No data field in Shopify response.');
             }
+
             if (!data.data.products) {
                 throw new Error('No products field in Shopify response.');
             }
-            if (!data.data.products.edges || !Array.isArray(data.data.products.edges)) {
-                throw new Error('Products.edges is missing or not an array.');
+
+            if (!Array.isArray(data.data.products.edges)) {
+                throw new Error('Invalid structure: products.edges is not an array.');
             }
-    
-            // Successfully fetched products
+
+            // Success
             setStatusMessage('Shopify data fetched successfully.');
-            console.log(data.data.products.edges);
+            console.log('Fetched Products:', data.data.products.edges);
         } catch (error) {
-            console.error('Error connecting to Shopify:', error);
+            console.error('Error Connecting to Shopify:', error);
             setStatusMessage(`Failed to connect to Shopify: ${error.message}`);
         }
     };
-    
 
     return (
         <div className="integration-modal">
