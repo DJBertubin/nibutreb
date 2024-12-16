@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
 import './IntegrationModal.css';
 
-const IntegrationModal = ({ onClose }) => {
+const IntegrationModal = ({ onClose, onProductsFetched }) => {
     const [activeSource, setActiveSource] = useState(null);
     const [storeUrl, setStoreUrl] = useState('');
     const [storefrontAccessToken, setStorefrontAccessToken] = useState('');
     const [statusMessage, setStatusMessage] = useState('');
-    const [fetchedProducts, setFetchedProducts] = useState([]);
 
     const handleSourceClick = (source) => {
         setActiveSource(source);
@@ -64,12 +63,20 @@ const IntegrationModal = ({ onClose }) => {
             }
 
             // Extract product data
-            const products = data.data.products.edges.map(edge => edge.node);
-            setFetchedProducts(products);
+            const products = data.data.products.edges.map(edge => edge.node).map(product => ({
+                id: product.id,
+                name: product.title,
+                price: product.variants.edges[0]?.node.price.amount || 'N/A',
+                status: product.descriptionHtml ? 'Available' : 'Unavailable',
+                category: 'General',
+            }));
+
+            // Pass products to the parent component
+            onProductsFetched(products);
 
             // Success
             setStatusMessage('Shopify data fetched successfully.');
-            console.log('Fetched Products:', products);
+            onClose(); // Close the modal after successful fetch
         } catch (error) {
             console.error('Error Connecting to Shopify:', error);
             setStatusMessage(`Failed to connect to Shopify: ${error.message}`);
@@ -118,26 +125,6 @@ const IntegrationModal = ({ onClose }) => {
                         </label>
                         <button className="connect-button" onClick={handleShopifyConnect}>Connect</button>
                         <p>{statusMessage}</p>
-
-                        {fetchedProducts.length > 0 && (
-                            <div className="fetched-products">
-                                <h4>Fetched Products:</h4>
-                                <ul>
-                                    {fetchedProducts.map(product => (
-                                        <li key={product.id}>
-                                            <strong>{product.title}</strong>
-                                            <ul>
-                                                {product.variants.edges.map(variant => (
-                                                    <li key={variant.node.id}>
-                                                        Variant: {variant.node.title} - {variant.node.price.amount} {variant.node.price.currencyCode}
-                                                    </li>
-                                                ))}
-                                            </ul>
-                                        </li>
-                                    ))}
-                                </ul>
-                            </div>
-                        )}
                     </div>
                 )}
 
