@@ -8,7 +8,18 @@ const ProductList = ({ products }) => {
                 <ul>
                     {products.map((product) => (
                         <li key={product.id}>
-                            <strong>{product.title}</strong> - ${product.variants[0]?.edges[0]?.node?.price?.amount || 'N/A'}
+                            <strong>Title:</strong> {product.title} <br />
+                            <strong>Total Inventory:</strong> {product.totalInventory} <br />
+                            <strong>Variants:</strong>
+                            <ul>
+                                {product.variants.edges.map((variant) => (
+                                    <li key={variant.node.id}>
+                                        <strong>Variant Title:</strong> {variant.node.title} <br />
+                                        <strong>Price:</strong> {variant.node.price.amount} {variant.node.price.currencyCode} <br />
+                                        <strong>Quantity:</strong> {variant.node.inventoryQuantity}
+                                    </li>
+                                ))}
+                            </ul>
                         </li>
                     ))}
                 </ul>
