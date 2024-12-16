@@ -27,6 +27,11 @@ const IntegrationModal = ({ onClose, onFetchSuccess }) => {
             return;
         }
 
+        console.log('Connecting to Shopify with:', {
+            storeUrl,
+            storefrontAccessToken,
+        });
+
         const apiUrl = `https://${storeUrl}/api/2024-01/graphql.json`;
         const query = `{
             products(first: 5) {
@@ -41,12 +46,6 @@ const IntegrationModal = ({ onClose, onFetchSuccess }) => {
         }`;
 
         try {
-            console.log('API URL:', apiUrl);
-            console.log('Headers:', {
-                'Content-Type': 'application/json',
-                'X-Shopify-Storefront-Access-Token': storefrontAccessToken
-            });
-
             const response = await fetch(apiUrl, {
                 method: 'POST',
                 headers: {
@@ -56,24 +55,26 @@ const IntegrationModal = ({ onClose, onFetchSuccess }) => {
                 body: JSON.stringify({ query }),
             });
 
+            console.log('Fetch response status:', response.status);
+
             if (!response.ok) {
                 const errorText = await response.text();
-                console.error('Fetch failed:', errorText);
-                throw new Error(`Fetch failed: ${response.status} - ${response.statusText}`);
+                console.error('Shopify API Error:', errorText);
+                throw new Error(`Request failed: ${response.status} - ${response.statusText}`);
             }
 
             const result = await response.json();
-            console.log('Shopify Response:', result);
+            console.log('Shopify API Response:', result);
 
             if (!result?.data?.products?.edges) {
-                throw new Error('No products found. Verify API permissions.');
+                throw new Error('No products found. Verify API permissions and Storefront Access Token.');
             }
 
             setStatusMessage('Shopify data fetched successfully!');
             onFetchSuccess(result.data.products.edges);
             onClose();
         } catch (error) {
-            console.error('Shopify Connection Error:', error);
+            console.error('Detailed Error:', error);
             setStatusMessage(`Failed to connect: ${error.message}`);
         }
     };
