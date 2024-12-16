@@ -47,11 +47,17 @@ const IntegrationModal = ({ onClose }) => {
             });
 
             if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.errors?.[0]?.message || 'Failed to connect to Shopify');
+                const errorData = await response.text();
+                throw new Error(errorData || 'Failed to connect to Shopify');
             }
 
             const data = await response.json();
+
+            // Validate response structure
+            if (!data || !data.data || !data.data.products) {
+                throw new Error('Invalid response structure from Shopify');
+            }
+
             setStatusMessage('Shopify data fetched successfully.');
             console.log(data.data.products.edges);
         } catch (error) {
