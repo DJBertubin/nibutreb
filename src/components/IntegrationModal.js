@@ -57,13 +57,22 @@ const IntegrationModal = ({ onClose, setProducts }) => {
 
             const data = await response.json();
 
-            if (!data?.data?.products?.edges) {
-                console.error('Full Shopify Response (debug):', data);
+            if (!data || !data.data || !data.data.products || !data.data.products.edges) {
+                console.error('Invalid Shopify Response Structure:', data);
                 throw new Error('Invalid response structure from Shopify.');
             }
 
             // Extract product data
-            const products = data.data.products.edges.map(edge => edge.node);
+            const products = data.data.products.edges.map(edge => ({
+                id: edge.node.id,
+                title: edge.node.title,
+                variants: edge.node.variants.edges.map(variant => ({
+                    id: variant.node.id,
+                    title: variant.node.title,
+                    price: `${variant.node.price.amount} ${variant.node.price.currencyCode}`
+                }))
+            }));
+
             setProducts(products);
 
             // Success

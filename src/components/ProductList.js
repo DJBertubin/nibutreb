@@ -8,7 +8,6 @@ const ProductList = ({ products }) => {
           <th>ID</th>
           <th>Title</th>
           <th>Variants</th>
-          <th>Price</th>
         </tr>
       </thead>
       <tbody>
@@ -19,25 +18,18 @@ const ProductList = ({ products }) => {
               <td>{product.title}</td>
               <td>
                 <ul>
-                  {product.variants.edges.map((variant) => (
-                    <li key={variant.node.id}>
-                      {variant.node.title}
+                  {product.variants.map((variant) => (
+                    <li key={variant.id}>
+                      {variant.title} - {variant.price}
                     </li>
                   ))}
                 </ul>
-              </td>
-              <td>
-                {product.variants.edges.map((variant) => (
-                  <div key={variant.node.id}>
-                    {variant.node.price.amount} {variant.node.price.currencyCode}
-                  </div>
-                ))}
               </td>
             </tr>
           ))
         ) : (
           <tr>
-            <td colSpan="4">No products available</td>
+            <td colSpan="3">No products available</td>
           </tr>
         )}
       </tbody>
