@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import './IntegrationModal.css';
 
-const IntegrationModal = ({ onClose, onProductsFetched }) => {
+const IntegrationModal = ({ onClose, setProducts }) => {
     const [activeSource, setActiveSource] = useState(null);
     const [storeUrl, setStoreUrl] = useState('');
     const [storefrontAccessToken, setStorefrontAccessToken] = useState('');
@@ -63,20 +63,15 @@ const IntegrationModal = ({ onClose, onProductsFetched }) => {
             }
 
             // Extract product data
-            const products = data.data.products.edges.map(edge => edge.node).map(product => ({
-                id: product.id,
-                name: product.title,
-                price: product.variants.edges[0]?.node.price.amount || 'N/A',
-                status: product.descriptionHtml ? 'Available' : 'Unavailable',
-                category: 'General',
-            }));
-
-            // Pass products to the parent component
-            onProductsFetched(products);
+            const products = data.data.products.edges.map(edge => edge.node);
+            setProducts(products);
 
             // Success
             setStatusMessage('Shopify data fetched successfully.');
-            onClose(); // Close the modal after successful fetch
+            console.log('Fetched Products:', products);
+
+            // Close modal after fetching data
+            onClose();
         } catch (error) {
             console.error('Error Connecting to Shopify:', error);
             setStatusMessage(`Failed to connect to Shopify: ${error.message}`);
