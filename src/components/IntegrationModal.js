@@ -67,6 +67,9 @@ const IntegrationModal = ({ onClose }) => {
             // Success
             setStatusMessage('Shopify data fetched successfully.');
             console.log('Fetched Products:', products);
+
+            // Automatically close modal
+            onClose();
         } catch (error) {
             console.error('Error Connecting to Shopify:', error);
             setStatusMessage(`Failed to connect to Shopify: ${error.message}`);
@@ -115,19 +118,6 @@ const IntegrationModal = ({ onClose }) => {
                         </label>
                         <button className="connect-button" onClick={handleShopifyConnect}>Connect</button>
                         <p>{statusMessage}</p>
-
-                        {fetchedProducts.length > 0 && (
-                            <div className="fetched-products">
-                                <h4>Fetched Products:</h4>
-                                <ul>
-                                    {fetchedProducts.map(product => (
-                                        <li key={product.id}>
-                                            <strong>{product.title}</strong> - Price: {product.variants.edges[0]?.node.price.amount} {product.variants.edges[0]?.node.price.currencyCode}
-                                        </li>
-                                    ))}
-                                </ul>
-                            </div>
-                        )}
                     </div>
                 )}
 
