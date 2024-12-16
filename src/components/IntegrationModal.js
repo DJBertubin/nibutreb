@@ -22,16 +22,13 @@ const IntegrationModal = ({ onClose, onShopifyConnect }) => {
                         node {
                             id
                             title
-                            description
-                            variants(first: 10) {
+                            variants(first: 1) {
                                 edges {
                                     node {
-                                        title
                                         price {
                                             amount
                                             currencyCode
                                         }
-                                        inventoryQuantity
                                     }
                                 }
                             }
@@ -66,6 +63,7 @@ const IntegrationModal = ({ onClose, onShopifyConnect }) => {
             // Pass products to the parent component
             onShopifyConnect({ data: products });
 
+            // Success
             setStatusMessage('Shopify data fetched successfully.');
             onClose();
         } catch (error) {
