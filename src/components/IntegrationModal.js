@@ -46,30 +46,24 @@ const IntegrationModal = ({ onClose }) => {
                 body: JSON.stringify({ query }),
             });
 
-            // Check for non-200 responses
+            // Log raw response for debugging
+            console.log('Raw Response Status:', response.status);
+            console.log('Raw Response Headers:', response.headers);
+
             if (!response.ok) {
                 const errorText = await response.text();
                 console.error('Shopify Response Error:', errorText);
                 throw new Error(`Request failed: ${response.status} - ${response.statusText}`);
             }
 
-            // Parse the JSON response
             const data = await response.json();
 
             // Log the entire response for debugging
             console.log('Shopify Full Response:', data);
 
-            // Validate the response structure
-            if (!data || !data.data) {
-                throw new Error('No data field in Shopify response.');
-            }
-
-            if (!data.data.products) {
-                throw new Error('No products field in Shopify response.');
-            }
-
-            if (!Array.isArray(data.data.products.edges)) {
-                throw new Error('Invalid structure: products.edges is not an array.');
+            if (!data?.data?.products?.edges) {
+                console.error('Full Shopify Response (debug):', data);
+                throw new Error('Invalid response structure from Shopify.');
             }
 
             // Success
