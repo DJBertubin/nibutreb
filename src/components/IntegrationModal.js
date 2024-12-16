@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import './IntegrationModal.css';
 
-const IntegrationModal = ({ onClose, setProducts }) => {
+const IntegrationModal = ({ onClose }) => {
     const [activeSource, setActiveSource] = useState(null);
     const [storeUrl, setStoreUrl] = useState('');
     const [storefrontAccessToken, setStorefrontAccessToken] = useState('');
     const [statusMessage, setStatusMessage] = useState('');
+    const [fetchedProducts, setFetchedProducts] = useState([]);
 
     const handleSourceClick = (source) => {
         setActiveSource(source);
@@ -22,12 +23,9 @@ const IntegrationModal = ({ onClose, setProducts }) => {
                         node {
                             id
                             title
-                            descriptionHtml
                             variants(first: 5) {
                                 edges {
                                     node {
-                                        id
-                                        title
                                         price {
                                             amount
                                             currencyCode
@@ -57,30 +55,18 @@ const IntegrationModal = ({ onClose, setProducts }) => {
 
             const data = await response.json();
 
-            if (!data || !data.data || !data.data.products || !data.data.products.edges) {
-                console.error('Invalid Shopify Response Structure:', data);
+            if (!data?.data?.products?.edges) {
+                console.error('Full Shopify Response (debug):', data);
                 throw new Error('Invalid response structure from Shopify.');
             }
 
             // Extract product data
-            const products = data.data.products.edges.map(edge => ({
-                id: edge.node.id,
-                title: edge.node.title,
-                variants: edge.node.variants.edges.map(variant => ({
-                    id: variant.node.id,
-                    title: variant.node.title,
-                    price: `${variant.node.price.amount} ${variant.node.price.currencyCode}`
-                }))
-            }));
-
-            setProducts(products);
+            const products = data.data.products.edges.map(edge => edge.node);
+            setFetchedProducts(products);
 
             // Success
             setStatusMessage('Shopify data fetched successfully.');
             console.log('Fetched Products:', products);
-
-            // Close modal after fetching data
-            onClose();
         } catch (error) {
             console.error('Error Connecting to Shopify:', error);
             setStatusMessage(`Failed to connect to Shopify: ${error.message}`);
@@ -129,6 +115,19 @@ const IntegrationModal = ({ onClose, setProducts }) => {
                         </label>
                         <button className="connect-button" onClick={handleShopifyConnect}>Connect</button>
                         <p>{statusMessage}</p>
+
+                        {fetchedProducts.length > 0 && (
+                            <div className="fetched-products">
+                                <h4>Fetched Products:</h4>
+                                <ul>
+                                    {fetchedProducts.map(product => (
+                                        <li key={product.id}>
+                                            <strong>{product.title}</strong> - Price: {product.variants.edges[0]?.node.price.amount} {product.variants.edges[0]?.node.price.currencyCode}
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        )}
                     </div>
                 )}
 
