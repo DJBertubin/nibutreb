@@ -4,8 +4,7 @@ import './IntegrationModal.css';
 const IntegrationModal = ({ onClose }) => {
     const [activeSource, setActiveSource] = useState(null);
     const [storeUrl, setStoreUrl] = useState('');
-    const [apiKey, setApiKey] = useState('');
-    const [apiPassword, setApiPassword] = useState('');
+    const [storefrontAccessToken, setStorefrontAccessToken] = useState('');
     const [statusMessage, setStatusMessage] = useState('');
 
     const handleSourceClick = (source) => {
@@ -16,23 +15,45 @@ const IntegrationModal = ({ onClose }) => {
     const handleShopifyConnect = async () => {
         setStatusMessage('Connecting to Shopify...');
         try {
-            const apiUrl = `https://${storeUrl}/admin/api/2024-01/products.json`; // Dynamic URL with storeUrl
+            const apiUrl = `https://${storeUrl}/api/2024-01/graphql.json`; // Shopify Storefront API endpoint
+            const query = `{
+                products(first: 10) {
+                    edges {
+                        node {
+                            id
+                            title
+                            descriptionHtml
+                            variants(first: 5) {
+                                edges {
+                                    node {
+                                        id
+                                        title
+                                        price
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }`;
+
             const response = await fetch(apiUrl, {
-                method: 'GET',
+                method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Basic ${btoa(`${apiKey}:${apiPassword}`)}`,
+                    'X-Shopify-Storefront-Access-Token': storefrontAccessToken,
                 },
+                body: JSON.stringify({ query }),
             });
 
             if (!response.ok) {
-                const errorData = await response.text();
-                throw new Error(errorData || 'Failed to connect to Shopify');
+                const errorData = await response.json();
+                throw new Error(errorData.errors?.[0]?.message || 'Failed to connect to Shopify');
             }
 
             const data = await response.json();
             setStatusMessage('Shopify data fetched successfully.');
-            console.log(data.products);
+            console.log(data.data.products.edges);
         } catch (error) {
             setStatusMessage(`Failed to connect to Shopify: ${error.message}`);
         }
@@ -70,21 +91,12 @@ const IntegrationModal = ({ onClose }) => {
                             />
                         </label>
                         <label>
-                            API Key:
-                            <input
-                                type="text"
-                                placeholder="Your Shopify API Key"
-                                value={apiKey}
-                                onChange={(e) => setApiKey(e.target.value)}
-                            />
-                        </label>
-                        <label>
-                            API Password:
+                            Storefront Access Token:
                             <input
                                 type="password"
-                                placeholder="Your Shopify API Password"
-                                value={apiPassword}
-                                onChange={(e) => setApiPassword(e.target.value)}
+                                placeholder="Your Storefront Access Token"
+                                value={storefrontAccessToken}
+                                onChange={(e) => setStorefrontAccessToken(e.target.value)}
                             />
                         </label>
                         <button className="connect-button" onClick={handleShopifyConnect}>Connect</button>
