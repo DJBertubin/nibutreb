@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import './IntegrationModal.css';
 
-const IntegrationModal = ({ onClose }) => {
+const IntegrationModal = ({ onClose, onFetchSuccess }) => {
     const [activeSource, setActiveSource] = useState(null);
     const [storeUrl, setStoreUrl] = useState('');
     const [storefrontAccessToken, setStorefrontAccessToken] = useState('');
@@ -72,6 +72,12 @@ const IntegrationModal = ({ onClose }) => {
             // Success
             setStatusMessage('Shopify data fetched successfully.');
             console.log('Fetched Products:', data.data.products.edges);
+
+            // Pass data to parent component to populate the table
+            onFetchSuccess(data.data.products.edges);
+
+            // Close the modal
+            onClose();
         } catch (error) {
             console.error('Error Connecting to Shopify:', error);
             setStatusMessage(`Failed to connect to Shopify: ${error.message}`);
