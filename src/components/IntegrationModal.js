@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
 import './IntegrationModal.css';
 
-const IntegrationModal = ({ onClose }) => {
+const IntegrationModal = ({ onClose, onShopifyConnect }) => {
     const [activeSource, setActiveSource] = useState(null);
     const [storeUrl, setStoreUrl] = useState('');
     const [storefrontAccessToken, setStorefrontAccessToken] = useState('');
     const [statusMessage, setStatusMessage] = useState('');
-    const [fetchedProducts, setFetchedProducts] = useState([]);
 
     const handleSourceClick = (source) => {
         setActiveSource(source);
@@ -23,7 +22,7 @@ const IntegrationModal = ({ onClose }) => {
                         node {
                             id
                             title
-                            variants(first: 5) {
+                            variants(first: 1) {
                                 edges {
                                     node {
                                         price {
@@ -49,29 +48,25 @@ const IntegrationModal = ({ onClose }) => {
 
             if (!response.ok) {
                 const errorText = await response.text();
-                console.error('Shopify Response Error:', errorText);
                 throw new Error(`Request failed: ${response.status} - ${response.statusText}`);
             }
 
             const data = await response.json();
 
             if (!data?.data?.products?.edges) {
-                console.error('Full Shopify Response (debug):', data);
                 throw new Error('Invalid response structure from Shopify.');
             }
 
             // Extract product data
             const products = data.data.products.edges.map(edge => edge.node);
-            setFetchedProducts(products);
+
+            // Pass products to the parent component
+            onShopifyConnect({ data: products });
 
             // Success
             setStatusMessage('Shopify data fetched successfully.');
-            console.log('Fetched Products:', products);
-
-            // Automatically close modal
             onClose();
         } catch (error) {
-            console.error('Error Connecting to Shopify:', error);
             setStatusMessage(`Failed to connect to Shopify: ${error.message}`);
         }
     };
@@ -87,17 +82,10 @@ const IntegrationModal = ({ onClose }) => {
                     >
                         Shopify
                     </button>
-                    <button
-                        className={`source-button ${activeSource === 'walmart' ? 'active' : ''}`}
-                        onClick={() => handleSourceClick('walmart')}
-                    >
-                        Walmart
-                    </button>
                 </div>
 
                 {activeSource === 'shopify' && (
                     <div className="shopify-integration">
-                        <h3>Shopify Integration</h3>
                         <label>
                             Store URL:
                             <input
@@ -120,14 +108,6 @@ const IntegrationModal = ({ onClose }) => {
                         <p>{statusMessage}</p>
                     </div>
                 )}
-
-                {activeSource === 'walmart' && (
-                    <div className="walmart-integration">
-                        <h3>Walmart Integration</h3>
-                        <p>Walmart integration form goes here.</p>
-                    </div>
-                )}
-
                 <button className="close-modal" onClick={onClose}>Close</button>
             </div>
         </div>

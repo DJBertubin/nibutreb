@@ -1,40 +1,22 @@
 import React from 'react';
 
 const ProductList = ({ products }) => {
-  return (
-    <table>
-      <thead>
-        <tr>
-          <th>ID</th>
-          <th>Title</th>
-          <th>Variants</th>
-        </tr>
-      </thead>
-      <tbody>
-        {products.length > 0 ? (
-          products.map((product) => (
-            <tr key={product.id}>
-              <td>{product.id}</td>
-              <td>{product.title}</td>
-              <td>
+    return (
+        <div>
+            <h3>Fetched Products</h3>
+            {products.length > 0 ? (
                 <ul>
-                  {product.variants.map((variant) => (
-                    <li key={variant.id}>
-                      {variant.title} - {variant.price}
-                    </li>
-                  ))}
+                    {products.map((product) => (
+                        <li key={product.id}>
+                            <strong>{product.title}</strong> - ${product.variants[0]?.edges[0]?.node?.price?.amount || 'N/A'}
+                        </li>
+                    ))}
                 </ul>
-              </td>
-            </tr>
-          ))
-        ) : (
-          <tr>
-            <td colSpan="3">No products available</td>
-          </tr>
-        )}
-      </tbody>
-    </table>
-  );
+            ) : (
+                <p>No products fetched yet. Please fetch from Shopify.</p>
+            )}
+        </div>
+    );
 };
 
 export default ProductList;
