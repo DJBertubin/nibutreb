@@ -15,7 +15,7 @@ const IntegrationModal = ({ onClose, onFetchSuccess }) => {
     };
 
     const validateShopifyUrl = (url) => {
-        const regex = /^(.*\.myshopify\.com)$/;
+        const regex = /^([a-zA-Z0-9][a-zA-Z0-9-_]*\.myshopify\.com)$/;
         return regex.test(url);
     };
 
@@ -23,64 +23,58 @@ const IntegrationModal = ({ onClose, onFetchSuccess }) => {
         setStatusMessage('Connecting to Shopify...');
 
         if (!validateShopifyUrl(storeUrl)) {
-            setStatusMessage('Invalid Shopify store URL format.');
+            setStatusMessage('Invalid Shopify store URL format. Use example.myshopify.com');
             return;
         }
 
         try {
-            const apiUrl = `https://${storeUrl}/api/2024-01/graphql.json`; // Shopify Storefront API endpoint
-            const query = `{
-                products(first: 10) {
-                    edges {
-                        node {
-                            id
-                            title
-                            descriptionHtml
-                            variants(first: 5) {
-                                edges {
-                                    node {
-                                        id
-                                        title
-                                        price {
-                                            amount
-                                            currencyCode
-                                        }
+            const apiUrl = `https://${storeUrl}/api/2024-01/graphql.json`;
+            const query = {
+                query: `{
+                    products(first: 10) {
+                        edges {
+                            node {
+                                id
+                                title
+                                description
+                                priceRange {
+                                    minVariantPrice {
+                                        amount
+                                        currencyCode
                                     }
                                 }
                             }
                         }
                     }
-                }
-            }`;
+                }`
+            };
 
-            console.log('Connecting to:', apiUrl);
             const response = await fetch(apiUrl, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-Shopify-Storefront-Access-Token': storefrontAccessToken,
                 },
-                body: JSON.stringify({ query }),
+                body: JSON.stringify(query),
             });
 
             if (!response.ok) {
                 const errorText = await response.text();
                 console.error('Error Response:', errorText);
-                throw new Error(`Request failed with status ${response.status}: ${response.statusText}`);
+                throw new Error(`Request failed: ${response.status} - ${response.statusText}`);
             }
 
-            const data = await response.json();
-            console.log('Shopify Response:', data);
-
-            if (!data?.data?.products?.edges) {
-                throw new Error('Unexpected response structure. Products not found.');
+            const result = await response.json();
+            if (!result?.data?.products) {
+                throw new Error('No products found in the response. Verify API access permissions.');
             }
 
-            setStatusMessage('Shopify data fetched successfully.');
-            onFetchSuccess(data.data.products.edges);
+            console.log('Shopify Response:', result);
+            setStatusMessage('Shopify data fetched successfully!');
+            onFetchSuccess(result.data.products.edges);
             onClose();
         } catch (error) {
-            console.error('Shopify Connection Error:', error.message);
+            console.error('Connection Error:', error);
             setStatusMessage(`Failed to connect: ${error.message}`);
         }
     };
@@ -95,12 +89,6 @@ const IntegrationModal = ({ onClose, onFetchSuccess }) => {
                         onClick={() => handleSourceClick('shopify')}
                     >
                         Shopify
-                    </button>
-                    <button
-                        className={`source-button ${activeSource === 'walmart' ? 'active' : ''}`}
-                        onClick={() => handleSourceClick('walmart')}
-                    >
-                        Walmart
                     </button>
                 </div>
 
@@ -129,14 +117,6 @@ const IntegrationModal = ({ onClose, onFetchSuccess }) => {
                         <p>{statusMessage}</p>
                     </div>
                 )}
-
-                {activeSource === 'walmart' && (
-                    <div className="walmart-integration">
-                        <h3>Walmart Integration</h3>
-                        <p>Walmart integration form goes here.</p>
-                    </div>
-                )}
-
                 <button className="close-modal" onClick={onClose}>Close</button>
             </div>
         </div>
