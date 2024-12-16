@@ -1,3 +1,5 @@
+// File: src/components/IntegrationModal.js
+
 import React, { useState } from 'react';
 import './IntegrationModal.css';
 
@@ -12,8 +14,19 @@ const IntegrationModal = ({ onClose, onFetchSuccess }) => {
         setStatusMessage('');
     };
 
+    const validateShopifyUrl = (url) => {
+        const regex = /^(.*\.myshopify\.com)$/;
+        return regex.test(url);
+    };
+
     const handleShopifyConnect = async () => {
         setStatusMessage('Connecting to Shopify...');
+
+        if (!validateShopifyUrl(storeUrl)) {
+            setStatusMessage('Invalid Shopify store URL format.');
+            return;
+        }
+
         try {
             const apiUrl = `https://${storeUrl}/api/2024-01/graphql.json`; // Shopify Storefront API endpoint
             const query = `{
@@ -40,6 +53,7 @@ const IntegrationModal = ({ onClose, onFetchSuccess }) => {
                 }
             }`;
 
+            console.log('Connecting to:', apiUrl);
             const response = await fetch(apiUrl, {
                 method: 'POST',
                 headers: {
@@ -49,38 +63,25 @@ const IntegrationModal = ({ onClose, onFetchSuccess }) => {
                 body: JSON.stringify({ query }),
             });
 
-            // Log raw response for debugging
-            console.log('Raw Response Status:', response.status);
-            console.log('Raw Response Headers:', response.headers);
-
             if (!response.ok) {
                 const errorText = await response.text();
-                console.error('Shopify Response Error:', errorText);
-                throw new Error(`Request failed: ${response.status} - ${response.statusText}`);
+                console.error('Error Response:', errorText);
+                throw new Error(`Request failed with status ${response.status}: ${response.statusText}`);
             }
 
             const data = await response.json();
-
-            // Log the entire response for debugging
-            console.log('Shopify Full Response:', data);
+            console.log('Shopify Response:', data);
 
             if (!data?.data?.products?.edges) {
-                console.error('Full Shopify Response (debug):', data);
-                throw new Error('Invalid response structure from Shopify.');
+                throw new Error('Unexpected response structure. Products not found.');
             }
 
-            // Success
             setStatusMessage('Shopify data fetched successfully.');
-            console.log('Fetched Products:', data.data.products.edges);
-
-            // Pass data to parent component to populate the table
             onFetchSuccess(data.data.products.edges);
-
-            // Close the modal
             onClose();
         } catch (error) {
-            console.error('Error Connecting to Shopify:', error);
-            setStatusMessage(`Failed to connect to Shopify: ${error.message}`);
+            console.error('Shopify Connection Error:', error.message);
+            setStatusMessage(`Failed to connect: ${error.message}`);
         }
     };
 
