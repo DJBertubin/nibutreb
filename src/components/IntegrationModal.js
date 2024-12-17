@@ -1,3 +1,5 @@
+// File: src/components/IntegrationModal.js
+
 import React, { useState } from 'react';
 import './IntegrationModal.css';
 
@@ -55,7 +57,12 @@ const IntegrationModal = ({ onClose, onFetchSuccess, onAddStoreName }) => {
 
             const storeName = extractStoreName(storeUrl);
             setStatusMessage(`Shopify Admin data fetched successfully from ${storeName}!`);
-            onAddStoreName(storeName); // Add store name to dropdown
+
+            // Add store name to dropdown list
+            if (typeof onAddStoreName === 'function') {
+                onAddStoreName(storeName); 
+            }
+
             onFetchSuccess(result.products);
             onClose();
         } catch (error) {
