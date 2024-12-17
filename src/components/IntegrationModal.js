@@ -1,20 +1,19 @@
-// File: src/components/IntegrationModal.js
-
 import React, { useState } from 'react';
 import './IntegrationModal.css';
 
-const IntegrationModal = ({ onClose, onFetchSuccess }) => {
+const IntegrationModal = ({ onClose }) => {
     const [activeSource, setActiveSource] = useState(null);
     const [storeUrl, setStoreUrl] = useState('');
     const [adminAccessToken, setAdminAccessToken] = useState('');
     const [statusMessage, setStatusMessage] = useState('');
+    const [fetchedData, setFetchedData] = useState(null);
 
     const handleSourceClick = (source) => {
         setActiveSource(source);
         setStatusMessage('');
+        setFetchedData(null);
     };
 
-    // Validate Shopify store URL format
     const validateShopifyUrl = (url) => {
         const trimmedUrl = url.trim().toLowerCase();
         const regex = /^[a-zA-Z0-9][a-zA-Z0-9-_]*\.myshopify\.com$/;
@@ -23,43 +22,36 @@ const IntegrationModal = ({ onClose, onFetchSuccess }) => {
 
     const handleShopifyAdminConnect = async () => {
         setStatusMessage('Connecting to Shopify Admin API...');
+        setFetchedData(null);
 
         if (!validateShopifyUrl(storeUrl)) {
             setStatusMessage('Invalid Shopify store URL format. Use example.myshopify.com');
             return;
         }
 
+        const adminApiUrl = `https://${storeUrl.trim()}/admin/api/2024-01/products.json`;
         try {
-            // Call the backend Vercel API
-            const response = await fetch('/api/shopify/products', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    storeUrl: storeUrl.trim(),
-                    adminAccessToken: adminAccessToken,
-                }),
+            const response = await fetch(adminApiUrl, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Shopify-Access-Token': adminAccessToken,
+                },
             });
-
-            console.log('Response status:', response.status);
 
             if (!response.ok) {
                 const errorText = await response.text();
-                console.error('Proxy Request Error:', errorText);
-                throw new Error(`Request failed: ${response.status} - ${errorText}`);
+                throw new Error(`Request failed: ${response.status} - ${response.statusText}`);
             }
 
             const result = await response.json();
-            console.log('Shopify Admin API Response via Proxy:', result);
-
             if (!result?.products) {
-                throw new Error('No products returned. Verify API permissions.');
+                throw new Error('No products found. Verify API permissions and Admin Access Token.');
             }
 
             setStatusMessage('Shopify Admin data fetched successfully!');
-            onFetchSuccess(result.products);
-            onClose();
+            setFetchedData(result.products);
         } catch (error) {
-            console.error('Error fetching via proxy:', error.message);
             setStatusMessage(`Failed to connect: ${error.message}`);
         }
     };
@@ -98,15 +90,26 @@ const IntegrationModal = ({ onClose, onFetchSuccess }) => {
                                 onChange={(e) => setAdminAccessToken(e.target.value)}
                             />
                         </label>
-                        <button className="connect-button" onClick={handleShopifyAdminConnect}>
-                            Connect
-                        </button>
+                        <button className="connect-button" onClick={handleShopifyAdminConnect}>Connect</button>
                         <p>{statusMessage}</p>
+
+                        {/* Display fetched data */}
+                        {fetchedData && (
+                            <div className="fetched-data">
+                                <h4>Fetched Products:</h4>
+                                <ul>
+                                    {fetchedData.map((product) => (
+                                        <li key={product.id}>
+                                            <strong>{product.title}</strong>
+                                            <p>{product.body_html || 'No description available'}</p>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        )}
                     </div>
                 )}
-                <button className="close-modal" onClick={onClose}>
-                    Close
-                </button>
+                <button className="close-modal" onClick={onClose}>Close</button>
             </div>
         </div>
     );
