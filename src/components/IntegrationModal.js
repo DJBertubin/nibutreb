@@ -1,3 +1,5 @@
+// File: src/components/IntegrationModal.js
+
 import React, { useState } from 'react';
 import './IntegrationModal.css';
 
