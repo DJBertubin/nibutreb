@@ -23,7 +23,7 @@ const IntegrationModal = ({ onClose }) => {
     };
 
     const handleShopifyAdminConnect = async () => {
-        setStatusMessage('Connecting to Shopify Admin API...');
+        setStatusMessage('Connecting to Shopify Admin API via Proxy...');
         setFetchedData(null);
 
         if (!validateShopifyUrl(storeUrl)) {
@@ -31,29 +31,35 @@ const IntegrationModal = ({ onClose }) => {
             return;
         }
 
-        const adminApiUrl = `https://${storeUrl.trim()}/admin/api/2024-01/products.json`;
         try {
-            const response = await fetch(adminApiUrl, {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Shopify-Access-Token': adminAccessToken,
-                },
+            const response = await fetch('/api/shopify/products', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    storeUrl: storeUrl.trim(),
+                    adminAccessToken: adminAccessToken,
+                }),
             });
+
+            console.log('Response Status:', response.status);
 
             if (!response.ok) {
                 const errorText = await response.text();
-                throw new Error(`Request failed: ${response.status} - ${response.statusText}`);
+                console.error('Proxy API Error:', errorText);
+                throw new Error(`Request failed: ${response.status} - ${errorText}`);
             }
 
             const result = await response.json();
+            console.log('Proxy API Response:', result);
+
             if (!result?.products) {
-                throw new Error('No products found. Verify API permissions and Admin Access Token.');
+                throw new Error('No products returned. Verify API permissions and Admin Access Token.');
             }
 
             setStatusMessage('Shopify Admin data fetched successfully!');
             setFetchedData(result.products);
         } catch (error) {
+            console.error('Error fetching from proxy:', error.message);
             setStatusMessage(`Failed to connect: ${error.message}`);
         }
     };
