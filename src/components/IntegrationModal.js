@@ -14,7 +14,6 @@ const IntegrationModal = ({ onClose, onFetchSuccess }) => {
         setStatusMessage('');
     };
 
-    // Validate Shopify store URL format
     const validateShopifyUrl = (url) => {
         const trimmedUrl = url.trim().toLowerCase();
         const regex = /^[a-zA-Z0-9][a-zA-Z0-9-_]*\.myshopify\.com$/;
@@ -29,37 +28,42 @@ const IntegrationModal = ({ onClose, onFetchSuccess }) => {
             return;
         }
 
-        // Use the Vercel proxy API instead of direct Shopify call
+        const adminApiUrl = `https://${storeUrl.trim()}/admin/api/2024-01/products.json`;
+        console.log('API Endpoint:', adminApiUrl);
+
         try {
-            const response = await fetch('/api/shopify/products', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    storeUrl: storeUrl.trim(),
-                    adminAccessToken: adminAccessToken,
-                }),
+            // Call the Admin API endpoint
+            console.log('Initiating request to Shopify Admin API...');
+            const response = await fetch(adminApiUrl, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Shopify-Access-Token': adminAccessToken,
+                },
             });
 
             console.log('Response status:', response.status);
 
             if (!response.ok) {
                 const errorText = await response.text();
-                console.error('Proxy Request Error:', errorText);
-                throw new Error(`Proxy request failed: ${response.status} - ${response.statusText}`);
+                console.error('Error response from Shopify Admin API:', errorText);
+                throw new Error(`Request failed: ${response.status} - ${response.statusText}`);
             }
 
+            // Safely parse the JSON response
             const result = await response.json();
-            console.log('Shopify Admin API Response via Proxy:', result);
+            console.log('Raw Response Data:', result);
 
-            if (!result?.products) {
-                throw new Error('No products returned. Verify API permissions.');
+            if (!result || !result.products) {
+                throw new Error('Invalid response format or no products found.');
             }
 
+            // Success: pass the data back
             setStatusMessage('Shopify Admin data fetched successfully!');
             onFetchSuccess(result.products);
             onClose();
         } catch (error) {
-            console.error('Error fetching via proxy:', error.message);
+            console.error('Error connecting to Shopify Admin API:', error.message);
             setStatusMessage(`Failed to connect: ${error.message}`);
         }
     };
