@@ -1,3 +1,5 @@
+// File: src/components/IntegrationModal.js
+
 import React, { useState } from 'react';
 import './IntegrationModal.css';
 
@@ -12,7 +14,7 @@ const IntegrationModal = ({ onClose, onFetchSuccess }) => {
         setStatusMessage('');
     };
 
-    // Updated to handle trailing spaces and case sensitivity
+    // Validate Shopify store URL format
     const validateShopifyUrl = (url) => {
         const trimmedUrl = url.trim().toLowerCase();
         const regex = /^[a-zA-Z0-9][a-zA-Z0-9-_]*\.myshopify\.com$/;
@@ -27,37 +29,37 @@ const IntegrationModal = ({ onClose, onFetchSuccess }) => {
             return;
         }
 
-        const adminApiUrl = `https://${storeUrl.trim()}/admin/api/2024-01/products.json`;
+        // Use the Vercel proxy API instead of direct Shopify call
         try {
-            console.log('Connecting to Admin API:', adminApiUrl);
-            const response = await fetch(adminApiUrl, {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Shopify-Access-Token': adminAccessToken,
-                },
+            const response = await fetch('/api/shopify/products', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    storeUrl: storeUrl.trim(),
+                    adminAccessToken: adminAccessToken,
+                }),
             });
 
-            console.log('Fetch response status:', response.status);
+            console.log('Response status:', response.status);
 
             if (!response.ok) {
                 const errorText = await response.text();
-                console.error('Shopify Admin API Error:', errorText);
-                throw new Error(`Request failed: ${response.status} - ${response.statusText}`);
+                console.error('Proxy Request Error:', errorText);
+                throw new Error(`Proxy request failed: ${response.status} - ${response.statusText}`);
             }
 
             const result = await response.json();
-            console.log('Shopify Admin API Response:', result);
+            console.log('Shopify Admin API Response via Proxy:', result);
 
             if (!result?.products) {
-                throw new Error('No products found. Verify API permissions and Admin Access Token.');
+                throw new Error('No products returned. Verify API permissions.');
             }
 
             setStatusMessage('Shopify Admin data fetched successfully!');
             onFetchSuccess(result.products);
             onClose();
         } catch (error) {
-            console.error('Admin API Connection Error:', error);
+            console.error('Error fetching via proxy:', error.message);
             setStatusMessage(`Failed to connect: ${error.message}`);
         }
     };
@@ -96,11 +98,15 @@ const IntegrationModal = ({ onClose, onFetchSuccess }) => {
                                 onChange={(e) => setAdminAccessToken(e.target.value)}
                             />
                         </label>
-                        <button className="connect-button" onClick={handleShopifyAdminConnect}>Connect</button>
+                        <button className="connect-button" onClick={handleShopifyAdminConnect}>
+                            Connect
+                        </button>
                         <p>{statusMessage}</p>
                     </div>
                 )}
-                <button className="close-modal" onClick={onClose}>Close</button>
+                <button className="close-modal" onClick={onClose}>
+                    Close
+                </button>
             </div>
         </div>
     );
