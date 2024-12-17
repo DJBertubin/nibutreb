@@ -1,3 +1,5 @@
+// File: src/components/AdminDashboard.js
+
 import React, { useState } from 'react';
 import Sidebar from '../components/Sidebar';
 import ProductList from '../components/ProductList';
@@ -9,7 +11,7 @@ const AdminDashboard = () => {
     const [showIntegrationModal, setShowIntegrationModal] = useState(false);
     const [integrationType, setIntegrationType] = useState('');
     const [productData, setProductData] = useState([]);
-    const [stores, setStores] = useState(["Walmart", "Shopify"]);
+    const [stores, setStores] = useState(['Walmart', 'Shopify']); // Initial stores list
 
     const handleShowModal = (type) => {
         setIntegrationType(type);
@@ -26,7 +28,9 @@ const AdminDashboard = () => {
     };
 
     const handleAddStoreName = (storeName) => {
-        setStores((prevStores) => [...prevStores, storeName]);
+        if (!stores.includes(storeName)) {
+            setStores((prevStores) => [...prevStores, storeName]);
+        }
     };
 
     return (
