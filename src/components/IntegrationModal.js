@@ -1,7 +1,9 @@
+// File: src/components/IntegrationModal.js
+
 import React, { useState } from 'react';
 import './IntegrationModal.css';
 
-const IntegrationModal = ({ onClose, onFetchSuccess }) => {
+const IntegrationModal = ({ onClose, onShopifyConnect }) => {
     const [activeSource, setActiveSource] = useState(null);
     const [storeUrl, setStoreUrl] = useState('');
     const [adminAccessToken, setAdminAccessToken] = useState('');
@@ -50,7 +52,9 @@ const IntegrationModal = ({ onClose, onFetchSuccess }) => {
             }
 
             setStatusMessage('Shopify Admin data fetched successfully!');
-            onFetchSuccess(result.products);
+            
+            // Pass the fetched data back to the parent component
+            onShopifyConnect({ data: result.products });
             onClose();
         } catch (error) {
             console.error('Error fetching from proxy:', error.message);
