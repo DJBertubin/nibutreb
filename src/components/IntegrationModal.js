@@ -1,7 +1,6 @@
-// File: src/components/IntegrationModal.js
-
 import React, { useState } from 'react';
 import './IntegrationModal.css';
+import './ProductList.css'; // New CSS for modern table styling
 
 const IntegrationModal = ({ onClose, onFetchSuccess, onAddStoreName }) => {
     const [activeSource, setActiveSource] = useState(null);
@@ -58,12 +57,14 @@ const IntegrationModal = ({ onClose, onFetchSuccess, onAddStoreName }) => {
             const storeName = extractStoreName(storeUrl);
             setStatusMessage(`Shopify Admin data fetched successfully from ${storeName}!`);
 
-            // Add store name to dropdown list
             if (typeof onAddStoreName === 'function') {
-                onAddStoreName(storeName); 
+                onAddStoreName(storeName, true); // Preselect the store name
             }
 
-            onFetchSuccess(result.products);
+            if (typeof onFetchSuccess === 'function') {
+                onFetchSuccess(result.products);
+            }
+
             onClose();
         } catch (error) {
             console.error('Error fetching from proxy:', error.message);
