@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import './IntegrationModal.css';
 
-const IntegrationModal = ({ onClose, onShopifyConnect }) => {
+const IntegrationModal = ({ onClose, onFetchSuccess }) => {
     const [activeSource, setActiveSource] = useState(null);
     const [storeUrl, setStoreUrl] = useState('');
-    const [storefrontAccessToken, setStorefrontAccessToken] = useState('');
+    const [adminAccessToken, setAdminAccessToken] = useState('');
     const [statusMessage, setStatusMessage] = useState('');
 
     const handleSourceClick = (source) => {
@@ -12,62 +12,53 @@ const IntegrationModal = ({ onClose, onShopifyConnect }) => {
         setStatusMessage('');
     };
 
-    const handleShopifyConnect = async () => {
-        setStatusMessage('Connecting to Shopify...');
-        try {
-            const apiUrl = `https://${storeUrl}/api/2024-01/graphql.json`; // Shopify Storefront API endpoint
-            const query = `{
-                products(first: 10) {
-                    edges {
-                        node {
-                            id
-                            title
-                            variants(first: 1) {
-                                edges {
-                                    node {
-                                        price {
-                                            amount
-                                            currencyCode
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }`;
+    // Updated to handle trailing spaces and case sensitivity
+    const validateShopifyUrl = (url) => {
+        const trimmedUrl = url.trim().toLowerCase();
+        const regex = /^[a-zA-Z0-9][a-zA-Z0-9-_]*\.myshopify\.com$/;
+        return regex.test(trimmedUrl);
+    };
 
-            const response = await fetch(apiUrl, {
-                method: 'POST',
+    const handleShopifyAdminConnect = async () => {
+        setStatusMessage('Connecting to Shopify Admin API...');
+
+        if (!validateShopifyUrl(storeUrl)) {
+            setStatusMessage('Invalid Shopify store URL format. Use example.myshopify.com');
+            return;
+        }
+
+        const adminApiUrl = `https://${storeUrl.trim()}/admin/api/2024-01/products.json`;
+        try {
+            console.log('Connecting to Admin API:', adminApiUrl);
+            const response = await fetch(adminApiUrl, {
+                method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-Shopify-Storefront-Access-Token': storefrontAccessToken,
+                    'X-Shopify-Access-Token': adminAccessToken,
                 },
-                body: JSON.stringify({ query }),
             });
+
+            console.log('Fetch response status:', response.status);
 
             if (!response.ok) {
                 const errorText = await response.text();
+                console.error('Shopify Admin API Error:', errorText);
                 throw new Error(`Request failed: ${response.status} - ${response.statusText}`);
             }
 
-            const data = await response.json();
+            const result = await response.json();
+            console.log('Shopify Admin API Response:', result);
 
-            if (!data?.data?.products?.edges) {
-                throw new Error('Invalid response structure from Shopify.');
+            if (!result?.products) {
+                throw new Error('No products found. Verify API permissions and Admin Access Token.');
             }
 
-            // Extract product data
-            const products = data.data.products.edges.map(edge => edge.node);
-
-            // Pass products to the parent component
-            onShopifyConnect({ data: products });
-
-            // Success
-            setStatusMessage('Shopify data fetched successfully.');
+            setStatusMessage('Shopify Admin data fetched successfully!');
+            onFetchSuccess(result.products);
             onClose();
         } catch (error) {
-            setStatusMessage(`Failed to connect to Shopify: ${error.message}`);
+            console.error('Admin API Connection Error:', error);
+            setStatusMessage(`Failed to connect: ${error.message}`);
         }
     };
 
@@ -86,6 +77,7 @@ const IntegrationModal = ({ onClose, onShopifyConnect }) => {
 
                 {activeSource === 'shopify' && (
                     <div className="shopify-integration">
+                        <h3>Shopify Admin API Integration</h3>
                         <label>
                             Store URL:
                             <input
@@ -96,15 +88,15 @@ const IntegrationModal = ({ onClose, onShopifyConnect }) => {
                             />
                         </label>
                         <label>
-                            Storefront Access Token:
+                            Admin Access Token:
                             <input
                                 type="password"
-                                placeholder="Your Storefront Access Token"
-                                value={storefrontAccessToken}
-                                onChange={(e) => setStorefrontAccessToken(e.target.value)}
+                                placeholder="Your Admin Access Token"
+                                value={adminAccessToken}
+                                onChange={(e) => setAdminAccessToken(e.target.value)}
                             />
                         </label>
-                        <button className="connect-button" onClick={handleShopifyConnect}>Connect</button>
+                        <button className="connect-button" onClick={handleShopifyAdminConnect}>Connect</button>
                         <p>{statusMessage}</p>
                     </div>
                 )}
