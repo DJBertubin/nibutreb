@@ -1,19 +1,15 @@
-// File: src/components/IntegrationModal.js
-
 import React, { useState } from 'react';
 import './IntegrationModal.css';
 
-const IntegrationModal = ({ onClose }) => {
+const IntegrationModal = ({ onClose, onFetchSuccess }) => {
     const [activeSource, setActiveSource] = useState(null);
     const [storeUrl, setStoreUrl] = useState('');
     const [adminAccessToken, setAdminAccessToken] = useState('');
     const [statusMessage, setStatusMessage] = useState('');
-    const [fetchedData, setFetchedData] = useState(null);
 
     const handleSourceClick = (source) => {
         setActiveSource(source);
         setStatusMessage('');
-        setFetchedData(null);
     };
 
     const validateShopifyUrl = (url) => {
@@ -24,7 +20,6 @@ const IntegrationModal = ({ onClose }) => {
 
     const handleShopifyAdminConnect = async () => {
         setStatusMessage('Connecting to Shopify Admin API via Proxy...');
-        setFetchedData(null);
 
         if (!validateShopifyUrl(storeUrl)) {
             setStatusMessage('Invalid Shopify store URL format. Use example.myshopify.com');
@@ -41,8 +36,6 @@ const IntegrationModal = ({ onClose }) => {
                 }),
             });
 
-            console.log('Response Status:', response.status);
-
             if (!response.ok) {
                 const errorText = await response.text();
                 console.error('Proxy API Error:', errorText);
@@ -57,7 +50,8 @@ const IntegrationModal = ({ onClose }) => {
             }
 
             setStatusMessage('Shopify Admin data fetched successfully!');
-            setFetchedData(result.products);
+            onFetchSuccess(result.products);
+            onClose();
         } catch (error) {
             console.error('Error fetching from proxy:', error.message);
             setStatusMessage(`Failed to connect: ${error.message}`);
@@ -100,21 +94,6 @@ const IntegrationModal = ({ onClose }) => {
                         </label>
                         <button className="connect-button" onClick={handleShopifyAdminConnect}>Connect</button>
                         <p>{statusMessage}</p>
-
-                        {/* Display fetched data */}
-                        {fetchedData && (
-                            <div className="fetched-data">
-                                <h4>Fetched Products:</h4>
-                                <ul>
-                                    {fetchedData.map((product) => (
-                                        <li key={product.id}>
-                                            <strong>{product.title}</strong>
-                                            <p>{product.body_html || 'No description available'}</p>
-                                        </li>
-                                    ))}
-                                </ul>
-                            </div>
-                        )}
                     </div>
                 )}
                 <button className="close-modal" onClick={onClose}>Close</button>
