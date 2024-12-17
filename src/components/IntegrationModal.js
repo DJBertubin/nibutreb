@@ -1,9 +1,7 @@
-// File: src/components/IntegrationModal.js
-
 import React, { useState } from 'react';
 import './IntegrationModal.css';
 
-const IntegrationModal = ({ onClose, onShopifyConnect }) => {
+const IntegrationModal = ({ onClose, onFetchSuccess, onAddStoreName }) => {
     const [activeSource, setActiveSource] = useState(null);
     const [storeUrl, setStoreUrl] = useState('');
     const [adminAccessToken, setAdminAccessToken] = useState('');
@@ -18,6 +16,10 @@ const IntegrationModal = ({ onClose, onShopifyConnect }) => {
         const trimmedUrl = url.trim().toLowerCase();
         const regex = /^[a-zA-Z0-9][a-zA-Z0-9-_]*\.myshopify\.com$/;
         return regex.test(trimmedUrl);
+    };
+
+    const extractStoreName = (url) => {
+        return url.split('.myshopify.com')[0]; // Extract store name from URL
     };
 
     const handleShopifyAdminConnect = async () => {
@@ -51,10 +53,10 @@ const IntegrationModal = ({ onClose, onShopifyConnect }) => {
                 throw new Error('No products returned. Verify API permissions and Admin Access Token.');
             }
 
-            setStatusMessage('Shopify Admin data fetched successfully!');
-            
-            // Pass the fetched data back to the parent component
-            onShopifyConnect({ data: result.products });
+            const storeName = extractStoreName(storeUrl);
+            setStatusMessage(`Shopify Admin data fetched successfully from ${storeName}!`);
+            onAddStoreName(storeName); // Add store name to dropdown
+            onFetchSuccess(result.products);
             onClose();
         } catch (error) {
             console.error('Error fetching from proxy:', error.message);
