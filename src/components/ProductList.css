@@ -5,12 +5,14 @@
 
 .product-table {
   width: 100%;
-  max-width: 800px;
+  max-width: 1200px;
   margin: auto;
   border-collapse: collapse;
   table-layout: fixed; /* Fix table width */
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
   background-color: #fff;
+  border-radius: 8px;
+  overflow: hidden;
 }
 
 .product-table th,
@@ -24,19 +26,20 @@
 }
 
 .product-table th {
-  background-color: #007bff;
+  background-color: #343a40;
   color: white;
   text-transform: uppercase;
+  font-weight: bold;
 }
 
 .product-table tr:nth-child(even) {
-  background-color: #f9f9f9;
+  background-color: #f8f9fa;
 }
 
 .product-table tr:hover {
-  background-color: #f1f1f1;
+  background-color: #e9ecef;
   cursor: pointer;
-  transition: background-color 0.3s;
+  transition: background-color 0.3s ease;
 }
 
 .action-buttons {
@@ -71,13 +74,18 @@
 }
 
 .price-input {
-  width: 80px;
+  width: 100px;
   text-align: center;
   border: 1px solid #ccc;
   border-radius: 4px;
   padding: 4px;
+  font-size: 14px;
 }
 
 .action-column {
-  width: 120px; /* Limit action column width */
+  width: 150px; /* Fix action column width */
+}
+
+.column-fixed {
+  width: 200px; /* Fixed width for columns */
 }
