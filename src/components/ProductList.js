@@ -1,3 +1,5 @@
+// File: src/components/ProductList.js
+
 import React from 'react';
 
 const ProductList = ({ products }) => {
@@ -8,7 +10,10 @@ const ProductList = ({ products }) => {
                 <ul>
                     {products.map((product) => (
                         <li key={product.id}>
-                            <strong>{product.title}</strong> - ${product.variants[0]?.edges[0]?.node?.price?.amount || 'N/A'}
+                            <strong>{product.title}</strong> - $
+                            {product.variants && product.variants.length > 0
+                                ? product.variants[0].price
+                                : 'N/A'}
                         </li>
                     ))}
                 </ul>
