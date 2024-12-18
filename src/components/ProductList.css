@@ -1,3 +1,4 @@
+/* File: src/components/ProductList.css */
 
 .product-list-container {
   font-family: Arial, sans-serif;
@@ -52,8 +53,8 @@ h3 {
   width: 200px;
 }
 
-.modern-table .title-column {
-  width: 400px;
+.modern-table .product-name-column {
+  width: 300px;
 }
 
 .modern-table .price-column {

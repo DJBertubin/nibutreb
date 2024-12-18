@@ -6,6 +6,7 @@ import './ProductList.css'; // Import a CSS file for modern table styles
 const ProductList = ({ products }) => {
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
+    const [editedProducts, setEditedProducts] = useState([]);
 
     // Sort products by created date (newest first)
     const sortedProducts = [...products].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
@@ -17,14 +18,13 @@ const ProductList = ({ products }) => {
 
     const totalPages = Math.ceil(products.length / itemsPerPage);
 
-    const handleExport = (product) => {
-        console.log('Exporting Product:', product);
-        // Logic to export the product data (e.g., CSV, JSON, etc.)
-    };
-
-    const handleEdit = (product) => {
-        console.log('Editing Product:', product);
-        // Logic to edit the product (open a form or modal)
+    const handleEdit = (productId, field, value) => {
+        setEditedProducts((prev) => {
+            const updated = prev.find((item) => item.id === productId)
+                ? prev.map((item) => (item.id === productId ? { ...item, [field]: value } : item))
+                : [...prev, { id: productId, [field]: value }];
+            return updated;
+        });
     };
 
     const handlePageChange = (pageNumber) => {
@@ -40,8 +40,8 @@ const ProductList = ({ products }) => {
                         <thead>
                             <tr>
                                 <th>Actions</th>
-                                <th>ID</th>
-                                <th>Title</th>
+                                <th>SKU</th>
+                                <th className="product-name-column">Product Name</th>
                                 <th>Price</th>
                                 <th>Quantity</th>
                                 <th>Created Date</th>
@@ -51,21 +51,26 @@ const ProductList = ({ products }) => {
                             {currentProducts.map((product) => (
                                 <tr key={product.id}>
                                     <td>
-                                        <button className="edit-button" onClick={() => handleEdit(product)}>
-                                            Edit
-                                        </button>
-                                        <button className="export-button" onClick={() => handleExport(product)}>
-                                            Export
+                                        <button className="edit-button">
+                                            Save
                                         </button>
                                     </td>
-                                    <td>{product.id}</td>
-                                    <td>{product.title}</td>
+                                    <td>{product.sku || 'N/A'}</td>
+                                    <td className="product-name-column">{product.title}</td>
                                     <td>
-                                        {product.variants && product.variants.length > 0
-                                            ? `$${product.variants[0].price}`
-                                            : 'N/A'}
+                                        <input
+                                            type="text"
+                                            defaultValue={product.variants && product.variants.length > 0 ? product.variants[0].price : 'N/A'}
+                                            onChange={(e) => handleEdit(product.id, 'price', e.target.value)}
+                                        />
                                     </td>
-                                    <td>{product.variants && product.variants.length > 0 ? product.variants[0].inventory_quantity : 'N/A'}</td>
+                                    <td>
+                                        <input
+                                            type="text"
+                                            defaultValue={product.variants && product.variants.length > 0 ? product.variants[0].inventory_quantity : 'N/A'}
+                                            onChange={(e) => handleEdit(product.id, 'quantity', e.target.value)}
+                                        />
+                                    </td>
                                     <td>{new Date(product.created_at).toLocaleDateString()}</td>
                                 </tr>
                             ))}
