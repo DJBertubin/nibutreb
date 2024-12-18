@@ -17,7 +17,7 @@ app.post('/api/shopify/products', async (req, res) => {
         return res.status(400).json({ error: 'Store URL and Admin Access Token are required.' });
     }
 
-    const shopifyApiUrl = https://${storeUrl}/admin/api/2024-01/products.json;
+    const shopifyApiUrl = `https://${storeUrl}/admin/api/2024-01/products.json`;
 
     try {
         // Fetch Shopify Admin API data
@@ -45,5 +45,5 @@ app.post('/api/shopify/products', async (req, res) => {
 
 // Start the server
 app.listen(PORT, () => {
-    console.log(Proxy server running at http://localhost:${PORT});
+    console.log(`Proxy server running at http://localhost:${PORT}`);
 });
