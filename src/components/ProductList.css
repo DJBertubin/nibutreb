@@ -1,123 +1,115 @@
-.product-table-container {
-  margin: 20px auto;
-  font-family: 'Roboto', sans-serif;
-  overflow-x: auto;
+.product-list-container {
+  font-family: Arial, sans-serif;
+  margin: 20px;
 }
 
-.product-table {
-  width: 100%;
-  max-width: 1200px;
-  margin: auto;
-  border-collapse: collapse;
-  table-layout: fixed; /* Fix table width */
-  background: #fff;
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
-  border-radius: 8px;
-  overflow: hidden;
-}
-
-.product-table th,
-.product-table td {
-  padding: 12px 15px;
-  border: 1px solid #ddd;
-  text-align: center;
-  font-size: 14px;
+h3 {
+  margin-bottom: 10px;
   color: #333;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  overflow: hidden;
 }
 
-.product-table th {
-  background-color: #343a40;
-  color: #fff;
-  text-transform: uppercase;
-  font-weight: 600;
-  letter-spacing: 1px;
+.modern-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  background: #fff;
 }
 
-.product-table tr {
-  transition: background-color 0.3s ease;
+.modern-table th,
+.modern-table td {
+  padding: 12px;
+  border: 1px solid #ddd;
+  text-align: left;
 }
 
-.product-table tr:hover {
+.modern-table th {
   background-color: #f5f5f5;
-  cursor: pointer;
+  font-weight: bold;
+  color: #555;
 }
 
-.product-table th:nth-child(1),
-.product-table td:nth-child(1) {
-  width: 150px; /* Fixed width for Action column */
+.modern-table tr:nth-child(even) {
+  background-color: #fafafa;
 }
 
-.product-table th:nth-child(2),
-.product-table td:nth-child(2) {
-  width: 200px; /* Fixed width for ID column */
+.modern-table tr:hover {
+  background-color: #f1f1f1;
+  transition: background-color 0.3s;
 }
 
-.product-table th:nth-child(3),
-.product-table td:nth-child(3) {
-  width: 400px; /* Fixed width for Title column */
+/* Fixed column widths */
+.modern-table .action-column {
+  width: 150px;
 }
 
-.product-table th:nth-child(4),
-.product-table td:nth-child(4) {
-  width: 150px; /* Fixed width for Price column */
+.modern-table .id-column {
+  width: 100px;
 }
 
-/* Action Buttons */
-.action-buttons {
-  display: flex;
-  justify-content: center;
-  gap: 6px;
+.modern-table .title-column {
+  width: 300px;
 }
 
-.action-buttons button {
-  margin: 0;
+.modern-table .price-column {
+  width: 100px;
+}
+
+.edit-button,
+.export-button {
   padding: 6px 12px;
+  margin-right: 8px;
   border: none;
-  color: white;
-  border-radius: 4px;
-  font-size: 12px;
   cursor: pointer;
-  font-weight: 500;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  transition: all 0.2s ease;
+  border-radius: 4px;
+  font-size: 14px;
 }
 
 .edit-button {
-  background-color: #28a745;
+  background-color: #4CAF50;
+  color: white;
 }
 
 .export-button {
-  background-color: #17a2b8;
+  background-color: #007BFF;
+  color: white;
 }
 
 .edit-button:hover {
-  background-color: #218838;
-  transform: scale(1.05);
+  background-color: #45a049;
 }
 
 .export-button:hover {
-  background-color: #138496;
-  transform: scale(1.05);
+  background-color: #0069d9;
 }
 
-/* Price Input */
-.price-input {
-  width: 80px;
-  text-align: center;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  padding: 6px;
+/* Pagination Styles */
+.pagination {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.pagination button {
+  background-color: #f1f1f1;
+  border: 1px solid #ddd;
+  padding: 8px 12px;
+  margin: 0 5px;
+  cursor: pointer;
   font-size: 14px;
-  background-color: #fdfdfd;
-  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
-  transition: border-color 0.3s;
 }
 
-.price-input:focus {
-  border-color: #007bff;
-  outline: none;
-  box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+.pagination button.active {
+  background-color: #007BFF;
+  color: white;
+  border-color: #007BFF;
+}
+
+.pagination button:hover {
+  background-color: #ddd;
+}
+
+.pagination button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
 }
