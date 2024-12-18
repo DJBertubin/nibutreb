@@ -1,3 +1,4 @@
+
 .product-list-container {
   font-family: Arial, sans-serif;
   margin: 20px;
@@ -14,6 +15,7 @@ h3 {
   margin-top: 10px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
   background: #fff;
+  table-layout: fixed; /* Ensure fixed column widths */
 }
 
 .modern-table th,
@@ -21,6 +23,9 @@ h3 {
   padding: 12px;
   border: 1px solid #ddd;
   text-align: left;
+  overflow: hidden; /* Hide overflow text */
+  text-overflow: ellipsis; /* Add ellipsis for overflow */
+  white-space: nowrap; /* Prevent wrapping */
 }
 
 .modern-table th {
