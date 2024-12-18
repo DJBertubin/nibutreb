@@ -55,7 +55,7 @@ const ProductList = ({ products }) => {
                                             Save
                                         </button>
                                     </td>
-                                    <td>{product.sku || 'N/A'}</td>
+                                    <td>{product.variants && product.variants.length > 0 ? product.variants[0].sku : 'N/A'}</td>
                                     <td className="product-name-column">{product.title}</td>
                                     <td>
                                         <input
