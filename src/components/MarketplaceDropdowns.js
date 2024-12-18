@@ -3,10 +3,13 @@
 import React from 'react';
 import './MarketplaceDropdowns.css';
 
-const MarketplaceDropdowns = ({ onAddNewSource, storeList }) => {
+const MarketplaceDropdowns = ({ onAddNewSource, storeList, onStoreSelect }) => {
     const handleDropdownChange = (event) => {
-        if (event.target.value === 'AddNew') {
+        const selectedValue = event.target.value;
+        if (selectedValue === 'AddNew') {
             onAddNewSource('source');
+        } else {
+            onStoreSelect(selectedValue); // Notify parent of selected store
         }
     };
 
@@ -16,7 +19,7 @@ const MarketplaceDropdowns = ({ onAddNewSource, storeList }) => {
                 <label htmlFor="import-source">
                     <i className="fas fa-download"></i> Import From
                 </label>
-                <select id="import-source" onChange={handleDropdownChange}>
+                <select id="import-source" onChange={handleDropdownChange} className="store-name-dropdown">
                     <option value="">Select Source</option>
                     {storeList.map((store, index) => (
                         <option key={index} value={store}>
@@ -32,8 +35,6 @@ const MarketplaceDropdowns = ({ onAddNewSource, storeList }) => {
                 </label>
                 <select id="export-target">
                     <option value="">Select Target</option>
-                    <option value="Walmart">Walmart</option>
-                    <option value="Shopify">Shopify</option>
                     <option value="AddNew">Add New Target</option>
                 </select>
             </div>
