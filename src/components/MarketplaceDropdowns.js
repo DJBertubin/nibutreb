@@ -1,9 +1,18 @@
 // File: src/components/MarketplaceDropdowns.js
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import './MarketplaceDropdowns.css';
 
-const MarketplaceDropdowns = ({ onAddNewSource, storeList, onStoreSelect }) => {
+const MarketplaceDropdowns = ({ onAddNewSource, storeList, onStoreSelect, storeName }) => {
+    useEffect(() => {
+        if (storeName) {
+            const importDropdown = document.querySelector('#import-source');
+            if (importDropdown) {
+                importDropdown.value = storeName;
+            }
+        }
+    }, [storeName]);
+
     const handleDropdownChange = (event) => {
         const selectedValue = event.target.value;
         if (selectedValue === 'AddNew') {
