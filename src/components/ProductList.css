@@ -44,15 +44,15 @@ h3 {
 }
 
 .modern-table .id-column {
-  width: 100px;
+  width: 200px;
 }
 
 .modern-table .title-column {
-  width: 300px;
+  width: 400px;
 }
 
 .modern-table .price-column {
-  width: 100px;
+  width: 150px;
 }
 
 .edit-button,
