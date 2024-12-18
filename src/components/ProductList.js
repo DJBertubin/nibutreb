@@ -7,10 +7,13 @@ const ProductList = ({ products }) => {
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
 
+    // Sort products by created date (newest first)
+    const sortedProducts = [...products].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
     // Calculate pagination
     const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-    const currentProducts = products.slice(indexOfFirstItem, indexOfLastItem);
+    const currentProducts = sortedProducts.slice(indexOfFirstItem, indexOfLastItem);
 
     const totalPages = Math.ceil(products.length / itemsPerPage);
 
@@ -40,6 +43,8 @@ const ProductList = ({ products }) => {
                                 <th>ID</th>
                                 <th>Title</th>
                                 <th>Price</th>
+                                <th>Quantity</th>
+                                <th>Created Date</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -60,6 +65,8 @@ const ProductList = ({ products }) => {
                                             ? `$${product.variants[0].price}`
                                             : 'N/A'}
                                     </td>
+                                    <td>{product.variants && product.variants.length > 0 ? product.variants[0].inventory_quantity : 'N/A'}</td>
+                                    <td>{new Date(product.created_at).toLocaleDateString()}</td>
                                 </tr>
                             ))}
                         </tbody>
