@@ -2,10 +2,15 @@ import React, { useState, useEffect } from 'react';
 import './MarketplaceDropdowns.css';
 
 const MarketplaceDropdowns = ({ onAddNewSource, storeName }) => {
-    const [selectedStore, setSelectedStore] = useState(storeName || '');
+    const [selectedStore, setSelectedStore] = useState('');
+    const [dropdownOptions, setDropdownOptions] = useState(['AddNew']);
 
     useEffect(() => {
         if (storeName) {
+            setDropdownOptions((prevOptions) => {
+                const updatedOptions = prevOptions.filter((option) => option !== 'AddNew');
+                return [storeName, ...updatedOptions, 'AddNew'];
+            });
             setSelectedStore(storeName);
         }
     }, [storeName]);
@@ -31,8 +36,11 @@ const MarketplaceDropdowns = ({ onAddNewSource, storeName }) => {
                     onChange={handleDropdownChange}
                     className="store-name-dropdown"
                 >
-                    {storeName && <option value={storeName}>{storeName}</option>}
-                    <option value="AddNew">Add New Source</option>
+                    {dropdownOptions.map((option, index) => (
+                        <option key={index} value={option}>
+                            {option === 'AddNew' ? 'Add New Source' : option}
+                        </option>
+                    ))}
                 </select>
             </div>
             <div className="dropdown">
