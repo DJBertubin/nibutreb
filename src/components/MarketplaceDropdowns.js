@@ -1,20 +1,20 @@
-// File: src/components/MarketplaceDropdowns.js
 
-import React, { useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import './MarketplaceDropdowns.css';
 
 const MarketplaceDropdowns = ({ onAddNewSource, storeList, onStoreSelect, storeName }) => {
+    const [selectedStore, setSelectedStore] = useState('');
+
     useEffect(() => {
-        if (storeName) {
-            const importDropdown = document.querySelector('#import-source');
-            if (importDropdown) {
-                importDropdown.value = storeName;
-            }
+        if (storeName && storeList.includes(storeName)) {
+            setSelectedStore(storeName);
         }
-    }, [storeName]);
+    }, [storeName, storeList]);
 
     const handleDropdownChange = (event) => {
         const selectedValue = event.target.value;
+        setSelectedStore(selectedValue);
+
         if (selectedValue === 'AddNew') {
             onAddNewSource('source');
         } else {
@@ -28,7 +28,12 @@ const MarketplaceDropdowns = ({ onAddNewSource, storeList, onStoreSelect, storeN
                 <label htmlFor="import-source">
                     <i className="fas fa-download"></i> Import From
                 </label>
-                <select id="import-source" onChange={handleDropdownChange} className="store-name-dropdown">
+                <select
+                    id="import-source"
+                    value={selectedStore}
+                    onChange={handleDropdownChange}
+                    className="store-name-dropdown"
+                >
                     <option value="">Select Source</option>
                     {storeList.map((store, index) => (
                         <option key={index} value={store}>
