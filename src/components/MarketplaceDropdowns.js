@@ -1,27 +1,16 @@
+// File: src/components/MarketplaceDropdowns.js
+
 import React, { useState, useEffect } from 'react';
 import './MarketplaceDropdowns.css';
 
-const MarketplaceDropdowns = ({ onAddNewSource, storeList, onStoreSelect, storeName }) => {
+const MarketplaceDropdowns = ({ storeName }) => {
     const [selectedStore, setSelectedStore] = useState(storeName || '');
 
     useEffect(() => {
-        if (storeName && storeList.includes(storeName)) {
+        if (storeName) {
             setSelectedStore(storeName);
         }
-    }, [storeName, storeList]);
-
-    const handleDropdownChange = (event) => {
-        const selectedValue = event.target.value;
-        if (selectedValue !== 'AddNew') {
-            setSelectedStore(selectedValue);
-        }
-
-        if (selectedValue === 'AddNew') {
-            onAddNewSource('source');
-        } else {
-            onStoreSelect(selectedValue); // Notify parent of selected store
-        }
-    };
+    }, [storeName]);
 
     return (
         <div className="marketplace-dropdowns">
@@ -32,25 +21,10 @@ const MarketplaceDropdowns = ({ onAddNewSource, storeList, onStoreSelect, storeN
                 <select
                     id="import-source"
                     value={selectedStore}
-                    onChange={handleDropdownChange}
                     className="store-name-dropdown"
+                    disabled
                 >
-                    <option value="">Select Source</option>
-                    {storeList.map((store, index) => (
-                        <option key={index} value={store}>
-                            {store}
-                        </option>
-                    ))}
-                    <option value="AddNew">Add New Source</option>
-                </select>
-            </div>
-            <div className="dropdown">
-                <label htmlFor="export-target">
-                    <i className="fas fa-upload"></i> Export To
-                </label>
-                <select id="export-target">
-                    <option value="">Select Target</option>
-                    <option value="AddNew">Add New Target</option>
+                    {selectedStore && <option value={selectedStore}>{selectedStore}</option>}
                 </select>
             </div>
         </div>
