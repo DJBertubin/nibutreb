@@ -12,7 +12,9 @@ const MarketplaceDropdowns = ({ onAddNewSource, storeName }) => {
 
     const handleDropdownChange = (event) => {
         const selectedValue = event.target.value;
-        setSelectedStore(selectedValue);
+        if (selectedValue !== 'AddNew') {
+            setSelectedStore(selectedValue);
+        }
 
         if (selectedValue === 'AddNew') {
             onAddNewSource('source');
@@ -31,12 +33,17 @@ const MarketplaceDropdowns = ({ onAddNewSource, storeName }) => {
                     onChange={handleDropdownChange}
                     className="store-name-dropdown"
                 >
-                    {selectedStore ? (
-                        <option value={selectedStore}>{selectedStore}</option>
+                    {storeName ? (
+                        <>
+                            <option value={storeName}>{storeName}</option>
+                            <option value="AddNew">Add New Source</option>
+                        </>
                     ) : (
-                        <option value="">Select Source</option>
+                        <>
+                            <option value="">Select Source</option>
+                            <option value="AddNew">Add New Source</option>
+                        </>
                     )}
-                    <option value="AddNew">Add New Source</option>
                 </select>
             </div>
             <div className="dropdown">
