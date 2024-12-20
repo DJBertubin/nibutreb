@@ -8,7 +8,12 @@ const MarketplaceDropdowns = ({ onAddNewSource, storeName }) => {
     useEffect(() => {
         if (storeName) {
             setSelectedStore(storeName);
-            setDropdownOptions([storeName]);
+            setDropdownOptions((prevOptions) => {
+                if (!prevOptions.includes(storeName)) {
+                    return [...prevOptions, storeName];
+                }
+                return prevOptions;
+            });
         }
     }, [storeName]);
 
