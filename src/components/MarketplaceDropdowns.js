@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import './MarketplaceDropdowns.css';
 
 const MarketplaceDropdowns = ({ onAddNewSource, storeList, onStoreSelect, storeName }) => {
-    const [selectedStore, setSelectedStore] = useState('');
+    const [selectedStore, setSelectedStore] = useState(storeName || '');
 
     useEffect(() => {
         if (storeName && storeList.includes(storeName)) {
@@ -22,12 +22,6 @@ const MarketplaceDropdowns = ({ onAddNewSource, storeList, onStoreSelect, storeN
             onStoreSelect(selectedValue); // Notify parent of selected store
         }
     };
-
-    useEffect(() => {
-        if (selectedStore && selectedStore !== 'AddNew') {
-            onStoreSelect(selectedStore); // Ensure parent is updated with the selected store
-        }
-    }, [selectedStore, onStoreSelect]);
 
     return (
         <div className="marketplace-dropdowns">
