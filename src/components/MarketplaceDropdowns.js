@@ -3,21 +3,21 @@ import './MarketplaceDropdowns.css';
 
 const MarketplaceDropdowns = ({ onAddNewSource, storeName }) => {
     const [selectedStore, setSelectedStore] = useState(storeName || '');
-    const [dropdownOptions, setDropdownOptions] = useState(storeName ? [storeName] : []);
+    const [dropdownOptions, setDropdownOptions] = useState(storeName ? [storeName, 'AddNew'] : ['AddNew']);
 
     useEffect(() => {
         if (storeName && !dropdownOptions.includes(storeName)) {
-            setDropdownOptions([storeName]);
+            setDropdownOptions((prevOptions) => [...new Set([storeName, ...prevOptions])]);
             setSelectedStore(storeName);
         }
-    }, [storeName, dropdownOptions]);
+    }, [storeName]);
 
     const handleDropdownChange = (event) => {
         const selectedValue = event.target.value;
-        if (selectedValue !== 'AddNew') {
-            setSelectedStore(selectedValue);
-        } else {
+        if (selectedValue === 'AddNew') {
             onAddNewSource('source');
+        } else {
+            setSelectedStore(selectedValue);
         }
     };
 
@@ -35,10 +35,9 @@ const MarketplaceDropdowns = ({ onAddNewSource, storeName }) => {
                 >
                     {dropdownOptions.map((store, index) => (
                         <option key={index} value={store}>
-                            {store}
+                            {store === 'AddNew' ? 'Add New Source' : store}
                         </option>
                     ))}
-                    <option value="AddNew">Add New Source</option>
                 </select>
             </div>
             <div className="dropdown">
