@@ -3,13 +3,16 @@ import './MarketplaceDropdowns.css';
 
 const MarketplaceDropdowns = ({ onAddNewSource, storeName }) => {
     const [selectedStore, setSelectedStore] = useState('');
-    const [dropdownOptions, setDropdownOptions] = useState(['AddNew']);
+    const [dropdownOptions, setDropdownOptions] = useState([]);
 
     useEffect(() => {
+        // Add storeName to the dropdown options and select it
         if (storeName) {
             setDropdownOptions((prevOptions) => {
-                const updatedOptions = prevOptions.filter((option) => option !== 'AddNew');
-                return [storeName, ...updatedOptions, 'AddNew'];
+                if (!prevOptions.includes(storeName)) {
+                    return [storeName];
+                }
+                return prevOptions;
             });
             setSelectedStore(storeName);
         }
@@ -17,10 +20,12 @@ const MarketplaceDropdowns = ({ onAddNewSource, storeName }) => {
 
     const handleDropdownChange = (event) => {
         const selectedValue = event.target.value;
+        if (selectedValue !== 'AddNew') {
+            setSelectedStore(selectedValue);
+        }
+
         if (selectedValue === 'AddNew') {
             onAddNewSource('source');
-        } else {
-            setSelectedStore(selectedValue);
         }
     };
 
@@ -36,11 +41,16 @@ const MarketplaceDropdowns = ({ onAddNewSource, storeName }) => {
                     onChange={handleDropdownChange}
                     className="store-name-dropdown"
                 >
-                    {dropdownOptions.map((option, index) => (
-                        <option key={index} value={option}>
-                            {option === 'AddNew' ? 'Add New Source' : option}
-                        </option>
-                    ))}
+                    {dropdownOptions.length > 0 ? (
+                        dropdownOptions.map((store, index) => (
+                            <option key={index} value={store}>
+                                {store}
+                            </option>
+                        ))
+                    ) : (
+                        <option value="">Select Source</option>
+                    )}
+                    <option value="AddNew">Add New Source</option>
                 </select>
             </div>
             <div className="dropdown">
