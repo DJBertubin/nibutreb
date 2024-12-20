@@ -1,9 +1,7 @@
-// File: src/components/MarketplaceDropdowns.js
-
 import React, { useState, useEffect } from 'react';
 import './MarketplaceDropdowns.css';
 
-const MarketplaceDropdowns = ({ storeName }) => {
+const MarketplaceDropdowns = ({ onAddNewSource, storeName }) => {
     const [selectedStore, setSelectedStore] = useState(storeName || '');
 
     useEffect(() => {
@@ -11,6 +9,15 @@ const MarketplaceDropdowns = ({ storeName }) => {
             setSelectedStore(storeName);
         }
     }, [storeName]);
+
+    const handleDropdownChange = (event) => {
+        const selectedValue = event.target.value;
+        setSelectedStore(selectedValue);
+
+        if (selectedValue === 'AddNew') {
+            onAddNewSource('source');
+        }
+    };
 
     return (
         <div className="marketplace-dropdowns">
@@ -21,10 +28,24 @@ const MarketplaceDropdowns = ({ storeName }) => {
                 <select
                     id="import-source"
                     value={selectedStore}
+                    onChange={handleDropdownChange}
                     className="store-name-dropdown"
-                    disabled
                 >
-                    {selectedStore && <option value={selectedStore}>{selectedStore}</option>}
+                    {storeName ? (
+                        <option value={storeName}>{storeName}</option>
+                    ) : (
+                        <option value="">Select Source</option>
+                    )}
+                    <option value="AddNew">Add New Source</option>
+                </select>
+            </div>
+            <div className="dropdown">
+                <label htmlFor="export-target">
+                    <i className="fas fa-upload"></i> Export To
+                </label>
+                <select id="export-target">
+                    <option value="">Select Target</option>
+                    <option value="AddNew">Add New Target</option>
                 </select>
             </div>
         </div>
