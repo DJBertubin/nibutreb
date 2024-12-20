@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import './MarketplaceDropdowns.css';
 
 const MarketplaceDropdowns = ({ onAddNewSource, storeName }) => {
-    const [selectedStore, setSelectedStore] = useState(storeName || '');
+    const [selectedStore, setSelectedStore] = useState('');
 
     useEffect(() => {
         if (storeName) {
@@ -31,8 +31,8 @@ const MarketplaceDropdowns = ({ onAddNewSource, storeName }) => {
                     onChange={handleDropdownChange}
                     className="store-name-dropdown"
                 >
-                    {storeName ? (
-                        <option value={storeName}>{storeName}</option>
+                    {selectedStore ? (
+                        <option value={selectedStore}>{selectedStore}</option>
                     ) : (
                         <option value="">Select Source</option>
                     )}
