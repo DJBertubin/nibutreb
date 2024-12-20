@@ -1,3 +1,5 @@
+// File: src/components/MarketplaceDropdowns.js
+
 import React, { useState, useEffect } from 'react';
 import './MarketplaceDropdowns.css';
 
@@ -6,13 +8,14 @@ const MarketplaceDropdowns = ({ onAddNewSource, storeName }) => {
     const [dropdownOptions, setDropdownOptions] = useState([]);
 
     useEffect(() => {
-        // Add storeName to the dropdown options and select it
+        // Add storeName to the dropdown options and select it automatically
         if (storeName) {
             setDropdownOptions((prevOptions) => {
-                if (!prevOptions.includes(storeName)) {
-                    return [storeName];
+                const updatedOptions = [...prevOptions];
+                if (!updatedOptions.includes(storeName)) {
+                    updatedOptions.push(storeName);
                 }
-                return prevOptions;
+                return updatedOptions;
             });
             setSelectedStore(storeName);
         }
