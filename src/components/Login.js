@@ -22,7 +22,7 @@ const Login = ({ setLoggedIn }) => {
             const { token } = await response.json();
             localStorage.setItem('token', token);
             setLoggedIn(true);
-            window.location.href = '/admin-dashboard'; // Adjust based on role
+            window.location.href = '/dashboard';
         } catch (err) {
             setError(err.message);
         }

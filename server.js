@@ -31,27 +31,20 @@ app.post('/api/login', (req, res) => {
         return res.status(401).json({ error: 'Invalid credentials' });
     }
 
-    const role = username === 'admin' ? 'admin' : 'client';
-    const token = jwt.sign({ username, role }, JWT_SECRET, { expiresIn: '1h' });
+    const token = jwt.sign({ username, role: username === 'admin' ? 'admin' : 'client' }, JWT_SECRET, { expiresIn: '1h' });
     res.status(200).json({ token });
 });
 
-// Example protected route
-app.get('/api/protected', (req, res) => {
-    const token = req.headers['authorization'];
-    if (!token) return res.status(401).json({ error: 'Access Denied' });
-
-    jwt.verify(token, JWT_SECRET, (err, user) => {
-        if (err) return res.status(403).json({ error: 'Invalid Token' });
-        res.status(200).json({ message: 'Protected Data', user });
-    });
-});
-
-// Catch-All for Undefined Routes
+// Catch-all for undefined routes
 app.use((req, res) => {
     res.status(404).json({ error: 'Route not found' });
 });
 
-app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
-});
+// Start server
+if (process.env.NODE_ENV !== 'vercel') {
+    app.listen(PORT, () => {
+        console.log(`Server running on http://localhost:${PORT}`);
+    });
+}
+
+module.exports = app; // Export for Vercel
