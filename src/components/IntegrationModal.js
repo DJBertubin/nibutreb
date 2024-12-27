@@ -42,31 +42,23 @@ const IntegrationModal = ({ onClose, onFetchSuccess, onAddStoreName }) => {
 
             if (!response.ok) {
                 const errorText = await response.text();
-                console.error('Proxy API Error:', errorText);
-                throw new Error(`Request failed: ${response.status} - ${errorText}`);
+                throw new Error(`Shopify API Error: ${errorText}`);
             }
 
-            const result = await response.json();
-            console.log('Proxy API Response:', result);
-
-            if (!result?.products) {
-                throw new Error('No products returned. Verify API permissions and Admin Access Token.');
-            }
-
+            const data = await response.json();
             const storeName = extractStoreName(storeUrl);
-            setStatusMessage(`Shopify Admin data fetched successfully from ${storeName}!`);
+            setStatusMessage(`Successfully fetched data from ${storeName}`);
 
             if (typeof onAddStoreName === 'function') {
                 onAddStoreName(storeName, true);
             }
 
             if (typeof onFetchSuccess === 'function') {
-                onFetchSuccess(result.products);
+                onFetchSuccess(data.products);
             }
 
             onClose();
         } catch (error) {
-            console.error('Error fetching from proxy:', error.message);
             setStatusMessage(`Failed to connect: ${error.message}`);
         }
     };

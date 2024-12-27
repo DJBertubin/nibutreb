@@ -7,21 +7,24 @@ dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
-
 const JWT_SECRET = process.env.JWT_SECRET;
 
 app.use(cors());
 app.use(express.json());
 
-// Dummy user data (replace with DB queries)
+// Dummy user data (use a database in production)
 const users = {
     admin: bcrypt.hashSync('admin123', 10),
     client: bcrypt.hashSync('client123', 10),
 };
 
-// Login Route
-app.post('/api/login', async (req, res) => {
+// Login route
+app.post('/api/login', (req, res) => {
     const { username, password } = req.body;
+
+    if (!username || !password) {
+        return res.status(400).json({ error: 'Username and password are required' });
+    }
 
     const hashedPassword = users[username];
     if (!hashedPassword || !bcrypt.compareSync(password, hashedPassword)) {
@@ -33,20 +36,41 @@ app.post('/api/login', async (req, res) => {
     res.status(200).json({ token });
 });
 
-// Protected Route Example
-app.get('/api/client-data', (req, res) => {
-    const token = req.headers['authorization'];
-    if (!token) return res.status(401).json({ error: 'Access Denied' });
+// Shopify integration route
+app.post('/api/shopify/products', async (req, res) => {
+    try {
+        const { storeUrl, adminAccessToken } = req.body;
 
-    jwt.verify(token, JWT_SECRET, (err, user) => {
-        if (err) return res.status(403).json({ error: 'Invalid Token' });
-        if (user.role !== 'client') return res.status(403).json({ error: 'Forbidden' });
+        if (!storeUrl || !adminAccessToken) {
+            return res.status(400).json({ error: 'Store URL and Admin Access Token are required' });
+        }
 
-        const clientData = [{ id: 1, name: 'Product A' }, { id: 2, name: 'Product B' }];
-        res.status(200).json(clientData);
-    });
+        const shopifyApiUrl = `https://${storeUrl}/admin/api/2024-01/products.json`;
+        const response = await fetch(shopifyApiUrl, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Shopify-Access-Token': adminAccessToken,
+            },
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            return res.status(response.status).json({ error: errorText });
+        }
+
+        const data = await response.json();
+        res.status(200).json(data);
+    } catch (error) {
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+// Catch-all for undefined routes
+app.use((req, res) => {
+    res.status(404).json({ error: 'Route not found' });
 });
 
 app.listen(PORT, () => {
-    console.log(`Server running at http://localhost:${PORT}`);
+    console.log(`Server running on http://localhost:${PORT}`);
 });

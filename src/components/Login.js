@@ -15,14 +15,14 @@ const Login = ({ setLoggedIn }) => {
             });
 
             if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.error || 'Login failed');
+                const errorText = await response.text();
+                throw new Error(errorText || 'Login failed');
             }
 
             const { token } = await response.json();
             localStorage.setItem('token', token);
             setLoggedIn(true);
-            window.location.href = '/admin-dashboard'; // Adjust redirection based on role
+            window.location.href = '/admin-dashboard'; // Adjust based on user role
         } catch (err) {
             setError(err.message);
         }
