@@ -11,11 +11,10 @@ const AdminDashboard = () => {
     const [selectedStore, setSelectedStore] = useState('');
     const [clients, setClients] = useState([]);
     const [selectedClient, setSelectedClient] = useState('');
-    const [clientDetails, setClientDetails] = useState(null); // Stores details of the selected client
+    const [clientDetails, setClientDetails] = useState(null);
     const [loading, setLoading] = useState(false);
-    const [error, setError] = useState(null); // Error handling for better user feedback
+    const [error, setError] = useState(null);
 
-    // Fetch clients list on component mount
     useEffect(() => {
         async function fetchClients() {
             try {
@@ -30,18 +29,17 @@ const AdminDashboard = () => {
         fetchClients();
     }, []);
 
-    // Fetch products for the selected client
     useEffect(() => {
         if (selectedClient) {
             async function fetchProducts() {
                 setLoading(true);
-                setError(null); // Reset error state
+                setError(null);
                 try {
                     const response = await fetch(`/api/clients/${selectedClient}/products`, { credentials: 'include' });
                     if (!response.ok) throw new Error('Failed to fetch products for selected client');
                     const data = await response.json();
                     setProductData(data.products);
-                    setClientDetails(data.clientDetails); // Assuming backend returns client details
+                    setClientDetails(data.clientDetails);
                 } catch (error) {
                     setError(error.message);
                 } finally {

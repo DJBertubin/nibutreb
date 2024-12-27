@@ -14,13 +14,12 @@ const IntegrationModal = ({ onClose, onFetchSuccess, onAddStoreName }) => {
     };
 
     const validateShopifyUrl = (url) => {
-        const trimmedUrl = url.trim().toLowerCase();
         const regex = /^[a-zA-Z0-9][a-zA-Z0-9-_]*\.myshopify\.com$/;
-        return regex.test(trimmedUrl);
+        return regex.test(url.trim().toLowerCase());
     };
 
     const extractStoreName = (url) => {
-        return url.split('.myshopify.com')[0]; // Extract store name from URL
+        return url.split('.myshopify.com')[0];
     };
 
     const handleShopifyAdminConnect = async () => {
@@ -58,7 +57,7 @@ const IntegrationModal = ({ onClose, onFetchSuccess, onAddStoreName }) => {
             setStatusMessage(`Shopify Admin data fetched successfully from ${storeName}!`);
 
             if (typeof onAddStoreName === 'function') {
-                onAddStoreName(storeName, true); // Pass the store name to be added to the dropdown
+                onAddStoreName(storeName, true);
             }
 
             if (typeof onFetchSuccess === 'function') {
