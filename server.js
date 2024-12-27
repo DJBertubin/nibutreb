@@ -17,7 +17,7 @@ if (!JWT_SECRET) {
 app.use(cors());
 app.use(express.json());
 
-// Dummy user data (use a database in production)
+// Dummy user data
 const users = {
     admin: bcrypt.hashSync('admin123', 10),
     client: bcrypt.hashSync('client123', 10),
@@ -46,7 +46,6 @@ app.use((req, res) => {
     res.status(404).json({ error: 'Route not found' });
 });
 
-// Start server for local development
 if (process.env.NODE_ENV !== 'vercel') {
     app.listen(PORT, () => {
         console.log(`Server running on http://localhost:${PORT}`);

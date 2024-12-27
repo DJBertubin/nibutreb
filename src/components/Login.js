@@ -8,6 +8,7 @@ const Login = ({ setLoggedIn }) => {
     const handleLogin = async () => {
         setError('');
         try {
+            // API call to backend
             const response = await fetch('/api/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -22,7 +23,7 @@ const Login = ({ setLoggedIn }) => {
             const { token } = await response.json();
             localStorage.setItem('token', token);
             setLoggedIn(true);
-            window.location.href = '/dashboard';
+            window.location.href = '/dashboard'; // Redirect after successful login
         } catch (err) {
             setError(err.message);
         }
@@ -33,15 +34,16 @@ const Login = ({ setLoggedIn }) => {
             <h1>Login</h1>
             {error && <p style={{ color: 'red' }}>{error}</p>}
             <input
+                type="text"
                 placeholder="Username"
-                onChange={(e) => setUsername(e.target.value)}
                 value={username}
+                onChange={(e) => setUsername(e.target.value)}
             />
             <input
-                placeholder="Password"
                 type="password"
-                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Password"
                 value={password}
+                onChange={(e) => setPassword(e.target.value)}
             />
             <button onClick={handleLogin}>Login</button>
         </div>
