@@ -36,37 +36,18 @@ app.post('/api/login', (req, res) => {
     res.status(200).json({ token });
 });
 
-// Shopify integration route
-app.post('/api/shopify/products', async (req, res) => {
-    try {
-        const { storeUrl, adminAccessToken } = req.body;
+// Example protected route
+app.get('/api/protected', (req, res) => {
+    const token = req.headers['authorization'];
+    if (!token) return res.status(401).json({ error: 'Access Denied' });
 
-        if (!storeUrl || !adminAccessToken) {
-            return res.status(400).json({ error: 'Store URL and Admin Access Token are required' });
-        }
-
-        const shopifyApiUrl = `https://${storeUrl}/admin/api/2024-01/products.json`;
-        const response = await fetch(shopifyApiUrl, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-Shopify-Access-Token': adminAccessToken,
-            },
-        });
-
-        if (!response.ok) {
-            const errorText = await response.text();
-            return res.status(response.status).json({ error: errorText });
-        }
-
-        const data = await response.json();
-        res.status(200).json(data);
-    } catch (error) {
-        res.status(500).json({ error: 'Internal Server Error' });
-    }
+    jwt.verify(token, JWT_SECRET, (err, user) => {
+        if (err) return res.status(403).json({ error: 'Invalid Token' });
+        res.status(200).json({ message: 'Protected Data', user });
+    });
 });
 
-// Catch-all for undefined routes
+// Catch-All for Undefined Routes
 app.use((req, res) => {
     res.status(404).json({ error: 'Route not found' });
 });
