@@ -1,13 +1,17 @@
 .sidebar {
   display: flex;
   flex-direction: column;
-  justify-content: space-between; /* Ensure elements are distributed properly */
+  justify-content: space-between;
   height: 100vh; /* Full height of the viewport */
   width: 250px;
   background-color: #343a40;
-  padding: 20px; /* General padding inside the sidebar */
+  padding: 20px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-  overflow: hidden; /* Prevent overflow issues */
+  overflow-y: auto; /* Allow scrolling if content overflows */
+  position: fixed; /* Fix the sidebar to the left of the screen */
+  top: 0;
+  left: 0;
+  z-index: 10; /* Ensure it stays above other content */
 }
 
 .sidebar h2 {

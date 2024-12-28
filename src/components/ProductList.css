@@ -9,7 +9,7 @@ h3 {
 }
 
 .modern-table {
-  width: 80%;
+  width: calc(100% - 40px); /* Adapt table to available space */
   border-collapse: collapse;
   margin-top: 10px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
@@ -44,27 +44,27 @@ h3 {
 
 /* Fixed column widths */
 .checkbox-column {
-  width: 2%;
+  width: 5%;
 }
 
 .sku-column {
-  width: 5%;
+  width: 10%;
 }
 
 .product-name-column {
-  width: 30%; /* Adjusted width for Product Name column */
+  width: 30%;
 }
 
 .price-column {
-  width: 5%;
+  width: 10%;
 }
 
 .quantity-column {
-  width: 5%;
+  width: 10%;
 }
 
 .date-column {
-  width: 5%;
+  width: 10%;
 }
 
 /* Pagination Styles */

@@ -5,7 +5,7 @@ const Sidebar = ({ userType, onLogout }) => {
     return (
         <div className="sidebar">
             <h2>{userType} Panel</h2>
-            <ul className="menu">
+            <ul>
                 <li><a href="/"><i className="fas fa-home"></i> Dashboard</a></li>
                 <li><a href="#"><i className="fas fa-box"></i> Products</a></li>
                 <li><a href="#"><i className="fas fa-shopping-cart"></i> Orders</a></li>
