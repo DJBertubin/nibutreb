@@ -43,13 +43,10 @@ const AdminDashboard = ({ setIsLoggedIn }) => {
 
     return (
         <div className="dashboard">
-            <Sidebar userType="Admin" />
+            <Sidebar userType="Admin" onLogout={handleLogout} />
             <div className="main-content">
                 <div className="header">
                     <h1>Admin Dashboard</h1>
-                    <button onClick={handleLogout} style={{ marginTop: '20px' }}>
-                        Logout
-                    </button>
                 </div>
                 <ClientProfile name="Jane Doe" clientId="98765" imageUrl="https://via.placeholder.com/100" />
                 <MarketplaceDropdowns onAddNewSource={handleShowModal} storeList={stores} />
