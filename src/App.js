@@ -1,35 +1,17 @@
-import React, { useState, useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import React from 'react';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import AdminDashboard from './pages/AdminDashboard';
-import ClientDashboard from './pages/ClientDashboard';
+import Products from './pages/Products';
 import Login from './components/Login';
 
 const App = () => {
-    const [isLoggedIn, setIsLoggedIn] = useState(false);
-
-    useEffect(() => {
-        const token = localStorage.getItem('token');
-        if (token) {
-            setIsLoggedIn(true);
-        }
-    }, []);
-
     return (
         <BrowserRouter>
             <Routes>
-                <Route
-                    path="/admin-dashboard"
-                    element={isLoggedIn ? <AdminDashboard setIsLoggedIn={setIsLoggedIn} /> : <Navigate to="/login" />}
-                />
-                <Route
-                    path="/client-dashboard"
-                    element={isLoggedIn ? <ClientDashboard setIsLoggedIn={setIsLoggedIn} /> : <Navigate to="/login" />}
-                />
-                <Route
-                    path="/login"
-                    element={<Login setLoggedIn={setIsLoggedIn} />}
-                />
-                <Route path="*" element={<Navigate to="/login" />} />
+                <Route path="/admin-dashboard" element={<AdminDashboard />} />
+                <Route path="/products" element={<Products />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="*" element={<Login />} /> {/* Default route */}
             </Routes>
         </BrowserRouter>
     );
