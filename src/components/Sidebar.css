@@ -1,17 +1,15 @@
 .sidebar {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  height: 100vh; /* Full height of the viewport */
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100%;
   width: 250px;
   background-color: #343a40;
   padding: 20px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-  overflow-y: auto; /* Allow scrolling if content overflows */
-  position: fixed; /* Fix the sidebar to the left of the screen */
-  top: 0;
-  left: 0;
-  z-index: 10; /* Ensure it stays above other content */
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
 }
 
 .sidebar h2 {
@@ -25,7 +23,7 @@
 .sidebar ul {
   list-style: none;
   padding: 0;
-  flex-grow: 1; /* Push the footer down */
+  flex-grow: 1;
 }
 
 .sidebar ul li {
@@ -53,21 +51,20 @@
 }
 
 .sidebar-footer {
-  margin-top: auto; /* Push the footer down */
-  padding: 20px 0 40px; /* Add more space at the bottom */
-  text-align: center; /* Center-align the button */
+  margin-top: auto;
+  padding: 20px 0 40px;
+  text-align: center;
 }
 
 .logout-button {
-  width: 100%; /* Full width inside the sidebar */
-  padding: 12px; /* Ensure enough padding for the button */
+  width: 100%;
+  padding: 12px;
   background-color: #ff4d4d;
   color: #ffffff;
   border: none;
   border-radius: 5px;
   cursor: pointer;
   font-size: 1rem;
-  text-align: center;
   display: flex;
   align-items: center;
   justify-content: center;

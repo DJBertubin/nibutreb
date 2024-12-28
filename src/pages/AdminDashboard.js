@@ -32,9 +32,9 @@ const AdminDashboard = () => {
     };
 
     return (
-        <div style={{ display: 'flex' }}>
+        <div style={{ display: 'flex', height: '100vh' }}>
             <Sidebar userType="Admin" />
-            <div style={{ marginLeft: '250px', width: '100%' }}>
+            <div style={{ flexGrow: 1, padding: '20px', overflow: 'auto' }}>
                 <div className="main-content">
                     <ClientProfile name="Jane Doe" clientId="98765" imageUrl="https://via.placeholder.com/100" />
                     <MarketplaceDropdowns onAddNewSource={handleShowModal} storeList={stores} />
