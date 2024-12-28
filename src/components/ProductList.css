@@ -44,11 +44,11 @@ h3 {
 
 /* Fixed column widths */
 .checkbox-column {
-  width: 5%;
+  width: 2%;
 }
 
 .sku-column {
-  width: 10%;
+  width: 5%;
 }
 
 .product-name-column {
@@ -56,15 +56,15 @@ h3 {
 }
 
 .price-column {
-  width: 15%;
+  width: 5%;
 }
 
 .quantity-column {
-  width: 10%;
+  width: 5%;
 }
 
 .date-column {
-  width: 15%;
+  width: 5%;
 }
 
 /* Pagination Styles */
