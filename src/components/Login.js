@@ -1,19 +1,23 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import './Login.css';
 
-const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080';
+const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
-const Login = () => {
+const Login = ({ setLoggedIn }) => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
 
+    // Redirect if already logged in
     useEffect(() => {
         const token = localStorage.getItem('token');
-        if (token) navigate('/admin-dashboard');
+        if (token) {
+            const role = localStorage.getItem('role');
+            navigate(role === 'admin' ? '/admin-dashboard' : '/client-dashboard');
+        }
     }, [navigate]);
 
     const handleLogin = async () => {
@@ -28,12 +32,18 @@ const Login = () => {
 
             if (!response.ok) {
                 const errorData = await response.json();
-                throw new Error(errorData.message || 'Login failed');
+                throw new Error(errorData.message || 'Invalid username or password');
             }
 
             const data = await response.json();
             localStorage.setItem('token', data.token);
-            navigate('/admin-dashboard');
+            localStorage.setItem('role', data.role);
+
+            if (typeof setLoggedIn === 'function') {
+                setLoggedIn(true);
+            }
+
+            navigate(data.role === 'admin' ? '/admin-dashboard' : '/client-dashboard');
         } catch (err) {
             setError(err.message);
         } finally {
@@ -51,18 +61,24 @@ const Login = () => {
                     placeholder="Username"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
+                    className="input-field"
                 />
                 <input
                     type="password"
                     placeholder="Password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
+                    className="input-field"
                 />
-                <button onClick={handleLogin} disabled={loading}>
+                <button
+                    onClick={handleLogin}
+                    className="login-button"
+                    disabled={loading}
+                >
                     {loading ? 'Logging in...' : 'Login'}
                 </button>
                 <p>
-                    Don't have an account? <Link to="/signup">Sign Up</Link>
+                    Don't have an account? <a href="/signup" className="signup-link">Sign Up</a>
                 </p>
             </div>
         </div>
