@@ -1,24 +1,25 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import ProductList from '../components/ProductList';
 import MarketplaceDropdowns from '../components/MarketplaceDropdowns';
-import ClientProfile from '../components/ClientProfile';
 import IntegrationModal from '../components/IntegrationModal';
 
 const AdminDashboard = ({ setIsLoggedIn }) => {
     const [showIntegrationModal, setShowIntegrationModal] = useState(false);
     const [integrationType, setIntegrationType] = useState('');
     const [productData, setProductData] = useState([]);
-    const [stores, setStores] = useState(['Walmart', 'Shopify']); // Initial stores list
+    const [stores, setStores] = useState(['Walmart', 'Shopify']);
+    const [clients, setClients] = useState([]); // List of clients
+    const [selectedClient, setSelectedClient] = useState(null); // Currently selected client
 
     const navigate = useNavigate();
 
     const handleLogout = () => {
-        localStorage.removeItem('token'); // Clear token
-        localStorage.removeItem('role');  // Clear role
-        setIsLoggedIn(false);            // Reset login state
-        navigate('/login');              // Redirect to login page
+        localStorage.removeItem('token');
+        localStorage.removeItem('role');
+        setIsLoggedIn(false);
+        navigate('/login');
     };
 
     const handleShowModal = (type) => {
@@ -41,27 +42,61 @@ const AdminDashboard = ({ setIsLoggedIn }) => {
         }
     };
 
+    const fetchClients = async () => {
+        // Simulating API call to fetch clients
+        const clientList = [
+            { id: '123', name: 'Client A' },
+            { id: '456', name: 'Client B' },
+            { id: '789', name: 'Client C' },
+        ];
+        setClients(clientList);
+    };
+
+    const handleClientChange = (event) => {
+        const clientId = event.target.value;
+        const client = clients.find((c) => c.id === clientId);
+        setSelectedClient(client);
+    };
+
+    useEffect(() => {
+        fetchClients();
+    }, []);
+
     return (
         <div className="dashboard">
             <Sidebar userType="Admin" onLogout={handleLogout} />
             <div className="main-content">
                 <div className="header">
                     <h1>Admin Dashboard</h1>
+                    <select onChange={handleClientChange} value={selectedClient?.id || ''}>
+                        <option value="" disabled>
+                            Select a Client
+                        </option>
+                        {clients.map((client) => (
+                            <option key={client.id} value={client.id}>
+                                {client.name}
+                            </option>
+                        ))}
+                    </select>
                 </div>
-                <ClientProfile name="Jane Doe" clientId="98765" imageUrl="https://via.placeholder.com/100" />
-                <MarketplaceDropdowns onAddNewSource={handleShowModal} storeList={stores} />
-                <div className="content">
-                    <h2 className="section-title">Products Overview</h2>
-                    <div className="products-table">
-                        <ProductList products={productData} />
-                    </div>
-                </div>
-                {showIntegrationModal && (
-                    <IntegrationModal
-                        onClose={handleCloseModal}
-                        onFetchSuccess={handleShopifyConnect}
-                        onAddStoreName={handleAddStoreName}
-                    />
+                {selectedClient && (
+                    <>
+                        <h2>{selectedClient.name}'s Data</h2>
+                        <MarketplaceDropdowns onAddNewSource={handleShowModal} storeList={stores} />
+                        <div className="content">
+                            <h2 className="section-title">Products Overview</h2>
+                            <div className="products-table">
+                                <ProductList products={productData} />
+                            </div>
+                        </div>
+                        {showIntegrationModal && (
+                            <IntegrationModal
+                                onClose={handleCloseModal}
+                                onFetchSuccess={handleShopifyConnect}
+                                onAddStoreName={handleAddStoreName}
+                            />
+                        )}
+                    </>
                 )}
             </div>
         </div>
