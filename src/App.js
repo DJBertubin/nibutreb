@@ -5,7 +5,7 @@ import ClientDashboard from './pages/ClientDashboard';
 import Login from './components/Login';
 
 const App = () => {
-    const [isLoggedIn, setIsLoggedIn] = useState(false); // Manage login state
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
 
     return (
         <BrowserRouter>

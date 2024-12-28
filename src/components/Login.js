@@ -22,7 +22,7 @@ const Login = ({ setLoggedIn }) => {
             const data = await response.json();
             localStorage.setItem('token', data.token);
             localStorage.setItem('role', data.role);
-            setLoggedIn(true); // Update login state
+            setLoggedIn(true);
         } catch (err) {
             setError(err.message);
         }
