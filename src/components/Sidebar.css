@@ -1,24 +1,27 @@
 .sidebar {
-  width: 250px; /* Fixed width */
-  min-height: 100vh;
-  background-color: #333;
-  color: #fff;
-  position: fixed; /* Keeps sidebar fixed */
-  top: 0;
-  left: 0;
-  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between; /* Ensure elements are distributed properly */
+  height: 100vh; /* Full height of the viewport */
+  width: 250px;
+  background-color: #343a40;
+  padding: 20px; /* General padding inside the sidebar */
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  overflow: hidden; /* Prevent overflow issues */
 }
 
 .sidebar h2 {
   text-align: center;
-  margin: 20px 0;
-  font-size: 18px;
+  margin-bottom: 20px;
+  font-weight: 500;
+  font-size: 1.25rem;
+  color: #ffffff;
 }
 
 .sidebar ul {
   list-style: none;
   padding: 0;
-  margin: 0;
+  flex-grow: 1; /* Push the footer down */
 }
 
 .sidebar ul li {
@@ -26,26 +29,52 @@
 }
 
 .sidebar ul li a {
-  color: #fff;
+  color: #ffffff;
   text-decoration: none;
-  padding: 10px 20px;
-  display: block;
-  transition: background-color 0.3s;
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  border-radius: 5px;
+  transition: all 0.3s;
+}
+
+.sidebar ul li a i {
+  margin-right: 10px;
+  font-size: 1.2rem;
 }
 
 .sidebar ul li a:hover {
-  background-color: #444;
+  background-color: #495057;
+  color: #ffffff;
+}
+
+.sidebar-footer {
+  margin-top: auto; /* Push the footer down */
+  padding: 20px 0 40px; /* Add more space at the bottom */
+  text-align: center; /* Center-align the button */
 }
 
 .logout-button {
-  position: absolute;
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  background-color: red;
-  color: white;
+  width: 100%; /* Full width inside the sidebar */
+  padding: 12px; /* Ensure enough padding for the button */
+  background-color: #ff4d4d;
+  color: #ffffff;
   border: none;
-  padding: 10px 20px;
   border-radius: 5px;
   cursor: pointer;
+  font-size: 1rem;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.3s;
+}
+
+.logout-button i {
+  margin-right: 10px;
+  font-size: 1.2rem;
+}
+
+.logout-button:hover {
+  background-color: #ff1a1a;
 }
