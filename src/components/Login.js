@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-const Login = ({ setLoggedIn }) => {
+const Login = ({ setLoggedIn, setRole }) => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
@@ -8,22 +8,27 @@ const Login = ({ setLoggedIn }) => {
     const handleLogin = async () => {
         setError('');
         try {
-            // API call to backend
-            const response = await fetch('/api/login', {
+            const response = await fetch('http://localhost:5001/api/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username, password }),
             });
 
             if (!response.ok) {
-                const errorText = await response.text();
-                throw new Error(errorText || 'Login failed');
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Login failed');
             }
 
-            const { token } = await response.json();
-            localStorage.setItem('token', token);
-            setLoggedIn(true);
-            window.location.href = '/dashboard'; // Redirect after successful login
+            const data = await response.json();
+            if (!data.token || !data.role) {
+                throw new Error('Invalid response from server');
+            }
+
+            localStorage.setItem('token', data.token); // Save token
+            localStorage.setItem('role', data.role);  // Save role
+            console.log('Logged in successfully with role:', data.role); // Debug log
+            setRole(data.role);                      // Update role in state
+            setLoggedIn(true);                       // Update logged-in state
         } catch (err) {
             setError(err.message);
         }

@@ -1,70 +1,68 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import ProductList from '../components/ProductList';
+import MarketplaceDropdowns from '../components/MarketplaceDropdowns';
+import ClientProfile from '../components/ClientProfile';
+import IntegrationModal from '../components/IntegrationModal';
 
-const ClientDashboard = () => {
-    const [clientData, setClientData] = useState([]);
-    const [clientDetails, setClientDetails] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
+const ClientDashboard = ({ setIsLoggedIn }) => {
+    const [showIntegrationModal, setShowIntegrationModal] = useState(false);
+    const [integrationType, setIntegrationType] = useState('');
+    const [productData, setProductData] = useState([]);
+    const [stores, setStores] = useState(['Shopify']); // Initial stores list for clients
 
-    useEffect(() => {
-        // Fetch client-specific details and data
-        const fetchClientData = async () => {
-            setLoading(true);
-            setError(null); // Reset any previous errors
+    const navigate = useNavigate();
 
-            try {
-                // Fetch client-specific data
-                const response = await fetch('/api/client-dashboard', {
-                    credentials: 'include', // Include cookies for authentication
-                });
-                if (!response.ok) {
-                    throw new Error('Failed to fetch client data');
-                }
-                const data = await response.json();
-                setClientData(data.products || []);
-                setClientDetails(data.clientDetails || {});
-            } catch (err) {
-                setError(err.message);
-            } finally {
-                setLoading(false);
-            }
-        };
+    const handleLogout = () => {
+        localStorage.removeItem('token'); // Clear token
+        localStorage.removeItem('role');  // Clear role
+        setIsLoggedIn(false);            // Reset login state
+        navigate('/login');              // Redirect to login page
+    };
 
-        fetchClientData();
-    }, []);
+    const handleShowModal = (type) => {
+        setIntegrationType(type);
+        setShowIntegrationModal(true);
+    };
 
-    if (loading) return <p>Loading your dashboard...</p>;
-    if (error) return <p className="error">Error: {error}</p>;
+    const handleCloseModal = () => {
+        setShowIntegrationModal(false);
+        setIntegrationType('');
+    };
+
+    const handleShopifyConnect = (data) => {
+        setProductData(data); // Update product data
+    };
+
+    const handleAddStoreName = (storeName) => {
+        if (!stores.includes(storeName)) {
+            setStores((prevStores) => [...prevStores, storeName]);
+        }
+    };
 
     return (
         <div className="dashboard">
-            <Sidebar userType="Client" />
+            <Sidebar userType="Client" onLogout={handleLogout} />
             <div className="main-content">
-                <h2>Welcome to Your Dashboard</h2>
-
-                {clientDetails && (
-                    <div className="client-details">
-                        <h3>Your Information</h3>
-                        <ul>
-                            <li><strong>Name:</strong> {clientDetails.name}</li>
-                            <li><strong>Email:</strong> {clientDetails.email}</li>
-                            <li><strong>Status:</strong> {clientDetails.status}</li>
-                        </ul>
-                    </div>
-                )}
-
+                <div className="header">
+                    <h1>Client Dashboard</h1>
+                </div>
+                <ClientProfile name="John Doe" clientId="54321" imageUrl="https://via.placeholder.com/100" />
+                <MarketplaceDropdowns onAddNewSource={handleShowModal} storeList={stores} />
                 <div className="content">
                     <h2 className="section-title">Your Products</h2>
-                    {clientData.length > 0 ? (
-                        <div className="products-table">
-                            <ProductList products={clientData} />
-                        </div>
-                    ) : (
-                        <p>No products available.</p>
-                    )}
+                    <div className="products-table">
+                        <ProductList products={productData} />
+                    </div>
                 </div>
+                {showIntegrationModal && (
+                    <IntegrationModal
+                        onClose={handleCloseModal}
+                        onFetchSuccess={handleShopifyConnect}
+                        onAddStoreName={handleAddStoreName}
+                    />
+                )}
             </div>
         </div>
     );
