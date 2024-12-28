@@ -3,22 +3,19 @@ import { useNavigate } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import ProductList from '../components/ProductList';
 import MarketplaceDropdowns from '../components/MarketplaceDropdowns';
-import ClientProfile from '../components/ClientProfile';
 import IntegrationModal from '../components/IntegrationModal';
 
-const ClientDashboard = ({ setIsLoggedIn }) => {
+const ClientDashboard = () => {
     const [showIntegrationModal, setShowIntegrationModal] = useState(false);
     const [integrationType, setIntegrationType] = useState('');
     const [productData, setProductData] = useState([]);
-    const [stores, setStores] = useState(['Shopify']); // Initial stores list for clients
-
+    const [stores, setStores] = useState(['Shopify']);
     const navigate = useNavigate();
 
     const handleLogout = () => {
-        localStorage.removeItem('token'); // Clear token
-        localStorage.removeItem('role');  // Clear role
-        setIsLoggedIn(false);            // Reset login state
-        navigate('/login');              // Redirect to login page
+        localStorage.removeItem('token');
+        localStorage.removeItem('role');
+        navigate('/login');
     };
 
     const handleShowModal = (type) => {
@@ -32,7 +29,7 @@ const ClientDashboard = ({ setIsLoggedIn }) => {
     };
 
     const handleShopifyConnect = (data) => {
-        setProductData(data); // Update product data
+        setProductData(data);
     };
 
     const handleAddStoreName = (storeName) => {
@@ -48,7 +45,6 @@ const ClientDashboard = ({ setIsLoggedIn }) => {
                 <div className="header">
                     <h1>Client Dashboard</h1>
                 </div>
-                <ClientProfile name="John Doe" clientId="54321" imageUrl="https://via.placeholder.com/100" />
                 <MarketplaceDropdowns onAddNewSource={handleShowModal} storeList={stores} />
                 <div className="content">
                     <h2 className="section-title">Your Products</h2>

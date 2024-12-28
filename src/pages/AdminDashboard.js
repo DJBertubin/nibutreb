@@ -1,24 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Sidebar from '../components/Sidebar'; // Adjust path if Sidebar is not in components
-import ProductList from '../components/ProductList'; // Adjust path as needed
+import Sidebar from '../components/Sidebar';
+import ProductList from '../components/ProductList';
 import MarketplaceDropdowns from '../components/MarketplaceDropdowns';
 import IntegrationModal from '../components/IntegrationModal';
 
-const AdminDashboard = ({ setIsLoggedIn }) => {
+const AdminDashboard = () => {
     const [showIntegrationModal, setShowIntegrationModal] = useState(false);
     const [integrationType, setIntegrationType] = useState('');
     const [productData, setProductData] = useState([]);
     const [stores, setStores] = useState(['Walmart', 'Shopify']);
     const [clients, setClients] = useState([]); // List of clients
-    const [selectedClient, setSelectedClient] = useState(null); // Currently selected client
-
+    const [selectedClient, setSelectedClient] = useState(null); // Selected client
     const navigate = useNavigate();
 
     const handleLogout = () => {
         localStorage.removeItem('token');
         localStorage.removeItem('role');
-        setIsLoggedIn(false);
         navigate('/login');
     };
 
@@ -33,7 +31,7 @@ const AdminDashboard = ({ setIsLoggedIn }) => {
     };
 
     const handleShopifyConnect = (data) => {
-        setProductData(data); // Update product data
+        setProductData(data);
     };
 
     const handleAddStoreName = (storeName) => {
@@ -43,7 +41,7 @@ const AdminDashboard = ({ setIsLoggedIn }) => {
     };
 
     const fetchClients = async () => {
-        // Simulating API call to fetch clients
+        // Simulated API call to fetch clients
         const clientList = [
             { id: '123', name: 'Client A' },
             { id: '456', name: 'Client B' },

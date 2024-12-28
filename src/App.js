@@ -1,23 +1,20 @@
-import React, { useState } from 'react';
-import Login from './components/Login';
+import React from 'react';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import AdminDashboard from './pages/AdminDashboard';
 import ClientDashboard from './pages/ClientDashboard';
+import Login from './components/Login';
 
-function App() {
-    const [isLoggedIn, setIsLoggedIn] = useState(false);
-    const [userRole, setUserRole] = useState(null); // Tracks the role (admin/client)
-
+const App = () => {
     return (
-        <div>
-            {!isLoggedIn ? (
-                <Login setLoggedIn={setIsLoggedIn} setUserRole={setUserRole} />
-            ) : userRole === 'admin' ? (
-                <AdminDashboard />
-            ) : (
-                <ClientDashboard />
-            )}
-        </div>
+        <BrowserRouter>
+            <Routes>
+                <Route path="/admin-dashboard" element={<AdminDashboard />} />
+                <Route path="/client-dashboard" element={<ClientDashboard />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="*" element={<Login />} /> {/* Default route */}
+            </Routes>
+        </BrowserRouter>
     );
-}
+};
 
 export default App;
