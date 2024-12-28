@@ -5,7 +5,9 @@ const Login = ({ setLoggedIn }) => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
-    const navigate = useNavigate(); // Hook for navigation
+    const navigate = useNavigate();
+
+    console.log('setLoggedIn:', typeof setLoggedIn === 'function' ? 'Valid function' : setLoggedIn);
 
     const handleLogin = async () => {
         setError('');
@@ -22,13 +24,17 @@ const Login = ({ setLoggedIn }) => {
             }
 
             const data = await response.json();
-            console.log('Login response:', data);
+            console.log('API Response:', data);
 
             localStorage.setItem('token', data.token);
             localStorage.setItem('role', data.role);
-            setLoggedIn(true);
 
-            // Redirect based on role
+            if (typeof setLoggedIn === 'function') {
+                setLoggedIn(true);
+            } else {
+                console.error('setLoggedIn is not a function:', setLoggedIn);
+            }
+
             if (data.role === 'admin') {
                 console.log('Navigating to Admin Dashboard...');
                 navigate('/admin-dashboard');
