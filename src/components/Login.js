@@ -1,17 +1,30 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Login.css';
+
+const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
 const Login = ({ setLoggedIn }) => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
+    const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
 
+    // Redirect if already logged in
+    useEffect(() => {
+        const token = localStorage.getItem('token');
+        if (token) {
+            const role = localStorage.getItem('role');
+            navigate(role === 'admin' ? '/admin-dashboard' : '/client-dashboard');
+        }
+    }, [navigate]);
+
     const handleLogin = async () => {
+        setLoading(true);
         setError('');
         try {
-            const response = await fetch('/api/login', {
+            const response = await fetch(`${BASE_URL}/api/login`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username, password }),
@@ -19,7 +32,7 @@ const Login = ({ setLoggedIn }) => {
 
             if (!response.ok) {
                 const errorData = await response.json();
-                throw new Error(errorData.error || 'Login failed');
+                throw new Error(errorData.message || 'Invalid username or password');
             }
 
             const data = await response.json();
@@ -30,13 +43,11 @@ const Login = ({ setLoggedIn }) => {
                 setLoggedIn(true);
             }
 
-            if (data.role === 'admin') {
-                navigate('/admin-dashboard');
-            } else if (data.role === 'client') {
-                navigate('/client-dashboard');
-            }
+            navigate(data.role === 'admin' ? '/admin-dashboard' : '/client-dashboard');
         } catch (err) {
             setError(err.message);
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -59,7 +70,13 @@ const Login = ({ setLoggedIn }) => {
                     onChange={(e) => setPassword(e.target.value)}
                     className="input-field"
                 />
-                <button onClick={handleLogin} className="login-button">Login</button>
+                <button
+                    onClick={handleLogin}
+                    className="login-button"
+                    disabled={loading}
+                >
+                    {loading ? 'Logging in...' : 'Login'}
+                </button>
                 <p>
                     Don't have an account? <a href="/signup" className="signup-link">Sign Up</a>
                 </p>
