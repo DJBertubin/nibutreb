@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 const Login = ({ setLoggedIn }) => {
@@ -7,7 +7,18 @@ const Login = ({ setLoggedIn }) => {
     const [error, setError] = useState('');
     const navigate = useNavigate();
 
-    console.log('setLoggedIn:', typeof setLoggedIn === 'function' ? 'Valid function' : setLoggedIn);
+    // Redirect if already logged in
+    useEffect(() => {
+        const token = localStorage.getItem('token');
+        const role = localStorage.getItem('role');
+        if (token && role) {
+            if (role === 'admin') {
+                navigate('/admin-dashboard');
+            } else if (role === 'client') {
+                navigate('/client-dashboard');
+            }
+        }
+    }, [navigate]);
 
     const handleLogin = async () => {
         setError('');
@@ -23,22 +34,25 @@ const Login = ({ setLoggedIn }) => {
                 throw new Error(errorData.error || 'Login failed');
             }
 
-            const data = await response.json();
-            console.log('API Response:', data);
+            const { token, role } = await response.json();
+            console.log('API Response:', { token, role });
 
-            localStorage.setItem('token', data.token);
-            localStorage.setItem('role', data.role);
+            // Save token and role to localStorage
+            localStorage.setItem('token', token);
+            localStorage.setItem('role', role);
 
+            // Set logged-in state
             if (typeof setLoggedIn === 'function') {
                 setLoggedIn(true);
             } else {
                 console.error('setLoggedIn is not a function:', setLoggedIn);
             }
 
-            if (data.role === 'admin') {
+            // Navigate based on role
+            if (role === 'admin') {
                 console.log('Navigating to Admin Dashboard...');
                 navigate('/admin-dashboard');
-            } else if (data.role === 'client') {
+            } else if (role === 'client') {
                 console.log('Navigating to Client Dashboard...');
                 navigate('/client-dashboard');
             }
