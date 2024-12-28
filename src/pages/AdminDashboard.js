@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Sidebar from '../components/Sidebar';
-import ProductList from '../components/ProductList';
+import Sidebar from '../components/Sidebar'; // Adjust path if Sidebar is not in components
+import ProductList from '../components/ProductList'; // Adjust path as needed
 import MarketplaceDropdowns from '../components/MarketplaceDropdowns';
 import IntegrationModal from '../components/IntegrationModal';
 
