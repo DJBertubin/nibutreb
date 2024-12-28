@@ -8,15 +8,31 @@ const dotenv = require('dotenv');
 dotenv.config();
 
 const app = express();
+const PORT = process.env.PORT || 5000;
 const JWT_SECRET = process.env.JWT_SECRET;
 
 // Middleware
-app.use(cors());
 app.use(express.json());
 
+// Dynamic CORS Configuration
+const allowedOrigins = [
+    'http://localhost:3000', // Local frontend
+    'https://nibutrebv2-ro7bdbqem-daniel-joseph-bertubins-projects.vercel.app', // Deployed frontend
+];
+
+app.use(cors({
+    origin: (origin, callback) => {
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
+    credentials: true, // Allow credentials (e.g., cookies, authorization headers)
+}));
+
 // MongoDB Connection
-mongoose
-    .connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
+mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
     .then(() => console.log('MongoDB connected'))
     .catch((err) => console.error('MongoDB connection error:', err));
 
@@ -24,7 +40,7 @@ mongoose
 const userSchema = new mongoose.Schema({
     username: { type: String, unique: true, required: true },
     password: { type: String, required: true },
-    role: { type: String, default: 'client' }, // Default role is client
+    role: { type: String, default: 'client' },
 });
 
 const User = mongoose.model('User', userSchema);
@@ -69,13 +85,18 @@ app.post('/api/login', async (req, res) => {
         return res.status(400).json({ error: true, message: 'Username and password are required' });
     }
 
-    const user = await User.findOne({ username });
-    if (!user || !(await bcrypt.compare(password, user.password))) {
-        return res.status(401).json({ error: true, message: 'Invalid credentials' });
-    }
+    try {
+        const user = await User.findOne({ username });
+        if (!user || !(await bcrypt.compare(password, user.password))) {
+            return res.status(401).json({ error: true, message: 'Invalid credentials' });
+        }
 
-    const token = jwt.sign({ username: user.username, role: user.role }, JWT_SECRET, { expiresIn: '1h' });
-    res.status(200).json({ error: false, token, role: user.role });
+        const token = jwt.sign({ username: user.username, role: user.role }, JWT_SECRET, { expiresIn: '1h' });
+        res.status(200).json({ error: false, token, role: user.role });
+    } catch (err) {
+        console.error('Login Error:', err.message);
+        res.status(500).json({ error: true, message: 'Internal Server Error', details: err.message });
+    }
 });
 
 // Shopify Products API Route
@@ -115,7 +136,7 @@ app.post('/api/shopify/products', async (req, res) => {
     }
 });
 
-// Error handling middleware
+// Error Handling Middleware
 app.use((err, req, res, next) => {
     console.error('Server Error:', err.message);
     res.status(500).json({
@@ -125,5 +146,5 @@ app.use((err, req, res, next) => {
     });
 });
 
-// Export for Vercel
-module.exports = app;
+// Start Server
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
