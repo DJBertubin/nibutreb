@@ -28,7 +28,15 @@ app.use(cors({
             callback(new Error('Not allowed by CORS'));
         }
     },
-    credentials: true, // Allow credentials (e.g., cookies, authorization headers)
+    credentials: true, // Allow credentials (cookies, authorization headers, etc.)
+}));
+
+// Handle Preflight Requests for all routes
+app.options('*', cors({
+    origin: allowedOrigins,
+    credentials: true,
+    methods: 'GET,POST,PUT,DELETE,OPTIONS',
+    allowedHeaders: 'Content-Type,Authorization',
 }));
 
 // MongoDB Connection
