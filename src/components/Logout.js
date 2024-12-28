@@ -1,12 +1,29 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import './Logout.css'; // Optional: Separate CSS for styling
 
-const Logout = () => {
+const Logout = ({ setLoggedIn }) => {
+    const navigate = useNavigate();
+
     const handleLogout = () => {
-        localStorage.removeItem('token'); // Clear JWT token
-        window.location.href = '/login';
+        // Clear authentication data
+        localStorage.removeItem('token');
+        localStorage.removeItem('role');
+
+        // Update state if provided
+        if (typeof setLoggedIn === 'function') {
+            setLoggedIn(false);
+        }
+
+        // Navigate to login page
+        navigate('/login');
     };
 
-    return <button onClick={handleLogout}>Logout</button>;
+    return (
+        <button onClick={handleLogout} className="logout-button">
+            Logout
+        </button>
+    );
 };
 
 export default Logout;
