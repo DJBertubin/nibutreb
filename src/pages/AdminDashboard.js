@@ -36,7 +36,7 @@ const AdminDashboard = () => {
             <Sidebar userType="Admin" />
             <div
                 style={{
-                    marginLeft: '300px', // Updated margin
+                    marginLeft: '200px', // Updated margin
                     padding: '20px',
                     flexGrow: 1,
                     overflow: 'auto',
