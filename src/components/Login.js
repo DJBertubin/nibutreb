@@ -1,3 +1,5 @@
+// File: src/components/Login.js
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Login.css';
@@ -31,10 +33,18 @@ const Login = ({ setLoggedIn }) => {
             });
 
             if (!response.ok) {
-                const errorData = await response.json();
+                // Handle error response
+                const errorText = await response.text();
+                let errorData;
+                try {
+                    errorData = JSON.parse(errorText); // Try parsing JSON
+                } catch {
+                    errorData = { message: 'Invalid response from server' }; // Fallback error
+                }
                 throw new Error(errorData.message || 'Invalid username or password');
             }
 
+            // Handle successful response
             const data = await response.json();
             localStorage.setItem('token', data.token);
             localStorage.setItem('role', data.role);
