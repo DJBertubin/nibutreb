@@ -11,30 +11,9 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 const JWT_SECRET = process.env.JWT_SECRET;
 
-// Middleware to parse JSON
+// Middleware
+app.use(cors()); // Allow all origins by default
 app.use(express.json());
-
-// Dynamic CORS Configuration
-const allowedOrigins = [
-    'http://localhost:3000', // Local frontend
-    'https://nibutrebv2-3a5tbx1vp-daniel-joseph-bertubins-projects.vercel.app', // Deployed frontend
-];
-
-// Custom CORS middleware
-app.use((req, res, next) => {
-    const origin = req.headers.origin;
-    if (allowedOrigins.includes(origin)) {
-        res.setHeader('Access-Control-Allow-Origin', origin);
-        res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
-        res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization');
-        res.setHeader('Access-Control-Allow-Credentials', 'true');
-    }
-    if (req.method === 'OPTIONS') {
-        res.status(200).end(); // Respond to preflight requests
-    } else {
-        next();
-    }
-});
 
 // MongoDB Connection
 mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
@@ -50,22 +29,12 @@ const userSchema = new mongoose.Schema({
 
 const User = mongoose.model('User', userSchema);
 
-// Helper function to process responses
-const processResponse = async (response) => {
-    const text = await response.text();
-    try {
-        return JSON.parse(text); // Try parsing JSON
-    } catch {
-        return { error: true, message: text }; // Fallback to plain text
-    }
-};
-
 // Signup Route
 app.post('/api/signup', async (req, res) => {
     const { username, password } = req.body;
 
     if (!username || !password) {
-        return res.status(400).json({ error: true, message: 'Username and password are required' });
+        return res.status(400).json({ error: 'Username and password are required' });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -73,12 +42,12 @@ app.post('/api/signup', async (req, res) => {
     try {
         const newUser = new User({ username, password: hashedPassword });
         await newUser.save();
-        res.status(201).json({ error: false, message: 'User created successfully' });
+        res.status(201).json({ message: 'User created successfully' });
     } catch (err) {
         if (err.code === 11000) {
-            return res.status(400).json({ error: true, message: 'Username already exists' });
+            return res.status(400).json({ error: 'Username already exists' });
         }
-        res.status(500).json({ error: true, message: 'Internal Server Error', details: err.message });
+        res.status(500).json({ error: 'Internal Server Error', details: err.message });
     }
 });
 
@@ -87,20 +56,20 @@ app.post('/api/login', async (req, res) => {
     const { username, password } = req.body;
 
     if (!username || !password) {
-        return res.status(400).json({ error: true, message: 'Username and password are required' });
+        return res.status(400).json({ error: 'Username and password are required' });
     }
 
     try {
         const user = await User.findOne({ username });
         if (!user || !(await bcrypt.compare(password, user.password))) {
-            return res.status(401).json({ error: true, message: 'Invalid credentials' });
+            return res.status(401).json({ error: 'Invalid credentials' });
         }
 
         const token = jwt.sign({ username: user.username, role: user.role }, JWT_SECRET, { expiresIn: '1h' });
-        res.status(200).json({ error: false, token, role: user.role });
+        res.status(200).json({ token, role: user.role });
     } catch (err) {
         console.error('Login Error:', err.message);
-        res.status(500).json({ error: true, message: 'Internal Server Error', details: err.message });
+        res.status(500).json({ error: 'Internal Server Error', details: err.message });
     }
 });
 
@@ -109,7 +78,7 @@ app.post('/api/shopify/products', async (req, res) => {
     const { storeUrl, adminAccessToken } = req.body;
 
     if (!storeUrl || !adminAccessToken) {
-        return res.status(400).json({ error: true, message: 'Store URL and Admin Access Token are required.' });
+        return res.status(400).json({ error: 'Store URL and Admin Access Token are required.' });
     }
 
     const shopifyApiUrl = `https://${storeUrl}/admin/api/2024-01/products.json`;
@@ -126,29 +95,21 @@ app.post('/api/shopify/products', async (req, res) => {
         if (!response.ok) {
             const errorText = await response.text();
             console.error('Shopify API Error:', errorText);
-            return res.status(response.status).json({ error: true, message: errorText });
+            return res.status(response.status).json({ error: errorText });
         }
 
-        const data = await processResponse(response);
-        if (data.error) {
-            return res.status(500).json({ error: true, message: data.message });
-        }
-
-        res.status(200).json({ error: false, data }); // Send products back to the frontend
+        const data = await response.json();
+        res.status(200).json(data); // Send products back to the frontend
     } catch (error) {
         console.error('Proxy Server Error:', error.message);
-        res.status(500).json({ error: true, message: 'Internal Server Error', details: error.message });
+        res.status(500).json({ error: 'Internal Server Error', details: error.message });
     }
 });
 
 // Error Handling Middleware
 app.use((err, req, res, next) => {
     console.error('Server Error:', err.message);
-    res.status(500).json({
-        error: true,
-        message: 'Internal Server Error',
-        details: err.message || 'An unexpected error occurred',
-    });
+    res.status(500).json({ error: 'Internal Server Error', details: err.message });
 });
 
 // Start Server
