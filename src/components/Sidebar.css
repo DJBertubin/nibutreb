@@ -3,7 +3,7 @@
   top: 0;
   left: 0;
   height: 100vh;
-  width: 200px; /* Updated to match the margin in AdminDashboard */
+  width: 190px; /* Updated to match the margin in AdminDashboard */
   background-color: #343a40;
   padding: 20px;
   display: flex;
