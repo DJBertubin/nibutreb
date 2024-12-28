@@ -1,7 +1,7 @@
 .product-list-container {
   font-family: Arial, sans-serif;
   margin: 0 auto;
-  max-width: calc(100% - 270px); /* Ensure it does not overlap the sidebar */
+  max-width: calc(100% - 200px); /* Ensure it does not overlap the sidebar */
   padding-left: 20px;
 }
 
