@@ -7,7 +7,6 @@ const dotenv = require('dotenv');
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 5001;
 const JWT_SECRET = process.env.JWT_SECRET;
 
 // Middleware
@@ -48,7 +47,6 @@ app.post('/api/shopify/products', async (req, res) => {
     const shopifyApiUrl = `https://${storeUrl}/admin/api/2024-01/products.json`;
 
     try {
-        // Fetch Shopify Admin API data
         const response = await fetch(shopifyApiUrl, {
             method: 'GET',
             headers: {
@@ -71,7 +69,5 @@ app.post('/api/shopify/products', async (req, res) => {
     }
 });
 
-// Start the server
-app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
-});
+// Export the app for Vercel
+module.exports = app;
