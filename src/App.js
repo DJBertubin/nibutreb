@@ -5,7 +5,7 @@ import ClientDashboard from './pages/ClientDashboard';
 import Login from './components/Login';
 
 const App = () => {
-    const [isLoggedIn, setIsLoggedIn] = useState(false); // Manage logged-in state
+    const [isLoggedIn, setIsLoggedIn] = useState(false); // Manage login state
 
     return (
         <BrowserRouter>
@@ -20,7 +20,7 @@ const App = () => {
                 />
                 <Route
                     path="/login"
-                    element={<Login setLoggedIn={setIsLoggedIn} />} // Pass as setLoggedIn
+                    element={<Login setLoggedIn={setIsLoggedIn} />}
                 />
                 <Route path="*" element={<Login setLoggedIn={setIsLoggedIn} />} />
             </Routes>

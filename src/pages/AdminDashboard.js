@@ -5,7 +5,7 @@ import ProductList from '../components/ProductList';
 import MarketplaceDropdowns from '../components/MarketplaceDropdowns';
 import IntegrationModal from '../components/IntegrationModal';
 
-const AdminDashboard = ({ setIsLoggedIn }) => { // Accept setIsLoggedIn as a prop
+const AdminDashboard = ({ setIsLoggedIn }) => {
     const [showIntegrationModal, setShowIntegrationModal] = useState(false);
     const [integrationType, setIntegrationType] = useState('');
     const [productData, setProductData] = useState([]);
@@ -19,26 +19,6 @@ const AdminDashboard = ({ setIsLoggedIn }) => { // Accept setIsLoggedIn as a pro
         localStorage.removeItem('role');
         setIsLoggedIn(false); // Update login state
         navigate('/login');
-    };
-
-    const handleShowModal = (type) => {
-        setIntegrationType(type);
-        setShowIntegrationModal(true);
-    };
-
-    const handleCloseModal = () => {
-        setShowIntegrationModal(false);
-        setIntegrationType('');
-    };
-
-    const handleShopifyConnect = (data) => {
-        setProductData(data);
-    };
-
-    const handleAddStoreName = (storeName) => {
-        if (!stores.includes(storeName)) {
-            setStores((prevStores) => [...prevStores, storeName]);
-        }
     };
 
     const fetchClients = async () => {
@@ -80,7 +60,7 @@ const AdminDashboard = ({ setIsLoggedIn }) => { // Accept setIsLoggedIn as a pro
                 {selectedClient && (
                     <>
                         <h2>{selectedClient.name}'s Data</h2>
-                        <MarketplaceDropdowns onAddNewSource={handleShowModal} storeList={stores} />
+                        <MarketplaceDropdowns />
                         <div className="content">
                             <h2 className="section-title">Products Overview</h2>
                             <div className="products-table">
@@ -89,9 +69,8 @@ const AdminDashboard = ({ setIsLoggedIn }) => { // Accept setIsLoggedIn as a pro
                         </div>
                         {showIntegrationModal && (
                             <IntegrationModal
-                                onClose={handleCloseModal}
-                                onFetchSuccess={handleShopifyConnect}
-                                onAddStoreName={handleAddStoreName}
+                                onClose={() => setShowIntegrationModal(false)}
+                                onFetchSuccess={(data) => setProductData(data)}
                             />
                         )}
                     </>
