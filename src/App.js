@@ -1,7 +1,7 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import AdminDashboard from './pages/AdminDashboard';
-import Products from './pages/Products';
+import Products from './pages/ProductDashboard';
 import Login from './components/Login';
 
 const App = () => {
