@@ -10,7 +10,7 @@ const App = () => {
     useEffect(() => {
         const token = localStorage.getItem('token');
         if (token) {
-            setIsLoggedIn(true); // Automatically log in if token exists
+            setIsLoggedIn(true);
         }
     }, []);
 

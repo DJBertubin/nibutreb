@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const Login = ({ setLoggedIn }) => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
+    const navigate = useNavigate(); // Hook for navigation
 
     const handleLogin = async () => {
         setError('');
@@ -20,11 +22,23 @@ const Login = ({ setLoggedIn }) => {
             }
 
             const data = await response.json();
+            console.log('Login response:', data);
+
             localStorage.setItem('token', data.token);
             localStorage.setItem('role', data.role);
             setLoggedIn(true);
+
+            // Redirect based on role
+            if (data.role === 'admin') {
+                console.log('Navigating to Admin Dashboard...');
+                navigate('/admin-dashboard');
+            } else if (data.role === 'client') {
+                console.log('Navigating to Client Dashboard...');
+                navigate('/client-dashboard');
+            }
         } catch (err) {
             setError(err.message);
+            console.error('Login Error:', err.message);
         }
     };
 
