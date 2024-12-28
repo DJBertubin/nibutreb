@@ -1,0 +1,78 @@
+/* Center the login container */
+.login-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background: linear-gradient(135deg, #74ebd5, #9face6);
+    font-family: 'Arial', sans-serif;
+}
+
+/* Login box styling */
+.login-box {
+    background-color: white;
+    padding: 40px;
+    border-radius: 10px;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    width: 300px;
+}
+
+/* Header styling */
+.login-box h1 {
+    margin-bottom: 20px;
+    font-size: 24px;
+    color: #333;
+}
+
+/* Input fields styling */
+.input-field {
+    width: 100%;
+    padding: 10px;
+    margin: 10px 0;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 16px;
+    outline: none;
+}
+
+.input-field:focus {
+    border-color: #74ebd5;
+    box-shadow: 0px 0px 5px rgba(116, 235, 213, 0.5);
+}
+
+/* Login button styling */
+.login-button {
+    width: 100%;
+    padding: 10px;
+    background: linear-gradient(135deg, #74ebd5, #9face6);
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    color: white;
+    cursor: pointer;
+    margin-top: 10px;
+    transition: background 0.3s ease;
+}
+
+.login-button:hover {
+    background: linear-gradient(135deg, #9face6, #74ebd5);
+}
+
+/* Error message styling */
+.error-message {
+    color: red;
+    margin-bottom: 10px;
+    font-size: 14px;
+}
+
+/* Signup link styling */
+.signup-link {
+    color: #74ebd5;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.signup-link:hover {
+    text-decoration: underline;
+}
