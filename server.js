@@ -2,7 +2,6 @@ const express = require('express');
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
-const fetch = require('node-fetch'); // Install using: npm install node-fetch
 const dotenv = require('dotenv');
 dotenv.config();
 
@@ -36,8 +35,11 @@ app.post('/api/login', (req, res) => {
     res.status(200).json({ token, role: user.role });
 });
 
-// Shopify API handler
-app.use('/api/shopify/products', require('./api/products'));
+// Error handling middleware
+app.use((err, req, res, next) => {
+    console.error('Server Error:', err.message);
+    res.status(500).json({ error: 'Internal Server Error', details: err.message });
+});
 
-// Export the app for Vercel
+// Export for Vercel
 module.exports = app;

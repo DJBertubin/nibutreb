@@ -1,6 +1,6 @@
-// File: /api/shopify/products.js
+const fetch = require('node-fetch');
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
     if (req.method !== 'POST') {
         return res.status(405).json({ error: 'Method Not Allowed. Use POST.' });
     }
@@ -31,7 +31,7 @@ export default async function handler(req, res) {
         const data = await response.json();
         res.status(200).json(data);
     } catch (error) {
-        console.error('Server Error:', error.message);
+        console.error('Proxy Server Error:', error.message);
         res.status(500).json({ error: 'Internal Server Error', details: error.message });
     }
-}
+};

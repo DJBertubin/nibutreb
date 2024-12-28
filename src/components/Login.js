@@ -14,15 +14,23 @@ const Login = ({ setLoggedIn }) => {
                 body: JSON.stringify({ username, password }),
             });
 
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.error || 'Login failed');
+            const rawBody = await response.text(); // Read raw response
+            let data;
+
+            try {
+                data = JSON.parse(rawBody); // Parse JSON
+            } catch (err) {
+                throw new Error('Unexpected response from server: ' + rawBody);
             }
 
-            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(data.error || 'Login failed');
+            }
+
             console.log('Logged in as:', data.role);
             setLoggedIn(true);
         } catch (err) {
+            console.error('Login Error:', err.message);
             setError(err.message);
         }
     };
