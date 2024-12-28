@@ -34,7 +34,14 @@ const AdminDashboard = () => {
     return (
         <div style={{ display: 'flex', height: '100vh' }}>
             <Sidebar userType="Admin" />
-            <div style={{ marginLeft: '250px', padding: '20px', flexGrow: 1, overflow: 'auto' }}>
+            <div
+                style={{
+                    marginLeft: '300px', // Updated margin
+                    padding: '20px',
+                    flexGrow: 1,
+                    overflow: 'auto',
+                }}
+            >
                 <div className="main-content">
                     <ClientProfile name="Jane Doe" clientId="98765" imageUrl="https://via.placeholder.com/100" />
                     <MarketplaceDropdowns onAddNewSource={handleShowModal} storeList={stores} />
