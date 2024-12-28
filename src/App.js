@@ -20,9 +20,9 @@ const App = () => {
                 />
                 <Route
                     path="/login"
-                    element={<Login setLoggedIn={setIsLoggedIn} />}
+                    element={<Login setLoggedIn={setIsLoggedIn} />} // Pass as setLoggedIn
                 />
-                <Route path="*" element={<Login setLoggedIn={setIsLoggedIn} />} /> {/* Default route */}
+                <Route path="*" element={<Login setLoggedIn={setIsLoggedIn} />} />
             </Routes>
         </BrowserRouter>
     );

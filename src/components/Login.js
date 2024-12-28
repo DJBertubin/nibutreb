@@ -1,5 +1,3 @@
-import React, { useState } from 'react';
-
 const Login = ({ setLoggedIn }) => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
@@ -23,7 +21,7 @@ const Login = ({ setLoggedIn }) => {
             console.log('Logged in as:', data.role);
             localStorage.setItem('token', data.token);
             localStorage.setItem('role', data.role);
-            setLoggedIn(true); // Update login state
+            setLoggedIn(true); // Ensure this function is defined and passed
         } catch (err) {
             console.error('Login Error:', err.message);
             setError(err.message);
