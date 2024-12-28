@@ -29,6 +29,16 @@ const userSchema = new mongoose.Schema({
 
 const User = mongoose.model('User', userSchema);
 
+// Helper function to process responses
+const processResponse = async (response) => {
+    const text = await response.text();
+    try {
+        return JSON.parse(text); // Try parsing JSON
+    } catch {
+        return { error: true, message: text }; // Fallback to plain text
+    }
+};
+
 // Signup Route
 app.post('/api/signup', async (req, res) => {
     const { username, password } = req.body;
@@ -93,7 +103,11 @@ app.post('/api/shopify/products', async (req, res) => {
             return res.status(response.status).json({ error: true, message: errorText });
         }
 
-        const data = await response.json();
+        const data = await processResponse(response);
+        if (data.error) {
+            return res.status(500).json({ error: true, message: data.message });
+        }
+
         res.status(200).json({ error: false, data }); // Send products back to the frontend
     } catch (error) {
         console.error('Proxy Server Error:', error.message);
@@ -104,7 +118,11 @@ app.post('/api/shopify/products', async (req, res) => {
 // Error handling middleware
 app.use((err, req, res, next) => {
     console.error('Server Error:', err.message);
-    res.status(500).json({ error: true, message: 'Internal Server Error', details: err.message });
+    res.status(500).json({
+        error: true,
+        message: 'Internal Server Error',
+        details: err.message || 'An unexpected error occurred',
+    });
 });
 
 // Export for Vercel
