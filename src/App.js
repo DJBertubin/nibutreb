@@ -3,7 +3,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import AdminDashboard from './pages/AdminDashboard';
 import ProductDashboard from './pages/ProductDashboard';
 import Login from './components/Login';
-import Signup from './components/Signup';
+import SignupPage from './components/SignupPage'; // Corrected import
 
 const App = () => {
     return (
@@ -12,7 +12,7 @@ const App = () => {
                 <Route path="/admin-dashboard" element={<AdminDashboard />} />
                 <Route path="/products" element={<ProductDashboard />} />
                 <Route path="/login" element={<Login />} />
-                <Route path="/signup" element={<Signup />} />
+                <Route path="/signup" element={<SignupPage />} /> {/* Updated route */}
                 <Route path="*" element={<Login />} /> {/* Default route */}
             </Routes>
         </BrowserRouter>
