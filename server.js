@@ -8,12 +8,33 @@ const dotenv = require('dotenv');
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 8080; // Use port 8080 or environment-specified port
 const JWT_SECRET = process.env.JWT_SECRET;
 
-// Middleware
-app.use(cors()); // Allow all origins by default
+// Middleware to parse JSON
 app.use(express.json());
+
+// CORS Configuration
+const allowedOrigins = [
+    'http://localhost:3000', // Local frontend during development
+    'https://nibutrebv2-3a5tbx1vp-daniel-joseph-bertubins-projects.vercel.app', // Deployed frontend
+];
+
+app.use((req, res, next) => {
+    const origin = req.headers.origin;
+    if (allowedOrigins.includes(origin)) {
+        res.setHeader('Access-Control-Allow-Origin', origin);
+        res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
+        res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization');
+        res.setHeader('Access-Control-Allow-Credentials', 'true');
+    }
+
+    if (req.method === 'OPTIONS') {
+        res.status(200).end(); // Respond to preflight request
+    } else {
+        next();
+    }
+});
 
 // MongoDB Connection
 mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
