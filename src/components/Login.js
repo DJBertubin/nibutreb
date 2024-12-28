@@ -33,29 +33,27 @@ const Login = ({ setLoggedIn }) => {
             });
 
             if (!response.ok) {
-                // Handle error response
-                const errorText = await response.text();
-                let errorData;
-                try {
-                    errorData = JSON.parse(errorText); // Try parsing JSON
-                } catch {
-                    errorData = { message: 'Invalid response from server' }; // Fallback error
-                }
-                throw new Error(errorData.message || 'Invalid username or password');
+                // Handle non-200 responses
+                throw new Error('Invalid username or password');
             }
 
-            // Handle successful response
+            // Attempt to parse JSON response
             const data = await response.json();
+
+            // Save token and role to localStorage
             localStorage.setItem('token', data.token);
             localStorage.setItem('role', data.role);
 
+            // Set logged-in status
             if (typeof setLoggedIn === 'function') {
                 setLoggedIn(true);
             }
 
+            // Navigate based on role
             navigate(data.role === 'admin' ? '/admin-dashboard' : '/client-dashboard');
         } catch (err) {
-            setError(err.message);
+            // Handle errors
+            setError(err.message || 'An unexpected error occurred');
         } finally {
             setLoading(false);
         }
