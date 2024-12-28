@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-const Login = ({ setLoggedIn, setUserRole }) => {
+const Login = ({ setLoggedIn }) => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
@@ -14,22 +14,16 @@ const Login = ({ setLoggedIn, setUserRole }) => {
                 body: JSON.stringify({ username, password }),
             });
 
-            const rawBody = await response.text(); // Read raw response
-            let data;
-
-            try {
-                data = JSON.parse(rawBody); // Parse JSON
-            } catch (err) {
-                throw new Error('Unexpected response from server: ' + rawBody);
-            }
-
             if (!response.ok) {
-                throw new Error(data.error || 'Login failed');
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Login failed');
             }
 
+            const data = await response.json();
             console.log('Logged in as:', data.role);
-            setUserRole(data.role); // Set the user role (admin/client)
-            setLoggedIn(true); // Set logged-in state
+            localStorage.setItem('token', data.token);
+            localStorage.setItem('role', data.role);
+            setLoggedIn(true); // Update login state
         } catch (err) {
             console.error('Login Error:', err.message);
             setError(err.message);

@@ -5,7 +5,7 @@ import ProductList from '../components/ProductList';
 import MarketplaceDropdowns from '../components/MarketplaceDropdowns';
 import IntegrationModal from '../components/IntegrationModal';
 
-const AdminDashboard = () => {
+const AdminDashboard = ({ setIsLoggedIn }) => { // Accept setIsLoggedIn as a prop
     const [showIntegrationModal, setShowIntegrationModal] = useState(false);
     const [integrationType, setIntegrationType] = useState('');
     const [productData, setProductData] = useState([]);
@@ -17,6 +17,7 @@ const AdminDashboard = () => {
     const handleLogout = () => {
         localStorage.removeItem('token');
         localStorage.removeItem('role');
+        setIsLoggedIn(false); // Update login state
         navigate('/login');
     };
 
@@ -41,7 +42,6 @@ const AdminDashboard = () => {
     };
 
     const fetchClients = async () => {
-        // Simulated API call to fetch clients
         const clientList = [
             { id: '123', name: 'Client A' },
             { id: '456', name: 'Client B' },
