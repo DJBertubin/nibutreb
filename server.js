@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
+const fetch = require('node-fetch'); // Required for Shopify API calls
 const dotenv = require('dotenv');
 dotenv.config();
 
@@ -33,6 +34,40 @@ app.post('/api/login', (req, res) => {
 
     const token = jwt.sign({ username, role: user.role }, JWT_SECRET, { expiresIn: '1h' });
     res.status(200).json({ token, role: user.role });
+});
+
+// Shopify Products API Route
+app.post('/api/shopify/products', async (req, res) => {
+    const { storeUrl, adminAccessToken } = req.body;
+
+    if (!storeUrl || !adminAccessToken) {
+        return res.status(400).json({ error: 'Store URL and Admin Access Token are required.' });
+    }
+
+    const shopifyApiUrl = `https://${storeUrl}/admin/api/2024-01/products.json`;
+
+    try {
+        // Fetch Shopify Admin API data
+        const response = await fetch(shopifyApiUrl, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Shopify-Access-Token': adminAccessToken,
+            },
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('Shopify API Error:', errorText);
+            return res.status(response.status).json({ error: errorText });
+        }
+
+        const data = await response.json();
+        res.status(200).json(data); // Send products back to the frontend
+    } catch (error) {
+        console.error('Proxy Server Error:', error.message);
+        res.status(500).json({ error: 'Internal Server Error', details: error.message });
+    }
 });
 
 // Error handling middleware
