@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-const Login = ({ setLoggedIn }) => {
+const Login = ({ setLoggedIn, setUserRole }) => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
@@ -28,7 +28,8 @@ const Login = ({ setLoggedIn }) => {
             }
 
             console.log('Logged in as:', data.role);
-            setLoggedIn(true);
+            setUserRole(data.role); // Set the user role (admin/client)
+            setLoggedIn(true); // Set logged-in state
         } catch (err) {
             console.error('Login Error:', err.message);
             setError(err.message);
