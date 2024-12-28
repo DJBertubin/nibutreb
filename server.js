@@ -11,33 +11,30 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 const JWT_SECRET = process.env.JWT_SECRET;
 
-// Middleware
+// Middleware to parse JSON
 app.use(express.json());
 
 // Dynamic CORS Configuration
 const allowedOrigins = [
     'http://localhost:3000', // Local frontend
-    'https://nibutrebv2-ro7bdbqem-daniel-joseph-bertubins-projects.vercel.app', // Deployed frontend
+    'https://nibutrebv2-3a5tbx1vp-daniel-joseph-bertubins-projects.vercel.app', // Deployed frontend
 ];
 
-app.use(cors({
-    origin: (origin, callback) => {
-        if (!origin || allowedOrigins.includes(origin)) {
-            callback(null, true);
-        } else {
-            callback(new Error('Not allowed by CORS'));
-        }
-    },
-    credentials: true, // Allow credentials (cookies, authorization headers, etc.)
-}));
-
-// Handle Preflight Requests for all routes
-app.options('*', cors({
-    origin: allowedOrigins,
-    credentials: true,
-    methods: 'GET,POST,PUT,DELETE,OPTIONS',
-    allowedHeaders: 'Content-Type,Authorization',
-}));
+// Custom CORS middleware
+app.use((req, res, next) => {
+    const origin = req.headers.origin;
+    if (allowedOrigins.includes(origin)) {
+        res.setHeader('Access-Control-Allow-Origin', origin);
+        res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
+        res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization');
+        res.setHeader('Access-Control-Allow-Credentials', 'true');
+    }
+    if (req.method === 'OPTIONS') {
+        res.status(200).end(); // Respond to preflight requests
+    } else {
+        next();
+    }
+});
 
 // MongoDB Connection
 mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
