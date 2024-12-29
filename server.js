@@ -2,7 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
-const fetch = require('node-fetch'); // Required for Shopify API calls
+const fetch = require('node-fetch');
 const dotenv = require('dotenv');
 const mongoose = require('mongoose');
 
@@ -29,8 +29,11 @@ const userSchema = new mongoose.Schema({
     username: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     role: { type: String, default: 'client' },
+    shopifyUrl: { type: String },
+    shopifyToken: { type: String },
+    shopifyData: { type: Object, default: {} },
 });
-const User = mongoose.model('User', userSchema);
+const User = mongoose.models.User || mongoose.model('User', userSchema);
 
 // Login Route
 app.post('/api/login', async (req, res) => {
@@ -50,7 +53,12 @@ app.post('/api/login', async (req, res) => {
             expiresIn: '1h',
         });
 
-        res.status(200).json({ token, role: user.role });
+        res.status(200).json({
+            token,
+            role: user.role,
+            shopifyUrl: user.shopifyUrl || null,
+            shopifyData: user.shopifyData || null,
+        });
     } catch (error) {
         console.error('Login Error:', error.message);
         res.status(500).json({ error: 'Internal Server Error' });
@@ -108,18 +116,23 @@ app.post('/api/shopify/fetch', async (req, res) => {
             return res.status(response.status).json({ error: errorText });
         }
 
-        const data = await response.json();
-        res.status(200).json(data); // Send products back to the frontend
-    } catch (error) {
-        console.error('Proxy Server Error:', error.message);
-        res.status(500).json({ error: 'Internal Server Error', details: error.message });
-    }
-});
+        const shopifyData = await response.json();
 
-// Backward Compatibility Alias
-app.post('/api/shopify/products', (req, res, next) => {
-    req.url = '/api/shopify/fetch'; // Redirect to /api/shopify/fetch
-    next();
+        // Save Shopify data to the database
+        const user = await User.findOneAndUpdate(
+            { shopifyUrl: storeUrl }, // Match by Shopify store URL
+            { shopifyToken: adminAccessToken, shopifyData: shopifyData }, // Update token and data
+            { new: true, upsert: true } // Create if doesn't exist
+        );
+
+        res.status(200).json({
+            message: 'Shopify data fetched and stored successfully.',
+            shopifyData,
+        });
+    } catch (err) {
+        console.error('Error fetching Shopify data:', err.message);
+        res.status(500).json({ error: 'Internal Server Error', details: err.message });
+    }
 });
 
 // Error handling middleware

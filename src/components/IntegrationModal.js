@@ -31,7 +31,6 @@ const IntegrationModal = ({ onClose, onFetchSuccess, onAddStoreName }) => {
         }
 
         try {
-            // Updated fetch URL to match the new backend route
             const response = await fetch('/api/shopify/fetch', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -55,7 +54,7 @@ const IntegrationModal = ({ onClose, onFetchSuccess, onAddStoreName }) => {
             }
 
             if (typeof onFetchSuccess === 'function') {
-                onFetchSuccess(data.products);
+                onFetchSuccess(data.shopifyData.products);
             }
 
             onClose();
