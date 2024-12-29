@@ -31,7 +31,7 @@ const IntegrationModal = ({ onClose, onFetchSuccess, onAddStoreName }) => {
         }
 
         try {
-            // Updated endpoint from `/api/shopify/products` to `/api/shopify/fetch`
+            // Updated fetch URL to match the new backend route
             const response = await fetch('/api/shopify/fetch', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
