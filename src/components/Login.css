@@ -7,7 +7,6 @@ body.login-page {
     display: flex;
     justify-content: center; /* Centers horizontally */
     align-items: center; /* Centers vertically */
-    overflow: hidden; /* Prevents scrollbars */
 }
 
 /* Login container */
@@ -17,6 +16,7 @@ body.login-page {
     align-items: center;
     width: 100%;
     height: 100%;
+    position: absolute; /* Ensures it remains centered in viewport */
 }
 
 /* Login box styling */
