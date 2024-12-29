@@ -33,21 +33,6 @@ const userSchema = new mongoose.Schema({
 });
 const User = mongoose.model('User', userSchema);
 
-// Middleware to Authenticate and Decode JWT
-const authenticateJWT = (req, res, next) => {
-    const token = req.headers.authorization?.split(' ')[1]; // Bearer <token>
-    if (!token) {
-        return res.status(403).json({ error: 'Access token is missing.' });
-    }
-    try {
-        const decoded = jwt.verify(token, JWT_SECRET);
-        req.user = decoded; // Attach the decoded user information to the request
-        next();
-    } catch (error) {
-        return res.status(403).json({ error: 'Invalid token.' });
-    }
-};
-
 // Login Route
 app.post('/api/login', async (req, res) => {
     const { username, password } = req.body;
@@ -103,12 +88,13 @@ app.post('/api/signup', async (req, res) => {
 });
 
 // Shopify Products API Route
-app.post('/api/shopify/products', authenticateJWT, async (req, res) => {
-    const { storeUrl, adminAccessToken } = req.body;
-    const username = req.user?.username; // Get the username from the authenticated user
+app.post('/api/shopify/products', async (req, res) => {
+    const { storeUrl, adminAccessToken, username } = req.body;
 
-    if (!storeUrl || !adminAccessToken) {
-        return res.status(400).json({ error: 'Store URL and Admin Access Token are required.' });
+    if (!storeUrl || !adminAccessToken || !username) {
+        return res.status(400).json({
+            error: 'Store URL, Admin Access Token, and Username are required.',
+        });
     }
 
     const shopifyApiUrl = `https://${storeUrl}/admin/api/2024-01/products.json`;
