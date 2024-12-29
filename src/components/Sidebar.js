@@ -1,8 +1,9 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
+import Logout from './Logout'; // Import the Logout component
 import './Sidebar.css';
 
-const Sidebar = ({ userType }) => {
+const Sidebar = ({ userType, setLoggedIn }) => {
     return (
         <div className="sidebar">
             <h2>{userType} Panel</h2>
@@ -19,9 +20,8 @@ const Sidebar = ({ userType }) => {
                 </li>
             </ul>
             <div className="sidebar-footer">
-                <button className="logout-button">
-                    <i className="fas fa-sign-out-alt"></i> Logout
-                </button>
+                {/* Use the Logout component */}
+                <Logout setLoggedIn={setLoggedIn} />
             </div>
         </div>
     );
