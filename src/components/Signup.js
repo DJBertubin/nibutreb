@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import './Signup.css'; // Import the CSS file for Signup styling
+import './Signup.css';
 
 const Signup = () => {
     const [username, setUsername] = useState('');
@@ -8,6 +8,13 @@ const Signup = () => {
     const [confirmPassword, setConfirmPassword] = useState('');
     const [error, setError] = useState('');
     const navigate = useNavigate();
+
+    useEffect(() => {
+        document.body.className = 'signup-page'; // Add the class for signup
+        return () => {
+            document.body.className = ''; // Remove the class on unmount
+        };
+    }, []);
 
     const handleSignup = async () => {
         setError('');
@@ -27,7 +34,6 @@ const Signup = () => {
                 throw new Error(errorData.error || 'Signup failed');
             }
 
-            // Redirect to login page on successful signup
             navigate('/login');
         } catch (err) {
             setError(err.message);
@@ -71,12 +77,9 @@ const Signup = () => {
                 </button>
                 <p className="login-link">
                     Already have an account?{' '}
-                    <span
-                        className="login-link-action"
-                        onClick={() => navigate('/login')}
-                    >
+                    <a href="#" onClick={() => navigate('/login')}>
                         Login
-                    </span>
+                    </a>
                 </p>
             </div>
         </div>
