@@ -9,64 +9,66 @@ mongoose.connect(process.env.MONGO_URI, {
 
 // Define User Schema and Model
 const UserSchema = new mongoose.Schema({
-    username: { type: String, required: true, unique: true },
+    username: { type: String, unique: true, required: true },
     password: { type: String, required: true },
     role: { type: String, default: 'client' },
-    shopifyUrl: { type: String },
+    shopifyUrl: { type: String, unique: true, required: true }, // Unique identifier
     shopifyToken: { type: String },
-    shopifyData: { type: Object, default: {} },
+    shopifyData: { type: Object, default: {} }, // Default to empty object
 });
 
 const User = mongoose.models.User || mongoose.model('User', UserSchema);
 
-// API Handler
 export default async function handler(req, res) {
     if (req.method !== 'POST') {
-        return res.status(405).json({ error: 'Method not allowed. Use POST.' });
+        return res.status(405).json({ error: 'Method not allowed' });
     }
 
-    const { username, shopifyUrl, shopifyToken } = req.body;
+    const { storeUrl, adminAccessToken } = req.body;
 
-    if (!username || !shopifyUrl || !shopifyToken) {
-        return res.status(400).json({
-            error: 'Username, Shopify URL, and Shopify Token are required.',
-        });
+    if (!storeUrl || !adminAccessToken) {
+        return res.status(400).json({ error: 'Store URL and Admin Access Token are required.' });
     }
 
-    const shopifyApiUrl = `${shopifyUrl}/admin/api/2024-01/products.json`;
+    const trimmedStoreUrl = storeUrl.trim().toLowerCase();
+    const shopifyApiUrl = `https://${trimmedStoreUrl}/admin/api/2024-01/products.json`;
 
     try {
         const response = await fetch(shopifyApiUrl, {
             method: 'GET',
             headers: {
-                'X-Shopify-Access-Token': shopifyToken,
+                'X-Shopify-Access-Token': adminAccessToken,
             },
         });
 
         if (!response.ok) {
-            const errorData = await response.text();
-            console.error('Shopify API Error:', errorData);
-            return res.status(response.status).json({ error: errorData });
+            const errorText = await response.text();
+            console.error('Shopify API Error:', errorText);
+            return res.status(response.status).json({ error: errorText });
         }
 
         const shopifyData = await response.json();
+        console.log('Shopify Data Size:', JSON.stringify(shopifyData).length);
 
-        const user = await User.findOne({ username });
-        if (!user) {
-            return res.status(404).json({ error: 'User not found.' });
+        const updatedUser = await User.findOneAndUpdate(
+            { shopifyUrl: trimmedStoreUrl },
+            { shopifyToken: adminAccessToken, shopifyData },
+            { new: true, upsert: true }
+        );
+
+        if (!updatedUser) {
+            console.error('User not found or update failed.');
+            return res.status(404).json({ error: 'Failed to save Shopify data.' });
         }
 
-        user.shopifyUrl = shopifyUrl; // Save Shopify URL
-        user.shopifyToken = shopifyToken; // Save Shopify token
-        user.shopifyData = shopifyData; // Save Shopify data
-        await user.save();
+        console.log('After Update:', updatedUser);
 
         res.status(200).json({
             message: 'Shopify data fetched and stored successfully.',
             shopifyData,
         });
     } catch (err) {
-        console.error('Error fetching Shopify data:', err.message);
-        res.status(500).json({ error: 'Internal Server Error', details: err.message });
+        console.error('Error saving Shopify data:', err.message);
+        res.status(500).json({ error: 'Failed to save data to MongoDB', details: err.message });
     }
 }
