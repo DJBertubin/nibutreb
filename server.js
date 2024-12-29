@@ -51,10 +51,10 @@ app.post('/api/login', async (req, res) => {
             expiresIn: '1h',
         });
 
-        res.status(200).json({ 
-            token, 
+        res.status(200).json({
+            token,
             role: user.role,
-            shopifyData: user.shopifyData // Include Shopify data in the response
+            shopifyData: user.shopifyData, // Include Shopify data in the response
         });
     } catch (error) {
         console.error('Login Error:', error.message);
@@ -124,9 +124,9 @@ app.post('/api/shopify/products', async (req, res) => {
         user.shopifyData = data; // Save Shopify data to the user's record
         await user.save();
 
-        res.status(200).json({ 
+        res.status(200).json({
             message: 'Shopify data fetched and stored successfully.',
-            shopifyData: data 
+            shopifyData: data,
         });
     } catch (error) {
         console.error('Proxy Server Error:', error.message);
