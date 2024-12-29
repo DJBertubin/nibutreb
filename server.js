@@ -29,11 +29,10 @@ const userSchema = new mongoose.Schema({
     username: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     role: { type: String, default: 'client' },
-    shopifyUrl: { type: String }, // Store Shopify store URL
-    shopifyToken: { type: String }, // Store Shopify token
-    shopifyData: { type: Object, default: {} }, // Store fetched Shopify data
+    shopifyUrl: { type: String },
+    shopifyToken: { type: String },
+    shopifyData: { type: Object, default: {} },
 });
-
 const User = mongoose.models.User || mongoose.model('User', userSchema);
 
 // Login Route
@@ -66,33 +65,9 @@ app.post('/api/login', async (req, res) => {
     }
 });
 
-// Signup Route
-app.post('/api/signup', async (req, res) => {
-    const { username, password, role } = req.body;
-
-    if (!username || !password) {
-        return res.status(400).json({ error: 'Username and password are required' });
-    }
-
-    try {
-        const existingUser = await User.findOne({ username });
-        if (existingUser) {
-            return res.status(400).json({ error: 'Username already exists' });
-        }
-
-        const hashedPassword = await bcrypt.hash(password, 10);
-        const newUser = new User({ username, password: hashedPassword, role });
-        await newUser.save();
-
-        res.status(201).json({ message: 'User created successfully' });
-    } catch (error) {
-        console.error('Signup Error:', error.message);
-        res.status(500).json({ error: 'Internal Server Error' });
-    }
-});
-
 // Shopify Fetch API Route
 app.post('/api/shopify/fetch', async (req, res) => {
+    console.log('Received request at /api/shopify/fetch with body:', req.body);
     const { username, shopifyUrl, shopifyToken } = req.body;
 
     if (!username || !shopifyUrl || !shopifyToken) {
@@ -124,7 +99,6 @@ app.post('/api/shopify/fetch', async (req, res) => {
             return res.status(404).json({ error: 'User not found.' });
         }
 
-        // Save Shopify URL, token, and data
         user.shopifyUrl = shopifyUrl;
         user.shopifyToken = shopifyToken;
         user.shopifyData = shopifyData;
@@ -142,7 +116,8 @@ app.post('/api/shopify/fetch', async (req, res) => {
 
 // Backward Compatibility Alias
 app.post('/api/shopify/products', (req, res, next) => {
-    req.url = '/api/shopify/fetch'; // Redirect to /api/shopify/fetch
+    console.log('Redirecting /api/shopify/products to /api/shopify/fetch');
+    req.url = '/api/shopify/fetch';
     next();
 });
 
