@@ -1,30 +1,25 @@
 import mongoose from 'mongoose';
 import fetch from 'node-fetch';
 
-// MongoDB Connection (modularized for reuse)
-const connectToMongoDB = async () => {
-    if (mongoose.connection.readyState === 0) {
-        await mongoose.connect(process.env.MONGO_URI, {
-            useNewUrlParser: true,
-            useUnifiedTopology: true,
-        });
-        console.log('Connected to MongoDB');
-    }
-};
+// MongoDB Connection
+mongoose.connect(process.env.MONGO_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+});
 
 // Define User Schema and Model
 const UserSchema = new mongoose.Schema({
     username: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     role: { type: String, default: 'client' },
-    shopifyUrl: { type: String }, // Store Shopify URL for future use
-    shopifyToken: { type: String }, // Store Shopify token for future use
-    shopifyData: Object, // Store fetched Shopify data
+    shopifyUrl: { type: String },
+    shopifyToken: { type: String },
+    shopifyData: { type: Object, default: {} },
 });
 
 const User = mongoose.models.User || mongoose.model('User', UserSchema);
 
-// Handler Function
+// API Handler
 export default async function handler(req, res) {
     if (req.method !== 'POST') {
         return res.status(405).json({ error: 'Method not allowed. Use POST.' });
@@ -38,16 +33,9 @@ export default async function handler(req, res) {
         });
     }
 
-    // Validate Shopify Token Format
-    if (!shopifyToken.startsWith('shpat_')) {
-        return res.status(400).json({ error: 'Invalid Shopify token format.' });
-    }
-
     const shopifyApiUrl = `${shopifyUrl}/admin/api/2024-01/products.json`;
 
     try {
-        await connectToMongoDB();
-
         // Fetch Shopify data
         const response = await fetch(shopifyApiUrl, {
             method: 'GET',
@@ -72,7 +60,7 @@ export default async function handler(req, res) {
 
         user.shopifyUrl = shopifyUrl; // Save Shopify URL
         user.shopifyToken = shopifyToken; // Save Shopify token
-        user.shopifyData = shopifyData; // Save Shopify data to the user's record
+        user.shopifyData = shopifyData; // Save Shopify data
         await user.save();
 
         res.status(200).json({
