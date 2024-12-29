@@ -114,13 +114,6 @@ app.post('/api/shopify/fetch', async (req, res) => {
     }
 });
 
-// Backward Compatibility Alias
-app.post('/api/shopify/products', (req, res, next) => {
-    console.log('Redirecting /api/shopify/products to /api/shopify/fetch');
-    req.url = '/api/shopify/fetch';
-    next();
-});
-
 // Error handling middleware
 app.use((err, req, res, next) => {
     console.error('Server Error:', err.message);

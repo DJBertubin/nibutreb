@@ -36,7 +36,6 @@ export default async function handler(req, res) {
     const shopifyApiUrl = `${shopifyUrl}/admin/api/2024-01/products.json`;
 
     try {
-        // Fetch Shopify data
         const response = await fetch(shopifyApiUrl, {
             method: 'GET',
             headers: {
@@ -52,7 +51,6 @@ export default async function handler(req, res) {
 
         const shopifyData = await response.json();
 
-        // Find the user and update their record
         const user = await User.findOne({ username });
         if (!user) {
             return res.status(404).json({ error: 'User not found.' });
