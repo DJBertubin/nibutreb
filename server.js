@@ -103,6 +103,7 @@ app.post('/api/shopify/fetch', async (req, res) => {
     const shopifyApiUrl = `https://${storeUrl}/admin/api/2024-01/products.json`;
 
     try {
+        // Fetch Shopify data
         const response = await fetch(shopifyApiUrl, {
             method: 'GET',
             headers: {
@@ -119,20 +120,23 @@ app.post('/api/shopify/fetch', async (req, res) => {
 
         const shopifyData = await response.json();
 
-        console.log('Before Update:', await User.findOne({ shopifyUrl: storeUrl })); // Log before update
+        // Debugging logs
+        console.log('Before Update:', await User.findOne({ shopifyUrl: storeUrl }));
+        console.log('Shopify Data Size:', JSON.stringify(shopifyData).length);
 
+        // Save to MongoDB
         const updatedUser = await User.findOneAndUpdate(
-            { shopifyUrl: storeUrl }, // Match by Shopify URL
-            { shopifyToken: adminAccessToken, shopifyData: shopifyData }, // Update token and data
-            { new: true, upsert: true } // Create if doesn't exist
+            { shopifyUrl: storeUrl.trim() },
+            { shopifyToken: adminAccessToken, shopifyData: shopifyData },
+            { new: true, upsert: true }
         );
 
-        console.log('After Update:', updatedUser); // Log after update
-
         if (!updatedUser) {
-            return res.status(404).json({ error: 'User not found or created.' });
+            console.error('User not found or update failed.');
+            return res.status(404).json({ error: 'User not found or update failed.' });
         }
 
+        console.log('After Update:', updatedUser);
         res.status(200).json({
             message: 'Shopify data fetched and stored successfully.',
             shopifyData,
