@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import './Signup.css';
+import './Signup.css'; // Import the CSS file for Signup styling
 
 const Signup = () => {
     const [username, setUsername] = useState('');
@@ -8,13 +8,6 @@ const Signup = () => {
     const [confirmPassword, setConfirmPassword] = useState('');
     const [error, setError] = useState('');
     const navigate = useNavigate();
-
-    useEffect(() => {
-        document.body.className = 'signup-page'; // Add class for signup page
-        return () => {
-            document.body.className = ''; // Remove class on unmount
-        };
-    }, []);
 
     const handleSignup = async () => {
         setError('');
@@ -34,7 +27,8 @@ const Signup = () => {
                 throw new Error(errorData.error || 'Signup failed');
             }
 
-            navigate('/login'); // Redirect to login page after signup
+            // Redirect to login page on successful signup
+            navigate('/login');
         } catch (err) {
             setError(err.message);
         }
