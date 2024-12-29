@@ -31,7 +31,8 @@ const IntegrationModal = ({ onClose, onFetchSuccess, onAddStoreName }) => {
         }
 
         try {
-            const response = await fetch('/api/shopify/products', {
+            // Updated endpoint from `/api/shopify/products` to `/api/shopify/fetch`
+            const response = await fetch('/api/shopify/fetch', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
