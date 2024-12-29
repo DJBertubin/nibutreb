@@ -1,22 +1,19 @@
 import React from 'react';
 import Sidebar from '../components/Sidebar';
 
-const AdminDashboard = () => {
+const AdminDashboard = ({ username }) => {
     return (
         <div style={{ display: 'flex', height: '100vh' }}>
-            {/* Sidebar */}
-            <Sidebar userType="Admin" />
-            
-            {/* Main Content */}
+            <Sidebar userType="admin" username={username} />
             <div
                 style={{
-                    marginLeft: '300px', // Ensure enough space for the sidebar
+                    marginLeft: '300px',
                     padding: '20px',
                     flexGrow: 1,
-                    backgroundColor: '#f9f9f9', // Optional: Add background for content area
+                    backgroundColor: '#f9f9f9',
                 }}
             >
-                <h1>Welcome, Admin!</h1>
+                <h1>Welcome, {username || 'Admin'}!</h1>
             </div>
         </div>
     );
