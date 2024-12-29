@@ -59,7 +59,7 @@ app.post('/api/login', async (req, res) => {
             token,
             role: user.role,
             shopifyUrl: user.shopifyUrl || null,
-            shopifyData: user.shopifyData || null,
+            shopifyData: user.shopifyData || {},
         });
     } catch (error) {
         console.error('Login Error:', error.message);
@@ -94,10 +94,10 @@ app.post('/api/signup', async (req, res) => {
 
 // Shopify Fetch API Route
 app.post('/api/shopify/fetch', async (req, res) => {
-    const { storeUrl, adminAccessToken } = req.body;
+    const { username, storeUrl, adminAccessToken } = req.body;
 
-    if (!storeUrl || !adminAccessToken) {
-        return res.status(400).json({ error: 'Store URL and Admin Access Token are required.' });
+    if (!username || !storeUrl || !adminAccessToken) {
+        return res.status(400).json({ error: 'Username, Store URL, and Admin Access Token are required.' });
     }
 
     const shopifyApiUrl = `https://${storeUrl}/admin/api/2024-01/products.json`;
@@ -119,17 +119,18 @@ app.post('/api/shopify/fetch', async (req, res) => {
 
         const shopifyData = await response.json();
 
-        // Save Shopify data to the database
+        console.log('Before Update:', await User.findOne({ username })); // Log before update
+
         const updatedUser = await User.findOneAndUpdate(
-            { shopifyUrl: storeUrl }, // Match by Shopify store URL
-            { shopifyToken: adminAccessToken, shopifyData: shopifyData }, // Update token and data
-            { new: true, upsert: true } // Create if doesn't exist
+            { username }, // Match by username
+            { shopifyUrl: storeUrl, shopifyToken: adminAccessToken, shopifyData: shopifyData }, // Update data
+            { new: true, upsert: false }
         );
 
-        console.log('Updated User:', updatedUser); // Log the updated user
+        console.log('After Update:', updatedUser); // Log after update
 
         if (!updatedUser) {
-            throw new Error('User not found or update failed.');
+            return res.status(404).json({ error: 'User not found.' });
         }
 
         res.status(200).json({
