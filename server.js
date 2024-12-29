@@ -29,7 +29,7 @@ const userSchema = new mongoose.Schema({
     username: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     role: { type: String, default: 'client' },
-    shopifyUrl: { type: String },
+    shopifyUrl: { type: String, unique: true }, // Ensure shopifyUrl is unique
     shopifyToken: { type: String },
     shopifyData: { type: Object, default: {} },
 });
@@ -45,7 +45,7 @@ app.post('/api/login', async (req, res) => {
 
     try {
         const user = await User.findOne({ username });
-        console.log('User Retrieved on Login:', user); // Log user data on login
+        console.log('User Retrieved on Login:', user);
 
         if (!user || !(await bcrypt.compare(password, user.password))) {
             return res.status(401).json({ error: 'Invalid credentials' });
@@ -94,10 +94,10 @@ app.post('/api/signup', async (req, res) => {
 
 // Shopify Fetch API Route
 app.post('/api/shopify/fetch', async (req, res) => {
-    const { username, storeUrl, adminAccessToken } = req.body;
+    const { storeUrl, adminAccessToken } = req.body;
 
-    if (!username || !storeUrl || !adminAccessToken) {
-        return res.status(400).json({ error: 'Username, Store URL, and Admin Access Token are required.' });
+    if (!storeUrl || !adminAccessToken) {
+        return res.status(400).json({ error: 'Store URL and Admin Access Token are required.' });
     }
 
     const shopifyApiUrl = `https://${storeUrl}/admin/api/2024-01/products.json`;
@@ -119,18 +119,18 @@ app.post('/api/shopify/fetch', async (req, res) => {
 
         const shopifyData = await response.json();
 
-        console.log('Before Update:', await User.findOne({ username })); // Log before update
+        console.log('Before Update:', await User.findOne({ shopifyUrl: storeUrl })); // Log before update
 
         const updatedUser = await User.findOneAndUpdate(
-            { username }, // Match by username
-            { shopifyUrl: storeUrl, shopifyToken: adminAccessToken, shopifyData: shopifyData }, // Update data
-            { new: true, upsert: false }
+            { shopifyUrl: storeUrl }, // Match by Shopify URL
+            { shopifyToken: adminAccessToken, shopifyData: shopifyData }, // Update token and data
+            { new: true, upsert: true } // Create if doesn't exist
         );
 
         console.log('After Update:', updatedUser); // Log after update
 
         if (!updatedUser) {
-            return res.status(404).json({ error: 'User not found.' });
+            return res.status(404).json({ error: 'User not found or created.' });
         }
 
         res.status(200).json({

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import './IntegrationModal.css';
 import './ProductList.css';
 
-const IntegrationModal = ({ onClose, onFetchSuccess, onAddStoreName, username }) => {
+const IntegrationModal = ({ onClose, onFetchSuccess, onAddStoreName }) => {
     const [activeSource, setActiveSource] = useState(null);
     const [storeUrl, setStoreUrl] = useState('');
     const [adminAccessToken, setAdminAccessToken] = useState('');
@@ -35,7 +35,6 @@ const IntegrationModal = ({ onClose, onFetchSuccess, onAddStoreName, username })
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    username, // Pass the username to associate the Shopify data with the user
                     storeUrl: storeUrl.trim(),
                     adminAccessToken: adminAccessToken,
                 }),
