@@ -1,78 +1,98 @@
-/* Center the login container */
-.login-container {
+/* Login.css */
+
+/* Full-page gradient background */
+body {
+    margin: 0;
+    font-family: 'Arial', sans-serif;
+    background: linear-gradient(135deg, #6dd5ed, #2193b0);
+    height: 100vh;
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 100vh;
-    background: linear-gradient(135deg, #74ebd5, #9face6);
-    font-family: 'Arial', sans-serif;
+}
+
+/* Centered login container */
+.login-page {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100%;
 }
 
 /* Login box styling */
 .login-box {
-    background-color: white;
-    padding: 40px;
+    background: white;
+    padding: 30px 20px;
     border-radius: 10px;
-    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    width: 350px;
     text-align: center;
-    width: 300px;
 }
 
-/* Header styling */
-.login-box h1 {
-    margin-bottom: 20px;
+/* Login title */
+.login-title {
     font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 20px;
     color: #333;
-}
-
-/* Input fields styling */
-.input-field {
-    width: 100%;
-    padding: 10px;
-    margin: 10px 0;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    font-size: 16px;
-    outline: none;
-}
-
-.input-field:focus {
-    border-color: #74ebd5;
-    box-shadow: 0px 0px 5px rgba(116, 235, 213, 0.5);
-}
-
-/* Login button styling */
-.login-button {
-    width: 100%;
-    padding: 10px;
-    background: linear-gradient(135deg, #74ebd5, #9face6);
-    border: none;
-    border-radius: 5px;
-    font-size: 16px;
-    color: white;
-    cursor: pointer;
-    margin-top: 10px;
-    transition: background 0.3s ease;
-}
-
-.login-button:hover {
-    background: linear-gradient(135deg, #9face6, #74ebd5);
 }
 
 /* Error message styling */
 .error-message {
-    color: red;
-    margin-bottom: 10px;
+    color: #d9534f;
     font-size: 14px;
+    margin-bottom: 15px;
 }
 
-/* Signup link styling */
+/* Input fields */
+.login-input {
+    width: 100%;
+    padding: 12px 15px;
+    margin-bottom: 20px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 16px;
+    outline: none;
+    transition: border-color 0.3s;
+}
+
+.login-input:focus {
+    border-color: #2193b0;
+    box-shadow: 0 0 4px rgba(33, 147, 176, 0.5);
+}
+
+/* Login button */
+.login-button {
+    width: 100%;
+    padding: 12px 15px;
+    background: linear-gradient(135deg, #6dd5ed, #2193b0);
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.login-button:hover {
+    background: linear-gradient(135deg, #2193b0, #6dd5ed);
+}
+
+/* Sign-up link */
 .signup-link {
-    color: #74ebd5;
+    margin-top: 20px;
+    font-size: 14px;
+    color: #333;
+}
+
+.signup-link a {
+    color: #2193b0;
     text-decoration: none;
     font-weight: bold;
+    transition: color 0.3s;
 }
 
-.signup-link:hover {
-    text-decoration: underline;
+.signup-link a:hover {
+    color: #6dd5ed;
 }

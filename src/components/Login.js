@@ -42,9 +42,9 @@ const Login = ({ setLoggedIn }) => {
     };
 
     return (
-        <div className="login-container">
+        <div className="login-page">
             <div className="login-box">
-                <h1 className="login-title">Welcome Back</h1>
+                <h1 className="login-title">Login</h1>
                 {error && <p className="error-message">{error}</p>}
                 <input
                     type="text"
@@ -63,6 +63,9 @@ const Login = ({ setLoggedIn }) => {
                 <button className="login-button" onClick={handleLogin}>
                     Login
                 </button>
+                <p className="signup-link">
+                    Don't have an account? <a href="/signup">Sign Up</a>
+                </p>
             </div>
         </div>
     );
