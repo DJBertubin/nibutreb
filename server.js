@@ -45,6 +45,8 @@ app.post('/api/login', async (req, res) => {
 
     try {
         const user = await User.findOne({ username });
+        console.log('User Retrieved on Login:', user); // Log user data on login
+
         if (!user || !(await bcrypt.compare(password, user.password))) {
             return res.status(401).json({ error: 'Invalid credentials' });
         }
@@ -101,7 +103,6 @@ app.post('/api/shopify/fetch', async (req, res) => {
     const shopifyApiUrl = `https://${storeUrl}/admin/api/2024-01/products.json`;
 
     try {
-        // Fetch Shopify Admin API data
         const response = await fetch(shopifyApiUrl, {
             method: 'GET',
             headers: {
@@ -119,11 +120,17 @@ app.post('/api/shopify/fetch', async (req, res) => {
         const shopifyData = await response.json();
 
         // Save Shopify data to the database
-        const user = await User.findOneAndUpdate(
+        const updatedUser = await User.findOneAndUpdate(
             { shopifyUrl: storeUrl }, // Match by Shopify store URL
             { shopifyToken: adminAccessToken, shopifyData: shopifyData }, // Update token and data
             { new: true, upsert: true } // Create if doesn't exist
         );
+
+        console.log('Updated User:', updatedUser); // Log the updated user
+
+        if (!updatedUser) {
+            throw new Error('User not found or update failed.');
+        }
 
         res.status(200).json({
             message: 'Shopify data fetched and stored successfully.',
