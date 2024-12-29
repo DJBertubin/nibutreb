@@ -29,6 +29,7 @@ const userSchema = new mongoose.Schema({
     username: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     role: { type: String, default: 'client' },
+    shopifyData: { type: Object, default: {} }, // Field for storing Shopify data
 });
 const User = mongoose.model('User', userSchema);
 
@@ -50,7 +51,11 @@ app.post('/api/login', async (req, res) => {
             expiresIn: '1h',
         });
 
-        res.status(200).json({ token, role: user.role });
+        res.status(200).json({ 
+            token, 
+            role: user.role,
+            shopifyData: user.shopifyData // Include Shopify data in the response
+        });
     } catch (error) {
         console.error('Login Error:', error.message);
         res.status(500).json({ error: 'Internal Server Error' });
@@ -84,10 +89,10 @@ app.post('/api/signup', async (req, res) => {
 
 // Shopify Products API Route
 app.post('/api/shopify/products', async (req, res) => {
-    const { storeUrl, adminAccessToken } = req.body;
+    const { storeUrl, adminAccessToken, username } = req.body;
 
-    if (!storeUrl || !adminAccessToken) {
-        return res.status(400).json({ error: 'Store URL and Admin Access Token are required.' });
+    if (!storeUrl || !adminAccessToken || !username) {
+        return res.status(400).json({ error: 'Store URL, Admin Access Token, and Username are required.' });
     }
 
     const shopifyApiUrl = `https://${storeUrl}/admin/api/2024-01/products.json`;
@@ -109,7 +114,20 @@ app.post('/api/shopify/products', async (req, res) => {
         }
 
         const data = await response.json();
-        res.status(200).json(data); // Send products back to the frontend
+
+        // Save Shopify Data to User's Record
+        const user = await User.findOne({ username });
+        if (!user) {
+            return res.status(404).json({ error: 'User not found.' });
+        }
+
+        user.shopifyData = data; // Save Shopify data to the user's record
+        await user.save();
+
+        res.status(200).json({ 
+            message: 'Shopify data fetched and stored successfully.',
+            shopifyData: data 
+        });
     } catch (error) {
         console.error('Proxy Server Error:', error.message);
         res.status(500).json({ error: 'Internal Server Error', details: error.message });
