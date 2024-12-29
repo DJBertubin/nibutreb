@@ -2,7 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
-const fetch = require('node-fetch'); // Required for Shopify API calls
+const fetch = require('node-fetch');
 const dotenv = require('dotenv');
 const mongoose = require('mongoose');
 
@@ -29,11 +29,12 @@ const userSchema = new mongoose.Schema({
     username: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     role: { type: String, default: 'client' },
-    storeUrl: { type: String }, // Optional: To store Shopify store URL
-    adminAccessToken: { type: String }, // Optional: To store Shopify access token
-    shopifyData: { type: Object, default: {} }, // Optional: To store fetched Shopify data
+    shopifyUrl: { type: String }, // Store Shopify store URL
+    shopifyToken: { type: String }, // Store Shopify token
+    shopifyData: { type: Object, default: {} }, // Store fetched Shopify data
 });
-const User = mongoose.model('User', userSchema);
+
+const User = mongoose.models.User || mongoose.model('User', userSchema);
 
 // Login Route
 app.post('/api/login', async (req, res) => {
@@ -56,8 +57,8 @@ app.post('/api/login', async (req, res) => {
         res.status(200).json({
             token,
             role: user.role,
-            storeUrl: user.storeUrl || null, // Include store URL if saved
-            shopifyData: user.shopifyData || {}, // Include Shopify data if saved
+            shopifyUrl: user.shopifyUrl || null,
+            shopifyData: user.shopifyData || {},
         });
     } catch (error) {
         console.error('Login Error:', error.message);
@@ -92,54 +93,57 @@ app.post('/api/signup', async (req, res) => {
 
 // Shopify Fetch API Route
 app.post('/api/shopify/fetch', async (req, res) => {
-    const { storeUrl, adminAccessToken } = req.body;
+    const { username, shopifyUrl, shopifyToken } = req.body;
 
-    if (!storeUrl || !adminAccessToken) {
-        return res.status(400).json({ error: 'Store URL and Admin Access Token are required.' });
+    if (!username || !shopifyUrl || !shopifyToken) {
+        return res.status(400).json({
+            error: 'Username, Shopify URL, and Shopify Token are required.',
+        });
     }
 
-    const shopifyApiUrl = `https://${storeUrl}/admin/api/2024-01/products.json`;
+    const shopifyApiUrl = `${shopifyUrl}/admin/api/2024-01/products.json`;
 
     try {
-        // Fetch Shopify Admin API data
         const response = await fetch(shopifyApiUrl, {
             method: 'GET',
             headers: {
-                'Content-Type': 'application/json',
-                'X-Shopify-Access-Token': adminAccessToken,
+                'X-Shopify-Access-Token': shopifyToken,
             },
         });
 
         if (!response.ok) {
-            const errorText = await response.text();
-            console.error('Shopify API Error:', errorText);
-            return res.status(response.status).json({ error: errorText });
+            const errorData = await response.text();
+            console.error('Shopify API Error:', errorData);
+            return res.status(response.status).json({ error: errorData });
         }
 
-        const data = await response.json();
+        const shopifyData = await response.json();
 
-        // Optional: Save Shopify Data and Credentials to User Record
-        if (req.headers.authorization) {
-            const token = req.headers.authorization.split(' ')[1];
-            const decoded = jwt.verify(token, JWT_SECRET);
-
-            const user = await User.findOne({ username: decoded.username });
-            if (user) {
-                user.storeUrl = storeUrl; // Save the store URL
-                user.adminAccessToken = adminAccessToken; // Save the access token
-                user.shopifyData = data; // Save the fetched Shopify data
-                await user.save();
-            }
+        const user = await User.findOne({ username });
+        if (!user) {
+            return res.status(404).json({ error: 'User not found.' });
         }
+
+        // Save Shopify URL, token, and data
+        user.shopifyUrl = shopifyUrl;
+        user.shopifyToken = shopifyToken;
+        user.shopifyData = shopifyData;
+        await user.save();
 
         res.status(200).json({
-            message: 'Shopify data fetched successfully.',
-            shopifyData: data,
+            message: 'Shopify data fetched and stored successfully.',
+            shopifyData,
         });
-    } catch (error) {
-        console.error('Proxy Server Error:', error.message);
-        res.status(500).json({ error: 'Internal Server Error', details: error.message });
+    } catch (err) {
+        console.error('Error fetching Shopify data:', err.message);
+        res.status(500).json({ error: 'Internal Server Error', details: err.message });
     }
+});
+
+// Backward Compatibility Alias
+app.post('/api/shopify/products', (req, res, next) => {
+    req.url = '/api/shopify/fetch'; // Redirect to /api/shopify/fetch
+    next();
 });
 
 // Error handling middleware
