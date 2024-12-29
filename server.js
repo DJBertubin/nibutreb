@@ -2,9 +2,10 @@ const express = require('express');
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
-const fetch = require('node-fetch'); // Required for Shopify API calls
 const dotenv = require('dotenv');
 const mongoose = require('mongoose');
+const fetchHandler = require('./api/fetch'); // Adjust path as needed
+const User = require('./models/User'); // Modularized user model
 
 dotenv.config();
 
@@ -23,14 +24,6 @@ mongoose
     })
     .then(() => console.log('Connected to MongoDB Atlas'))
     .catch((err) => console.error('MongoDB connection error:', err));
-
-// User Schema and Model
-const userSchema = new mongoose.Schema({
-    username: { type: String, required: true, unique: true },
-    password: { type: String, required: true },
-    role: { type: String, default: 'client' },
-});
-const User = mongoose.model('User', userSchema);
 
 // Login Route
 app.post('/api/login', async (req, res) => {
@@ -82,42 +75,14 @@ app.post('/api/signup', async (req, res) => {
     }
 });
 
-// Shopify Products API Route
-app.post('/api/shopify/products', async (req, res) => {
-    const { storeUrl, adminAccessToken } = req.body;
+// Use Fetch Handler for Shopify Data
+app.post('/api/fetch', fetchHandler);
 
-    if (!storeUrl || !adminAccessToken) {
-        return res.status(400).json({ error: 'Store URL and Admin Access Token are required.' });
-    }
-
-    const shopifyApiUrl = `https://${storeUrl}/admin/api/2024-01/products.json`;
-
-    try {
-        // Fetch Shopify Admin API data
-        const response = await fetch(shopifyApiUrl, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-Shopify-Access-Token': adminAccessToken,
-            },
-        });
-
-        if (!response.ok) {
-            const errorText = await response.text();
-            console.error('Shopify API Error:', errorText);
-            return res.status(response.status).json({ error: errorText });
-        }
-
-        const data = await response.json();
-        res.status(200).json(data); // Send products back to the frontend
-    } catch (error) {
-        console.error('Proxy Server Error:', error.message);
-        res.status(500).json({ error: 'Internal Server Error', details: error.message });
-    }
-});
-
-// Error handling middleware
+// Error Handling Middleware
 app.use((err, req, res, next) => {
+    if (err.name === 'MongoError' && err.code === 11000) {
+        return res.status(400).json({ error: 'Duplicate key error' });
+    }
     console.error('Server Error:', err.message);
     res.status(500).json({ error: 'Internal Server Error', details: err.message });
 });
