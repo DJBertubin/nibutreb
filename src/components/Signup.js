@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import './Signup.css'; // Import the CSS file for Signup styling
+import './Signup.css';
 
 const Signup = () => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
+    const [role, setRole] = useState('client'); // Default role
     const [error, setError] = useState('');
     const navigate = useNavigate();
 
@@ -15,22 +16,36 @@ const Signup = () => {
             setError('Passwords do not match!');
             return;
         }
+        if (password.length < 8) {
+            setError('Password must be at least 8 characters long!');
+            return;
+        }
+        if (!/[A-Z]/.test(password) || !/[0-9]/.test(password)) {
+            setError('Password must include at least one uppercase letter and one number!');
+            return;
+        }
+
         try {
             const response = await fetch('/api/signup', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, password }),
+                body: JSON.stringify({ username, password, role }),
             });
 
             if (!response.ok) {
                 const errorData = await response.json();
-                throw new Error(errorData.error || 'Signup failed');
+                if (response.status === 400) {
+                    setError(errorData.error || 'Username already exists');
+                } else {
+                    setError('Signup failed. Please try again later.');
+                }
+                return;
             }
 
             // Redirect to login page on successful signup
             navigate('/login');
         } catch (err) {
-            setError(err.message);
+            setError(err.message || 'An error occurred. Please try again.');
         }
     };
 
@@ -65,6 +80,16 @@ const Signup = () => {
                         value={confirmPassword}
                         onChange={(e) => setConfirmPassword(e.target.value)}
                     />
+                </div>
+                <div className="input-group">
+                    <select
+                        className="signup-input"
+                        value={role}
+                        onChange={(e) => setRole(e.target.value)}
+                    >
+                        <option value="client">Client</option>
+                        <option value="admin">Admin</option>
+                    </select>
                 </div>
                 <button className="signup-button" onClick={handleSignup}>
                     Sign Up
