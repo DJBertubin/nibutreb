@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import './Signup.css';
+import './Signup.css'; // Import the CSS file for Signup styling
 
 const Signup = () => {
     const [username, setUsername] = useState('');
@@ -27,7 +27,8 @@ const Signup = () => {
                 throw new Error(errorData.error || 'Signup failed');
             }
 
-            navigate('/login'); // Redirect to login page on successful signup
+            // Redirect to login page on successful signup
+            navigate('/login');
         } catch (err) {
             setError(err.message);
         }
@@ -70,7 +71,10 @@ const Signup = () => {
                 </button>
                 <p className="login-link">
                     Already have an account?{' '}
-                    <span className="login-link-action" onClick={() => navigate('/login')}>
+                    <span
+                        className="login-link-action"
+                        onClick={() => navigate('/login')}
+                    >
                         Login
                     </span>
                 </p>

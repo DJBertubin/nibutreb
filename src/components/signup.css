@@ -1,3 +1,4 @@
+/* Full-page gradient background scoped to the signup page */
 body.signup-page {
     margin: 0;
     font-family: 'Arial', sans-serif;
@@ -8,6 +9,7 @@ body.signup-page {
     align-items: center;
 }
 
+/* Signup container */
 .signup-container {
     display: flex;
     justify-content: center;
@@ -16,6 +18,7 @@ body.signup-page {
     height: 100%;
 }
 
+/* Signup box styling */
 .signup-box {
     background: white;
     padding: 30px;
@@ -27,6 +30,7 @@ body.signup-page {
     box-sizing: border-box;
 }
 
+/* Signup title */
 .signup-title {
     font-size: 24px;
     font-weight: bold;
@@ -34,16 +38,19 @@ body.signup-page {
     color: #333;
 }
 
+/* Error message */
 .error-message {
     color: #d9534f;
     font-size: 14px;
     margin-bottom: 15px;
 }
 
+/* Input field group */
 .input-group {
     margin-bottom: 20px;
 }
 
+/* Input field styling */
 .signup-input {
     width: 100%;
     padding: 12px 15px;
@@ -60,6 +67,7 @@ body.signup-page {
     box-shadow: 0 0 4px rgba(33, 147, 176, 0.5);
 }
 
+/* Signup button */
 .signup-button {
     width: 100%;
     padding: 12px 15px;
@@ -76,6 +84,7 @@ body.signup-page {
     background: linear-gradient(135deg, #2193b0, #6dd5ed);
 }
 
+/* Login link */
 .login-link {
     margin-top: 20px;
     font-size: 14px;
