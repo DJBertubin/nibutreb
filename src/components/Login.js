@@ -6,7 +6,7 @@ const Login = ({ setLoggedIn }) => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
-    const navigate = useNavigate();
+    const navigate = useNavigate(); // React Router's navigation hook
 
     const handleLogin = async () => {
         setError('');
@@ -41,6 +41,10 @@ const Login = ({ setLoggedIn }) => {
         }
     };
 
+    const handleSignup = () => {
+        navigate('/signup'); // Navigate to the signup page
+    };
+
     return (
         <div className="login-container">
             <div className="login-box">
@@ -68,7 +72,10 @@ const Login = ({ setLoggedIn }) => {
                     Login
                 </button>
                 <p className="signup-link">
-                    Don't have an account? <a href="/signup">Sign Up</a>
+                    Don't have an account?{' '}
+                    <span className="signup-link-action" onClick={handleSignup}>
+                        Sign Up
+                    </span>
                 </p>
             </div>
         </div>

@@ -1,16 +1,18 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import AdminDashboard from './pages/AdminDashboard';
-import ProductDashboard from './pages/ProductDashboard'; // Correct Import
+import ProductDashboard from './pages/ProductDashboard';
 import Login from './components/Login';
+import Signup from './components/Signup'; // Import the Signup component
 
 const App = () => {
     return (
         <BrowserRouter>
             <Routes>
                 <Route path="/admin-dashboard" element={<AdminDashboard />} />
-                <Route path="/products" element={<ProductDashboard />} /> {/* Correct Route */}
+                <Route path="/products" element={<ProductDashboard />} />
                 <Route path="/login" element={<Login />} />
+                <Route path="/signup" element={<Signup />} /> {/* New Sign Up route */}
                 <Route path="*" element={<Login />} /> {/* Default route */}
             </Routes>
         </BrowserRouter>
