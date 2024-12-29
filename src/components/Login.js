@@ -24,22 +24,20 @@ const Login = ({ setLoggedIn }) => {
 
             const data = await response.json();
 
-            // Save token, role, and username in localStorage
+            // Save authentication details in localStorage
             localStorage.setItem('token', data.token);
             localStorage.setItem('role', data.role);
-            localStorage.setItem('username', data.username); // Save username from response
+            localStorage.setItem('username', data.username);
 
-            if (typeof setLoggedIn === 'function') {
-                setLoggedIn(true);
-            }
+            setLoggedIn(true);
 
-            // Navigate based on role
+            // Redirect based on role
             if (data.role === 'admin') {
                 navigate('/admin-dashboard');
             } else if (data.role === 'client') {
                 navigate('/client-dashboard');
             } else {
-                throw new Error('Unknown role');
+                throw new Error('Invalid role');
             }
         } catch (err) {
             setError(err.message);
@@ -78,7 +76,10 @@ const Login = ({ setLoggedIn }) => {
                 </button>
                 <p className="signup-link">
                     Don't have an account?{' '}
-                    <span className="signup-link-action" onClick={handleSignup}>
+                    <span
+                        className="signup-link-action"
+                        onClick={handleSignup}
+                    >
                         Sign Up
                     </span>
                 </p>

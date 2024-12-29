@@ -10,44 +10,42 @@ const App = () => {
     const [isLoggedIn, setLoggedIn] = useState(false);
     const [role, setRole] = useState(null);
 
-    // Check localStorage for authentication status
+    // Fetch user role and login status from localStorage
     useEffect(() => {
         const token = localStorage.getItem('token');
         const userRole = localStorage.getItem('role');
         if (token && userRole) {
             setLoggedIn(true);
             setRole(userRole);
+        } else {
+            setLoggedIn(false);
+            setRole(null);
         }
     }, []);
 
     return (
         <BrowserRouter>
             <Routes>
-                {/* Role-Based Routing */}
-                {isLoggedIn ? (
+                {/* Authenticated Routes */}
+                {isLoggedIn && role === 'admin' && (
                     <>
-                        {role === 'admin' && (
-                            <Route path="/admin-dashboard" element={<AdminDashboard />} />
-                        )}
-                        {role === 'client' && (
-                            <Route path="/client-dashboard" element={<ClientDashboard />} />
-                        )}
+                        <Route path="/admin-dashboard" element={<AdminDashboard />} />
                         <Route path="/products" element={<ProductDashboard />} />
-                        {/* Redirect based on role */}
-                        <Route
-                            path="*"
-                            element={
-                                role === 'admin' ? (
-                                    <Navigate to="/admin-dashboard" replace />
-                                ) : (
-                                    <Navigate to="/client-dashboard" replace />
-                                )
-                            }
-                        />
+                        <Route path="*" element={<Navigate to="/admin-dashboard" replace />} />
                     </>
-                ) : (
+                )}
+
+                {isLoggedIn && role === 'client' && (
                     <>
-                        {/* Public Routes */}
+                        <Route path="/client-dashboard" element={<ClientDashboard />} />
+                        <Route path="/products" element={<ProductDashboard />} />
+                        <Route path="*" element={<Navigate to="/client-dashboard" replace />} />
+                    </>
+                )}
+
+                {/* Public Routes */}
+                {!isLoggedIn && (
+                    <>
                         <Route path="/login" element={<Login setLoggedIn={setLoggedIn} />} />
                         <Route path="/signup" element={<Signup />} />
                         <Route path="*" element={<Navigate to="/login" replace />} />
