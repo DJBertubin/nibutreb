@@ -49,13 +49,15 @@ const Signup = () => {
                 body: JSON.stringify({ username: username.trim(), password, role }),
             });
 
+            const contentType = response.headers.get('Content-Type');
+            if (!contentType || !contentType.includes('application/json')) {
+                throw new Error('Invalid response from server. Please try again later.');
+            }
+
+            const data = await response.json();
+
             if (!response.ok) {
-                const errorData = await response.json();
-                if (response.status === 400) {
-                    setError(errorData.error || 'Username already exists');
-                } else {
-                    setError('Signup failed. Please try again later.');
-                }
+                setError(data.error || 'Signup failed. Please try again later.');
                 setLoading(false);
                 return;
             }

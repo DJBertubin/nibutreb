@@ -37,13 +37,16 @@ export default async function handler(req, res) {
         const newUser = new User({
             username,
             password: hashedPassword,
-            role: role || 'client', // Default role is 'client'
+            role: role || 'client',
         });
 
         await newUser.save();
+
         res.status(201).json({ message: 'User created successfully' });
     } catch (err) {
         console.error('Error in signup:', err);
-        res.status(500).json({ error: 'Internal server error' });
+
+        // Return a generic error as JSON
+        res.status(500).json({ error: 'Internal server error. Please try again later.' });
     }
 }
