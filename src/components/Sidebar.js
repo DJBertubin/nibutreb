@@ -7,12 +7,11 @@ const Sidebar = () => {
     const [username, setUsername] = useState('');
     const [role, setRole] = useState('');
 
-    // Fetch username and role from localStorage
     useEffect(() => {
         const storedUsername = localStorage.getItem('username');
         const storedRole = localStorage.getItem('role');
-        setUsername(storedUsername || 'User'); // Default to "User" if not set
-        setRole(storedRole || ''); // Default to empty if not set
+        setUsername(storedUsername || 'User'); // Fallback to "User"
+        setRole(storedRole || ''); // Fallback to empty
     }, []);
 
     const handleLogout = () => {
@@ -59,12 +58,8 @@ const Sidebar = () => {
 
     return (
         <div className="sidebar">
-            {/* Dynamically Display Username */}
             <h2>{username ? `${username}'s Panel` : 'User Panel'}</h2>
-            
-            {/* Display Role-Specific Links */}
             {role === 'admin' ? adminLinks : clientLinks}
-            
             <div className="sidebar-footer">
                 <button className="logout-button" onClick={handleLogout}>
                     <i className="fas fa-sign-out-alt"></i> Logout
