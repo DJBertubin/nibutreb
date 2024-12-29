@@ -10,9 +10,9 @@ const Signup = () => {
     const navigate = useNavigate();
 
     useEffect(() => {
-        document.body.className = 'signup-page'; // Add the class for signup
+        document.body.className = 'signup-page'; // Add class for signup page
         return () => {
-            document.body.className = ''; // Remove the class on unmount
+            document.body.className = ''; // Remove class on unmount
         };
     }, []);
 
@@ -34,7 +34,7 @@ const Signup = () => {
                 throw new Error(errorData.error || 'Signup failed');
             }
 
-            navigate('/login');
+            navigate('/login'); // Redirect to login page after signup
         } catch (err) {
             setError(err.message);
         }
@@ -77,9 +77,12 @@ const Signup = () => {
                 </button>
                 <p className="login-link">
                     Already have an account?{' '}
-                    <a href="#" onClick={() => navigate('/login')}>
+                    <span
+                        className="login-link-action"
+                        onClick={() => navigate('/login')}
+                    >
                         Login
-                    </a>
+                    </span>
                 </p>
             </div>
         </div>

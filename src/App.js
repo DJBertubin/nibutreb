@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Sidebar from './components/Sidebar';
 import AdminDashboard from './pages/AdminDashboard';
@@ -7,12 +7,20 @@ import Login from './components/Login';
 import Signup from './components/Signup';
 
 const App = () => {
-    const [isLoggedIn, setLoggedIn] = useState(false); // Tracks login status
+    const [isLoggedIn, setLoggedIn] = useState(false);
+
+    // Check localStorage for authentication token on app load
+    useEffect(() => {
+        const token = localStorage.getItem('token');
+        if (token) {
+            setLoggedIn(true);
+        }
+    }, []);
 
     return (
         <BrowserRouter>
             <Routes>
-                {/* Auth Pages */}
+                {/* Login Route */}
                 <Route
                     path="/login"
                     element={
@@ -23,6 +31,7 @@ const App = () => {
                         )
                     }
                 />
+                {/* Signup Route */}
                 <Route
                     path="/signup"
                     element={
@@ -33,8 +42,7 @@ const App = () => {
                         )
                     }
                 />
-
-                {/* Dashboard Pages */}
+                {/* Admin Dashboard Route */}
                 <Route
                     path="/admin-dashboard"
                     element={
@@ -50,6 +58,7 @@ const App = () => {
                         )
                     }
                 />
+                {/* Products Dashboard Route */}
                 <Route
                     path="/products"
                     element={
@@ -65,7 +74,6 @@ const App = () => {
                         )
                     }
                 />
-
                 {/* Catch-All Redirect */}
                 <Route
                     path="*"

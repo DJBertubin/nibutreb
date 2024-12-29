@@ -9,9 +9,9 @@ const Login = ({ setLoggedIn }) => {
     const navigate = useNavigate();
 
     useEffect(() => {
-        document.body.className = 'login-page';
+        document.body.className = 'login-page'; // Add class for login page
         return () => {
-            document.body.className = '';
+            document.body.className = ''; // Remove class on unmount
         };
     }, []);
 
@@ -30,10 +30,9 @@ const Login = ({ setLoggedIn }) => {
             }
 
             const data = await response.json();
-            localStorage.setItem('token', data.token);
-            localStorage.setItem('role', data.role);
-
-            setLoggedIn(true); // Updates the login state
+            localStorage.setItem('token', data.token); // Save authentication token
+            localStorage.setItem('role', data.role); // Save role if needed
+            setLoggedIn(true); // Update state
             navigate('/admin-dashboard'); // Redirect to dashboard
         } catch (err) {
             setError(err.message);
