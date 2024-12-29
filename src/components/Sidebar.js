@@ -1,23 +1,15 @@
 import React from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
+import Logout from './Logout'; // Import the Logout component
 import './Sidebar.css';
 
-const Sidebar = ({ userType, username }) => {
-    const navigate = useNavigate();
-
-    const handleLogout = () => {
-        localStorage.removeItem('token');
-        localStorage.removeItem('username');
-        localStorage.removeItem('role');
-        navigate('/login');
-    };
-
+const Sidebar = ({ userType, setLoggedIn }) => {
     return (
         <div className="sidebar">
-            <h2>{username}'s Panel</h2> {/* Dynamically show the username */}
+            <h2>{userType} Panel</h2>
             <ul>
                 <li>
-                    <NavLink to={`/${userType.toLowerCase()}-dashboard`} activeClassName="active">
+                    <NavLink to="/admin-dashboard" activeClassName="active">
                         <i className="fas fa-home"></i> Dashboard
                     </NavLink>
                 </li>
@@ -28,9 +20,8 @@ const Sidebar = ({ userType, username }) => {
                 </li>
             </ul>
             <div className="sidebar-footer">
-                <button className="logout-button" onClick={handleLogout}>
-                    <i className="fas fa-sign-out-alt"></i> Logout
-                </button>
+                {/* Use the Logout component */}
+                <Logout setLoggedIn={setLoggedIn} />
             </div>
         </div>
     );

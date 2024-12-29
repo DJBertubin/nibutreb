@@ -6,7 +6,7 @@ const Login = ({ setLoggedIn }) => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
-    const navigate = useNavigate();
+    const navigate = useNavigate(); // React Router's navigation hook
 
     const handleLogin = async () => {
         setError('');
@@ -24,20 +24,17 @@ const Login = ({ setLoggedIn }) => {
 
             const data = await response.json();
 
-            // Save authentication details in localStorage
             localStorage.setItem('token', data.token);
             localStorage.setItem('role', data.role);
-            localStorage.setItem('username', data.username);
 
-            setLoggedIn(true);
+            if (typeof setLoggedIn === 'function') {
+                setLoggedIn(true);
+            }
 
-            // Redirect based on role
             if (data.role === 'admin') {
                 navigate('/admin-dashboard');
             } else if (data.role === 'client') {
                 navigate('/client-dashboard');
-            } else {
-                throw new Error('Invalid role');
             }
         } catch (err) {
             setError(err.message);
@@ -76,10 +73,7 @@ const Login = ({ setLoggedIn }) => {
                 </button>
                 <p className="signup-link">
                     Don't have an account?{' '}
-                    <span
-                        className="signup-link-action"
-                        onClick={handleSignup}
-                    >
+                    <span className="signup-link-action" onClick={handleSignup}>
                         Sign Up
                     </span>
                 </p>
