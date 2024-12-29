@@ -1,20 +1,23 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import Sidebar from '../components/Sidebar';
 
-const ClientDashboard = ({ setIsLoggedIn }) => {
-    const navigate = useNavigate();
-
-    const handleLogout = () => {
-        localStorage.removeItem('token');
-        localStorage.removeItem('role');
-        setIsLoggedIn(false);
-        navigate('/login');
-    };
-
+const ClientDashboard = () => {
     return (
-        <div>
-            <h1>Client Dashboard</h1>
-            <button onClick={handleLogout}>Logout</button>
+        <div style={{ display: 'flex', height: '100vh' }}>
+            {/* Sidebar */}
+            <Sidebar userType="Client" />
+            
+            {/* Main Content */}
+            <div
+                style={{
+                    marginLeft: '300px', // Ensure enough space for the sidebar
+                    padding: '20px',
+                    flexGrow: 1,
+                    backgroundColor: '#f9f9f9', // Optional: Add background for content area
+                }}
+            >
+                <h1>Welcome, Client!</h1>
+            </div>
         </div>
     );
 };
