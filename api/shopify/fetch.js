@@ -1,22 +1,30 @@
 import mongoose from 'mongoose';
 import fetch from 'node-fetch';
 
-// MongoDB Connection
-mongoose.connect(process.env.MONGO_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-});
+// MongoDB Connection (modularized for reuse)
+const connectToMongoDB = async () => {
+    if (mongoose.connection.readyState === 0) {
+        await mongoose.connect(process.env.MONGO_URI, {
+            useNewUrlParser: true,
+            useUnifiedTopology: true,
+        });
+        console.log('Connected to MongoDB');
+    }
+};
 
 // Define User Schema and Model
 const UserSchema = new mongoose.Schema({
     username: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     role: { type: String, default: 'client' },
-    shopifyData: Object, // Field for storing Shopify data
+    shopifyUrl: { type: String }, // Store Shopify URL for future use
+    shopifyToken: { type: String }, // Store Shopify token for future use
+    shopifyData: Object, // Store fetched Shopify data
 });
 
 const User = mongoose.models.User || mongoose.model('User', UserSchema);
 
+// Handler Function
 export default async function handler(req, res) {
     if (req.method !== 'POST') {
         return res.status(405).json({ error: 'Method not allowed. Use POST.' });
@@ -30,9 +38,16 @@ export default async function handler(req, res) {
         });
     }
 
+    // Validate Shopify Token Format
+    if (!shopifyToken.startsWith('shpat_')) {
+        return res.status(400).json({ error: 'Invalid Shopify token format.' });
+    }
+
     const shopifyApiUrl = `${shopifyUrl}/admin/api/2024-01/products.json`;
 
     try {
+        await connectToMongoDB();
+
         // Fetch Shopify data
         const response = await fetch(shopifyApiUrl, {
             method: 'GET',
@@ -43,6 +58,7 @@ export default async function handler(req, res) {
 
         if (!response.ok) {
             const errorData = await response.text();
+            console.error('Shopify API Error:', errorData);
             return res.status(response.status).json({ error: errorData });
         }
 
@@ -54,6 +70,8 @@ export default async function handler(req, res) {
             return res.status(404).json({ error: 'User not found.' });
         }
 
+        user.shopifyUrl = shopifyUrl; // Save Shopify URL
+        user.shopifyToken = shopifyToken; // Save Shopify token
         user.shopifyData = shopifyData; // Save Shopify data to the user's record
         await user.save();
 

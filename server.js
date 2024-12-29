@@ -29,9 +29,9 @@ const userSchema = new mongoose.Schema({
     username: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     role: { type: String, default: 'client' },
-    storeUrl: { type: String }, // To store Shopify store URL
-    adminAccessToken: { type: String }, // To store Shopify access token
-    shopifyData: { type: Object, default: {} }, // To store fetched Shopify data
+    storeUrl: { type: String }, // Optional: To store Shopify store URL
+    adminAccessToken: { type: String }, // Optional: To store Shopify access token
+    shopifyData: { type: Object, default: {} }, // Optional: To store fetched Shopify data
 });
 const User = mongoose.model('User', userSchema);
 
@@ -56,8 +56,8 @@ app.post('/api/login', async (req, res) => {
         res.status(200).json({
             token,
             role: user.role,
-            storeUrl: user.storeUrl, // Include store URL
-            shopifyData: user.shopifyData, // Include Shopify data
+            storeUrl: user.storeUrl || null, // Include store URL if saved
+            shopifyData: user.shopifyData || {}, // Include Shopify data if saved
         });
     } catch (error) {
         console.error('Login Error:', error.message);
@@ -90,7 +90,7 @@ app.post('/api/signup', async (req, res) => {
     }
 });
 
-// Shopify Fetch Route
+// Shopify Fetch API Route
 app.post('/api/shopify/fetch', async (req, res) => {
     const { storeUrl, adminAccessToken } = req.body;
 
@@ -118,20 +118,22 @@ app.post('/api/shopify/fetch', async (req, res) => {
 
         const data = await response.json();
 
-        // Save Shopify Data and Credentials to User Record
-        const username = req.headers['x-username']; // Assume username is sent via headers for authentication
-        const user = await User.findOne({ username });
-        if (!user) {
-            return res.status(404).json({ error: 'User not found.' });
+        // Optional: Save Shopify Data and Credentials to User Record
+        if (req.headers.authorization) {
+            const token = req.headers.authorization.split(' ')[1];
+            const decoded = jwt.verify(token, JWT_SECRET);
+
+            const user = await User.findOne({ username: decoded.username });
+            if (user) {
+                user.storeUrl = storeUrl; // Save the store URL
+                user.adminAccessToken = adminAccessToken; // Save the access token
+                user.shopifyData = data; // Save the fetched Shopify data
+                await user.save();
+            }
         }
 
-        user.storeUrl = storeUrl; // Save the store URL
-        user.adminAccessToken = adminAccessToken; // Save the access token
-        user.shopifyData = data; // Save the fetched Shopify data
-        await user.save();
-
         res.status(200).json({
-            message: 'Shopify data fetched and stored successfully.',
+            message: 'Shopify data fetched successfully.',
             shopifyData: data,
         });
     } catch (error) {
