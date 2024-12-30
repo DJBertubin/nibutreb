@@ -45,8 +45,6 @@ app.post('/api/login', async (req, res) => {
 
     try {
         const user = await User.findOne({ username });
-        console.log('User Retrieved on Login:', user);
-
         if (!user || !(await bcrypt.compare(password, user.password))) {
             return res.status(401).json({ error: 'Invalid credentials' });
         }
@@ -59,7 +57,7 @@ app.post('/api/login', async (req, res) => {
             token,
             role: user.role,
             shopifyUrl: user.shopifyUrl || null,
-            shopifyData: user.shopifyData || {},
+            shopifyData: user.shopifyData || {}, // Return existing shopifyData
         });
     } catch (error) {
         console.error('Login Error:', error.message);
@@ -100,10 +98,9 @@ app.post('/api/shopify/fetch', async (req, res) => {
         return res.status(400).json({ error: 'Store URL and Admin Access Token are required.' });
     }
 
-    const shopifyApiUrl = `https://${storeUrl}/admin/api/2024-01/products.json`;
+    const shopifyApiUrl = `https://${storeUrl.trim()}/admin/api/2024-01/products.json`;
 
     try {
-        // Fetch Shopify data
         const response = await fetch(shopifyApiUrl, {
             method: 'GET',
             headers: {
@@ -120,15 +117,11 @@ app.post('/api/shopify/fetch', async (req, res) => {
 
         const shopifyData = await response.json();
 
-        // Debugging logs
-        console.log('Before Update:', await User.findOne({ shopifyUrl: storeUrl }));
-        console.log('Shopify Data Size:', JSON.stringify(shopifyData).length);
-
-        // Save to MongoDB
+        // Update or insert Shopify data for the user
         const updatedUser = await User.findOneAndUpdate(
-            { shopifyUrl: storeUrl.trim() },
-            { shopifyToken: adminAccessToken, shopifyData: shopifyData },
-            { new: true, upsert: true }
+            { shopifyUrl: storeUrl.trim() }, // Match by store URL
+            { shopifyToken: adminAccessToken, shopifyData: shopifyData }, // Update token and data
+            { new: true, upsert: true } // Create if not exists
         );
 
         if (!updatedUser) {
@@ -136,7 +129,7 @@ app.post('/api/shopify/fetch', async (req, res) => {
             return res.status(404).json({ error: 'User not found or update failed.' });
         }
 
-        console.log('After Update:', updatedUser);
+        console.log('Updated User:', updatedUser);
         res.status(200).json({
             message: 'Shopify data fetched and stored successfully.',
             shopifyData,
@@ -147,11 +140,37 @@ app.post('/api/shopify/fetch', async (req, res) => {
     }
 });
 
-// Error handling middleware
+// Fetch User Data Route
+app.get('/api/user/data', async (req, res) => {
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader) {
+        return res.status(401).json({ error: 'Authorization token required.' });
+    }
+
+    const token = authHeader.split(' ')[1];
+
+    try {
+        const decoded = jwt.verify(token, JWT_SECRET);
+        const user = await User.findOne({ username: decoded.username });
+
+        if (!user) {
+            return res.status(404).json({ error: 'User not found.' });
+        }
+
+        res.status(200).json({
+            shopifyData: user.shopifyData || {},
+        });
+    } catch (error) {
+        console.error('Error fetching user data:', error.message);
+        res.status(500).json({ error: 'Internal Server Error', details: error.message });
+    }
+});
+
+// Error Handling Middleware
 app.use((err, req, res, next) => {
     console.error('Server Error:', err.message);
     res.status(500).json({ error: 'Internal Server Error', details: err.message });
 });
 
-// Export for Vercel
 module.exports = app;
