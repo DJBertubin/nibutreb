@@ -3,13 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import './Signup.css';
 
 const Signup = () => {
-    const [name, setName] = useState(''); // Added name input
+    const [name, setName] = useState(''); // Add name state
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [role, setRole] = useState('client'); // Default role
     const [error, setError] = useState('');
-    const [loading, setLoading] = useState(false); // Added loading state
+    const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
 
     const handleSignup = async () => {
@@ -52,7 +52,12 @@ const Signup = () => {
             const response = await fetch('/api/signup', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name: name.trim(), username: username.trim(), password, role }),
+                body: JSON.stringify({
+                    name: name.trim(), // Send name
+                    username: username.trim(),
+                    password,
+                    role,
+                }),
             });
 
             const data = await response.json();
@@ -63,9 +68,8 @@ const Signup = () => {
                 return;
             }
 
-            console.log('Generated Client ID:', data.clientId);
-
-            localStorage.setItem('clientId', data.clientId);
+            console.log('Generated Client ID:', data.clientId); // Log client ID for debugging
+            localStorage.setItem('clientId', data.clientId); // Save clientId locally
 
             navigate('/login');
         } catch (err) {
@@ -84,7 +88,7 @@ const Signup = () => {
                     <input
                         type="text"
                         className="signup-input"
-                        placeholder="Full Name"
+                        placeholder="Name"
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                         disabled={loading}
