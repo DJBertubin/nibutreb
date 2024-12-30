@@ -46,6 +46,10 @@ export default async function handler(req, res) {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         const clientId = decoded.clientId;
 
+        if (!clientId) {
+            return res.status(401).json({ error: 'Invalid or missing clientId in token.' });
+        }
+
         // Fetch data from Shopify API
         const response = await fetch(shopifyApiUrl, {
             method: 'GET',
@@ -69,10 +73,10 @@ export default async function handler(req, res) {
                 $set: {
                     shopifyUrl: trimmedStoreUrl,
                     shopifyToken: adminAccessToken,
-                    shopifyData, // Merge shopifyData into the user's record
+                    shopifyData, // Save the fetched Shopify data
                 },
             },
-            { new: true } // Return the updated document
+            { new: true, upsert: false } // Ensure user exists; no creation on failure
         );
 
         if (!updatedUser) {
