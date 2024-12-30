@@ -10,7 +10,7 @@ mongoose.connect(process.env.MONGO_URI, {
 
 // Define User Schema and Model
 const UserSchema = new mongoose.Schema({
-    clientId: { type: String, unique: true, required: true, default: () => nanoid() }, // Unique Client ID using nanoid
+    clientId: { type: String, unique: true, required: true }, // Unique Client ID
     username: { type: String, unique: true, required: true },
     password: { type: String, required: true },
     role: { type: String, default: 'client' },
@@ -35,8 +35,9 @@ export default async function handler(req, res) {
         // Step 2: Hash the password
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        // Step 3: Create and save the user with a unique clientId
+        // Step 3: Generate unique clientId and save the user
         const newUser = new User({
+            clientId: nanoid(), // Generate a unique clientId
             username,
             password: hashedPassword,
             role: role || 'client',
