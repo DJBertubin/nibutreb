@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import './Signup.css';
 
 const Signup = () => {
+    const [name, setName] = useState(''); // Added name input
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
@@ -16,6 +17,11 @@ const Signup = () => {
         setLoading(true);
 
         // Input validation
+        if (!name.trim()) {
+            setError('Name is required.');
+            setLoading(false);
+            return;
+        }
         if (!username.trim()) {
             setError('Username is required.');
             setLoading(false);
@@ -46,7 +52,7 @@ const Signup = () => {
             const response = await fetch('/api/signup', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username: username.trim(), password, role }),
+                body: JSON.stringify({ name: name.trim(), username: username.trim(), password, role }),
             });
 
             const data = await response.json();
@@ -79,6 +85,16 @@ const Signup = () => {
             <div className="signup-box">
                 <h1 className="signup-title">Sign Up</h1>
                 {error && <p className="error-message">{error}</p>}
+                <div className="input-group">
+                    <input
+                        type="text"
+                        className="signup-input"
+                        placeholder="Full Name"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        disabled={loading}
+                    />
+                </div>
                 <div className="input-group">
                     <input
                         type="text"
