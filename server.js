@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
+const fetch = require('node-fetch');
 const dotenv = require('dotenv');
 const mongoose = require('mongoose');
 
@@ -28,7 +29,7 @@ const userSchema = new mongoose.Schema({
     username: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     role: { type: String, default: 'client' },
-    shopifyUrl: { type: String },
+    shopifyUrl: { type: String, unique: true }, // Ensure shopifyUrl is unique
     shopifyToken: { type: String },
     shopifyData: { type: Object, default: {} },
 });
@@ -61,6 +62,81 @@ app.post('/api/login', async (req, res) => {
     } catch (error) {
         console.error('Login Error:', error.message);
         res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+// Signup Route
+app.post('/api/signup', async (req, res) => {
+    const { username, password, role } = req.body;
+
+    if (!username || !password) {
+        return res.status(400).json({ error: 'Username and password are required' });
+    }
+
+    try {
+        const existingUser = await User.findOne({ username });
+        if (existingUser) {
+            return res.status(400).json({ error: 'Username already exists' });
+        }
+
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const newUser = new User({ username, password: hashedPassword, role });
+        await newUser.save();
+
+        res.status(201).json({ message: 'User created successfully' });
+    } catch (error) {
+        console.error('Signup Error:', error.message);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+// Shopify Fetch API Route
+app.post('/api/shopify/fetch', async (req, res) => {
+    const { storeUrl, adminAccessToken } = req.body;
+
+    if (!storeUrl || !adminAccessToken) {
+        return res.status(400).json({ error: 'Store URL and Admin Access Token are required.' });
+    }
+
+    const shopifyApiUrl = `https://${storeUrl.trim()}/admin/api/2024-01/products.json`;
+
+    try {
+        const response = await fetch(shopifyApiUrl, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Shopify-Access-Token': adminAccessToken,
+            },
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('Shopify API Error:', errorText);
+            return res.status(response.status).json({ error: errorText });
+        }
+
+        const shopifyData = await response.json();
+
+        // Update or insert Shopify data for the user
+        const updatedUser = await User.findOneAndUpdate(
+            { shopifyUrl: storeUrl.trim() }, // Match by store URL
+            { shopifyToken: adminAccessToken, shopifyData: shopifyData }, // Update token and data
+            { new: true, upsert: true } // Create if not exists
+        );
+
+        if (!updatedUser) {
+            console.error('User not found or update failed.');
+            return res.status(404).json({ error: 'User not found or update failed.' });
+        }
+
+        console.log('Updated User:', updatedUser);
+        res.status(200).json({
+            message: 'Shopify data fetched and stored successfully.',
+            shopifyData,
+        });
+    } catch (err) {
+        console.error('Error fetching Shopify data:', err.message);
+        res.status(500).json({ error: 'Internal Server Error', details: err.message });
     }
 });
 
