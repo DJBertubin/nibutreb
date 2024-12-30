@@ -35,15 +35,21 @@ export default async function handler(req, res) {
         // Step 2: Hash the password
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        // Step 3: Generate unique clientId and save the user
+        // Step 3: Generate unique clientId and create user
+        const clientId = nanoid();
+        console.log(`Generated Client ID: ${clientId}`); // Debugging log
+
         const newUser = new User({
-            clientId: nanoid(), // Generate a unique clientId
+            clientId, // Add generated clientId
             username,
             password: hashedPassword,
             role: role || 'client',
         });
 
+        // Step 4: Save user to MongoDB
         await newUser.save();
+
+        console.log(`User Created: ${JSON.stringify(newUser)}`); // Debugging log
 
         res.status(201).json({
             message: 'User created successfully',
