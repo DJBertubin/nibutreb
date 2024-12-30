@@ -9,51 +9,60 @@ import IntegrationModal from '../components/IntegrationModal';
 const Products = () => {
     const [showIntegrationModal, setShowIntegrationModal] = useState(false);
     const [integrationType, setIntegrationType] = useState('');
-    const [productData, setProductData] = useState([]);
+    const [productData, setProductData] = useState(() => {
+        // Load cached data from sessionStorage
+        const cachedData = sessionStorage.getItem('productData');
+        return cachedData ? JSON.parse(cachedData) : [];
+    });
     const [stores, setStores] = useState(['Walmart', 'Shopify']); // Initial stores list
     const [error, setError] = useState('');
-    const [loading, setLoading] = useState(true); // Loading state
+    const [loading, setLoading] = useState(false); // Initialize to false
     const navigate = useNavigate();
 
     useEffect(() => {
-        const fetchShopifyData = async () => {
-            const token = localStorage.getItem('token');
+        // Fetch data only if not already cached
+        if (productData.length === 0) {
+            const fetchShopifyData = async () => {
+                const token = localStorage.getItem('token');
 
-            if (!token) {
-                navigate('/login'); // Redirect to login if not authenticated
-                return;
-            }
-
-            try {
-                const response = await fetch('/api/shopify/data', {
-                    method: 'GET',
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                });
-
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    if (response.status === 404) {
-                        // No data found for user
-                        setProductData([]); // Explicitly set empty product data
-                        setLoading(false);
-                        return;
-                    }
-                    throw new Error(errorData.error || 'Failed to fetch Shopify data.');
+                if (!token) {
+                    navigate('/login'); // Redirect to login if not authenticated
+                    return;
                 }
 
-                const data = await response.json();
-                setProductData(data.shopifyData); // Update product data with fetched Shopify data
-            } catch (err) {
-                setError(err.message);
-            } finally {
-                setLoading(false); // Stop loading
-            }
-        };
+                try {
+                    setLoading(true); // Start loading
+                    const response = await fetch('/api/shopify/data', {
+                        method: 'GET',
+                        headers: {
+                            Authorization: `Bearer ${token}`,
+                        },
+                    });
 
-        fetchShopifyData();
-    }, [navigate]);
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        if (response.status === 404) {
+                            // No data found for user
+                            setProductData([]); // Explicitly set empty product data
+                            sessionStorage.setItem('productData', JSON.stringify([])); // Cache the empty data
+                            return;
+                        }
+                        throw new Error(errorData.error || 'Failed to fetch Shopify data.');
+                    }
+
+                    const data = await response.json();
+                    setProductData(data.shopifyData); // Update product data with fetched Shopify data
+                    sessionStorage.setItem('productData', JSON.stringify(data.shopifyData)); // Cache the data
+                } catch (err) {
+                    setError(err.message);
+                } finally {
+                    setLoading(false); // Stop loading
+                }
+            };
+
+            fetchShopifyData();
+        }
+    }, [navigate, productData.length]);
 
     const handleShowModal = (type) => {
         setIntegrationType(type);
@@ -67,6 +76,7 @@ const Products = () => {
 
     const handleShopifyConnect = (data) => {
         setProductData(data); // Update product data
+        sessionStorage.setItem('productData', JSON.stringify(data)); // Cache updated data
     };
 
     const handleAddStoreName = (storeName) => {
@@ -74,10 +84,6 @@ const Products = () => {
             setStores((prevStores) => [...prevStores, storeName]);
         }
     };
-
-    if (loading) {
-        return <div>Loading...</div>;
-    }
 
     if (error) {
         return <div>Error: {error}</div>;
