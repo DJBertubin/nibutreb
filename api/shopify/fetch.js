@@ -66,11 +66,13 @@ export default async function handler(req, res) {
         const updatedUser = await User.findOneAndUpdate(
             { clientId }, // Match by clientId
             {
-                shopifyUrl: trimmedStoreUrl,
-                shopifyToken: adminAccessToken,
-                shopifyData, // Merge shopifyData into the user's record
+                $set: {
+                    shopifyUrl: trimmedStoreUrl,
+                    shopifyToken: adminAccessToken,
+                    shopifyData, // Merge shopifyData into the user's record
+                },
             },
-            { new: true, upsert: false } // Only update existing user
+            { new: true } // Return the updated document
         );
 
         if (!updatedUser) {

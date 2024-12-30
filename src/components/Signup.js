@@ -62,6 +62,9 @@ const Signup = () => {
                 return;
             }
 
+            // Log the generated clientId for debugging or analytics (optional)
+            console.log('Generated Client ID:', data.clientId);
+
             // On successful signup, redirect to login page
             navigate('/login');
         } catch (err) {
