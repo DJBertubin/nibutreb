@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 import bcrypt from 'bcrypt';
-import { v4 as uuidv4 } from 'uuid'; // For generating unique client IDs
+import { nanoid } from 'nanoid'; // For generating unique client IDs
 
 // MongoDB Connection
 mongoose.connect(process.env.MONGO_URI, {
@@ -10,7 +10,7 @@ mongoose.connect(process.env.MONGO_URI, {
 
 // Define User Schema and Model
 const UserSchema = new mongoose.Schema({
-    clientId: { type: String, unique: true, required: true, default: uuidv4 }, // Unique Client ID
+    clientId: { type: String, unique: true, required: true, default: () => nanoid() }, // Unique Client ID using nanoid
     username: { type: String, unique: true, required: true },
     password: { type: String, required: true },
     role: { type: String, default: 'client' },
