@@ -26,13 +26,15 @@ mongoose
 
 // User Schema and Model
 const userSchema = new mongoose.Schema({
+    name: { type: String, required: true }, // Ensure `name` is part of the schema
     username: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     role: { type: String, default: 'client' },
-    shopifyUrl: { type: String, unique: true }, // Ensure shopifyUrl is unique
-    shopifyToken: { type: String },
-    shopifyData: { type: Object, default: {} },
+    shopifyUrl: { type: String, unique: false }, // Optional
+    shopifyToken: { type: String }, // Optional
+    shopifyData: { type: Object, default: {} }, // Store Shopify data
 });
+
 const User = mongoose.models.User || mongoose.model('User', userSchema);
 
 // Login Route
@@ -56,6 +58,7 @@ app.post('/api/login', async (req, res) => {
         res.status(200).json({
             token,
             role: user.role,
+            name: user.name, // Return the user's name
             shopifyUrl: user.shopifyUrl || null,
             shopifyData: user.shopifyData || {}, // Return existing shopifyData
         });
@@ -67,10 +70,10 @@ app.post('/api/login', async (req, res) => {
 
 // Signup Route
 app.post('/api/signup', async (req, res) => {
-    const { username, password, role } = req.body;
+    const { name, username, password, role } = req.body;
 
-    if (!username || !password) {
-        return res.status(400).json({ error: 'Username and password are required' });
+    if (!name || !username || !password) {
+        return res.status(400).json({ error: 'Name, username, and password are required' });
     }
 
     try {
@@ -80,7 +83,13 @@ app.post('/api/signup', async (req, res) => {
         }
 
         const hashedPassword = await bcrypt.hash(password, 10);
-        const newUser = new User({ username, password: hashedPassword, role });
+        const newUser = new User({
+            name, // Include name in the user creation
+            username,
+            password: hashedPassword,
+            role: role || 'client', // Default to `client`
+        });
+
         await newUser.save();
 
         res.status(201).json({ message: 'User created successfully' });
@@ -120,7 +129,7 @@ app.post('/api/shopify/fetch', async (req, res) => {
         // Update or insert Shopify data for the user
         const updatedUser = await User.findOneAndUpdate(
             { shopifyUrl: storeUrl.trim() }, // Match by store URL
-            { shopifyToken: adminAccessToken, shopifyData: shopifyData }, // Update token and data
+            { shopifyToken: adminAccessToken, shopifyData }, // Update token and data
             { new: true, upsert: true } // Create if not exists
         );
 
