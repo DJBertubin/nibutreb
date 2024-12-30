@@ -9,7 +9,7 @@ mongoose.connect(process.env.MONGO_URI, {
 
 // Define User Schema and Model
 const UserSchema = new mongoose.Schema({
-    clientId: { type: String, unique: true, required: true }, // Unique Client ID
+    clientId: { type: String, unique: true, required: true },
     username: { type: String, unique: true, required: true },
     password: { type: String, required: true },
     role: { type: String, default: 'client' },
@@ -17,7 +17,7 @@ const UserSchema = new mongoose.Schema({
 
 const User = mongoose.models.User || mongoose.model('User', UserSchema);
 
-// Generate clientId based on current date and time
+// Function to Generate Client ID
 const generateClientId = () => {
     const now = new Date();
     return `${now.getFullYear()}${(now.getMonth() + 1)

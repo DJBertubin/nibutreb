@@ -61,7 +61,9 @@ const Signup = () => {
             console.log('Generated Client ID:', data.clientId);
 
             // Store the clientId in localStorage for client-side reference
-            localStorage.setItem('clientId', data.clientId);
+            if (data.clientId) {
+                localStorage.setItem('clientId', data.clientId);
+            }
 
             // On successful signup, redirect to login page
             navigate('/login');
