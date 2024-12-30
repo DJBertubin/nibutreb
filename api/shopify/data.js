@@ -19,6 +19,7 @@ export default async function handler(req, res) {
     }
 
     try {
+        // Extract the token and decode it
         const token = authorization.split(' ')[1];
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         const clientId = decoded.clientId;
@@ -27,11 +28,22 @@ export default async function handler(req, res) {
             return res.status(401).json({ error: 'Invalid or missing clientId in token.' });
         }
 
+        // Fetch all Shopify data linked to the user's clientId
         const shopifyData = await ShopifyData.find({ clientId });
 
-        res.status(200).json({ shopifyData });
+        if (!shopifyData.length) {
+            return res.status(404).json({ error: 'No Shopify data found for this user.' });
+        }
+
+        res.status(200).json({
+            message: 'Shopify data fetched successfully.',
+            shopifyData,
+        });
     } catch (err) {
         console.error('Error fetching Shopify data:', err.message);
-        res.status(500).json({ error: 'Failed to fetch data from MongoDB', details: err.message });
+        res.status(500).json({
+            error: 'Failed to fetch data from MongoDB',
+            details: err.message,
+        });
     }
 }
