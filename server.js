@@ -5,7 +5,6 @@ const bcrypt = require('bcryptjs');
 const fetch = require('node-fetch');
 const dotenv = require('dotenv');
 const mongoose = require('mongoose');
-const { nanoid } = require('nanoid');
 
 dotenv.config();
 
@@ -25,13 +24,16 @@ mongoose
     .then(() => console.log('Connected to MongoDB Atlas'))
     .catch((err) => console.error('MongoDB connection error:', err));
 
+// Helper function to generate a 5-digit random number
+const generateClientId = () => Math.floor(10000 + Math.random() * 90000).toString();
+
 // User Schema and Model
 const userSchema = new mongoose.Schema({
     clientId: {
         type: String,
         required: true,
         unique: true,
-        default: () => nanoid(10), // Automatically generate a unique clientId
+        default: generateClientId, // Generate a unique 5-digit clientId
     },
     name: { type: String, required: true },
     username: { type: String, required: true, unique: true },
@@ -137,11 +139,10 @@ app.post('/api/shopify/fetch', async (req, res) => {
 
         const shopifyData = await response.json();
 
-        // Update or insert Shopify data for the user
         const updatedUser = await User.findOneAndUpdate(
-            { shopifyUrl: storeUrl.trim() }, // Match by store URL
-            { shopifyToken: adminAccessToken, shopifyData: shopifyData }, // Update token and data
-            { new: true, upsert: true } // Create if not exists
+            { shopifyUrl: storeUrl.trim() },
+            { shopifyToken: adminAccessToken, shopifyData: shopifyData },
+            { new: true, upsert: true }
         );
 
         if (!updatedUser) {
@@ -157,33 +158,6 @@ app.post('/api/shopify/fetch', async (req, res) => {
     } catch (err) {
         console.error('Error fetching Shopify data:', err.message);
         res.status(500).json({ error: 'Internal Server Error', details: err.message });
-    }
-});
-
-// Fetch User Data Route
-app.get('/api/user/data', async (req, res) => {
-    const authHeader = req.headers.authorization;
-
-    if (!authHeader) {
-        return res.status(401).json({ error: 'Authorization token required.' });
-    }
-
-    const token = authHeader.split(' ')[1];
-
-    try {
-        const decoded = jwt.verify(token, JWT_SECRET);
-        const user = await User.findOne({ username: decoded.username });
-
-        if (!user) {
-            return res.status(404).json({ error: 'User not found.' });
-        }
-
-        res.status(200).json({
-            shopifyData: user.shopifyData || {},
-        });
-    } catch (error) {
-        console.error('Error fetching user data:', error.message);
-        res.status(500).json({ error: 'Internal Server Error', details: error.message });
     }
 });
 
