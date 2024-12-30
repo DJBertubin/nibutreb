@@ -5,6 +5,7 @@ const bcrypt = require('bcryptjs');
 const fetch = require('node-fetch');
 const dotenv = require('dotenv');
 const mongoose = require('mongoose');
+const { nanoid } = require('nanoid');
 
 dotenv.config();
 
@@ -26,15 +27,20 @@ mongoose
 
 // User Schema and Model
 const userSchema = new mongoose.Schema({
-    name: { type: String, required: true }, // Ensure `name` is part of the schema
+    clientId: {
+        type: String,
+        required: true,
+        unique: true,
+        default: () => nanoid(10), // Automatically generate a unique clientId
+    },
+    name: { type: String, required: true },
     username: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     role: { type: String, default: 'client' },
-    shopifyUrl: { type: String, unique: false }, // Optional
-    shopifyToken: { type: String }, // Optional
-    shopifyData: { type: Object, default: {} }, // Store Shopify data
+    shopifyData: { type: Object, default: {} },
+    shopifyUrl: { type: String },
+    shopifyToken: { type: String },
 });
-
 const User = mongoose.models.User || mongoose.model('User', userSchema);
 
 // Login Route
@@ -58,7 +64,8 @@ app.post('/api/login', async (req, res) => {
         res.status(200).json({
             token,
             role: user.role,
-            name: user.name, // Return the user's name
+            name: user.name,
+            clientId: user.clientId, // Include clientId in the response
             shopifyUrl: user.shopifyUrl || null,
             shopifyData: user.shopifyData || {}, // Return existing shopifyData
         });
@@ -73,7 +80,7 @@ app.post('/api/signup', async (req, res) => {
     const { name, username, password, role } = req.body;
 
     if (!name || !username || !password) {
-        return res.status(400).json({ error: 'Name, username, and password are required' });
+        return res.status(400).json({ error: 'Name, username, and password are required.' });
     }
 
     try {
@@ -84,7 +91,7 @@ app.post('/api/signup', async (req, res) => {
 
         const hashedPassword = await bcrypt.hash(password, 10);
         const newUser = new User({
-            name, // Include name in the user creation
+            name,
             username,
             password: hashedPassword,
             role: role || 'client', // Default to `client`
@@ -92,7 +99,11 @@ app.post('/api/signup', async (req, res) => {
 
         await newUser.save();
 
-        res.status(201).json({ message: 'User created successfully' });
+        res.status(201).json({
+            message: 'User created successfully',
+            userId: newUser._id, // Return MongoDB ID for reference
+            clientId: newUser.clientId, // Return the generated clientId for reference
+        });
     } catch (error) {
         console.error('Signup Error:', error.message);
         res.status(500).json({ error: 'Internal Server Error' });
@@ -129,7 +140,7 @@ app.post('/api/shopify/fetch', async (req, res) => {
         // Update or insert Shopify data for the user
         const updatedUser = await User.findOneAndUpdate(
             { shopifyUrl: storeUrl.trim() }, // Match by store URL
-            { shopifyToken: adminAccessToken, shopifyData }, // Update token and data
+            { shopifyToken: adminAccessToken, shopifyData: shopifyData }, // Update token and data
             { new: true, upsert: true } // Create if not exists
         );
 

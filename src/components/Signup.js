@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import './Signup.css';
 
 const Signup = () => {
-    const [name, setName] = useState('');
+    const [name, setName] = useState(''); // Added name field
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
@@ -16,19 +16,26 @@ const Signup = () => {
         setError('');
         setLoading(true);
 
-        // Input validation
         if (!name.trim()) {
             setError('Name is required.');
             setLoading(false);
             return;
         }
+
         if (!username.trim()) {
             setError('Username is required.');
             setLoading(false);
             return;
         }
+
         if (password !== confirmPassword) {
             setError('Passwords do not match!');
+            setLoading(false);
+            return;
+        }
+
+        if (password.length < 8 || !/[A-Z]/.test(password) || !/[0-9]/.test(password)) {
+            setError('Password must be at least 8 characters long, include an uppercase letter, and a number.');
             setLoading(false);
             return;
         }
@@ -37,12 +44,7 @@ const Signup = () => {
             const response = await fetch('/api/signup', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    name: name.trim(),
-                    username: username.trim(),
-                    password,
-                    role,
-                }),
+                body: JSON.stringify({ name: name.trim(), username: username.trim(), password, role }),
             });
 
             const data = await response.json();
@@ -53,8 +55,8 @@ const Signup = () => {
                 return;
             }
 
-            console.log('User ID:', data.userId); // Debugging
-            localStorage.setItem('userId', data.userId); // Save MongoDB ID locally
+            console.log('Generated Client ID:', data.clientId);
+            localStorage.setItem('clientId', data.clientId); // Save clientId locally if needed
 
             navigate('/login');
         } catch (err) {

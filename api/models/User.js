@@ -1,13 +1,20 @@
 const mongoose = require('mongoose');
+const { nanoid } = require('nanoid'); // Import nanoid
 
-const UserSchema = new mongoose.Schema({
+const userSchema = new mongoose.Schema({
+    clientId: {
+        type: String,
+        required: true,
+        unique: true,
+        default: () => nanoid(10), // Generate a unique 10-character client ID
+    },
+    name: { type: String, required: true },
     username: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     role: { type: String, default: 'client' },
-    name: { type: String, required: true }, // Add the `name` field
     shopifyData: { type: Object, default: {} },
     shopifyUrl: { type: String },
     shopifyToken: { type: String },
 });
 
-module.exports = mongoose.models.User || mongoose.model('User', UserSchema);
+module.exports = mongoose.models.User || mongoose.model('User', userSchema);
