@@ -7,7 +7,7 @@ const Signup = () => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
-    const [role, setRole] = useState('client'); // Default role
+    const [role, setRole] = useState('client');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
@@ -53,8 +53,8 @@ const Signup = () => {
                 return;
             }
 
-            console.log('Generated Client ID:', data.clientId); // Debugging
-            localStorage.setItem('clientId', data.clientId); // Save clientId locally
+            console.log('User ID:', data.userId); // Debugging
+            localStorage.setItem('userId', data.userId); // Save MongoDB ID locally
 
             navigate('/login');
         } catch (err) {

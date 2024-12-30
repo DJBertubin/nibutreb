@@ -15,33 +15,33 @@ export default async function handler(req, res) {
     const { name, username, password, role } = req.body;
 
     try {
-        // Step 1: Validate inputs
+        // Validate required fields
         if (!name || !username || !password) {
             return res.status(400).json({ error: 'Name, username, and password are required.' });
         }
 
-        // Step 2: Check if username already exists
+        // Check if username already exists
         const existingUser = await User.findOne({ username });
         if (existingUser) {
-            return res.status(400).json({ error: 'Username already exists' });
+            return res.status(400).json({ error: 'Username already exists.' });
         }
 
-        // Step 3: Hash the password
+        // Hash the password
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        // Step 4: Create and save the user
+        // Create a new user
         const newUser = new User({
-            name, // Include `name` explicitly
+            name, // Include the `name` field
             username,
             password: hashedPassword,
-            role: role || 'client',
+            role: role || 'client', // Default to `client`
         });
 
         await newUser.save();
 
         res.status(201).json({
             message: 'User created successfully',
-            clientId: newUser.clientId, // Return the generated clientId
+            userId: newUser._id, // Return MongoDB ID for reference
         });
     } catch (err) {
         console.error('Error in signup:', err);
