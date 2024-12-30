@@ -8,18 +8,16 @@ mongoose.connect(process.env.MONGO_URI, {
     useUnifiedTopology: true,
 });
 
-// Define User Schema and Model
-const UserSchema = new mongoose.Schema({
-    clientId: { type: String, unique: true, required: true },
-    username: { type: String, unique: true, required: true },
-    password: { type: String, required: true },
-    role: { type: String, default: 'client' },
-    shopifyUrl: { type: String },
-    shopifyToken: { type: String },
+// Define Shopify Data Schema
+const ShopifyDataSchema = new mongoose.Schema({
+    clientId: { type: String, required: true }, // Link to the logged-in user's clientId
+    shopifyUrl: { type: String, required: true },
+    shopifyToken: { type: String, required: true },
     shopifyData: { type: Object, default: {} },
+    createdAt: { type: Date, default: Date.now }, // Track when the data was created
 });
 
-const User = mongoose.models.User || mongoose.model('User', UserSchema);
+const ShopifyData = mongoose.models.ShopifyData || mongoose.model('ShopifyData', ShopifyDataSchema);
 
 export default async function handler(req, res) {
     if (req.method !== 'POST') {
@@ -66,29 +64,21 @@ export default async function handler(req, res) {
 
         const shopifyData = await response.json();
 
-        // Save Shopify data to the user's record in MongoDB
-        const updatedUser = await User.findOneAndUpdate(
-            { clientId }, // Match by clientId
-            {
-                $set: {
-                    shopifyUrl: trimmedStoreUrl,
-                    shopifyToken: adminAccessToken,
-                    shopifyData, // Save the fetched Shopify data
-                },
-            },
-            { new: true, upsert: false } // Ensure user exists; no creation on failure
-        );
+        // Save the Shopify data as a new document linked to the clientId
+        const newShopifyData = new ShopifyData({
+            clientId,
+            shopifyUrl: trimmedStoreUrl,
+            shopifyToken: adminAccessToken,
+            shopifyData, // Save the fetched Shopify data
+        });
 
-        if (!updatedUser) {
-            console.error('User not found or update failed.');
-            return res.status(404).json({ error: 'User not found or update failed.' });
-        }
+        await newShopifyData.save();
 
-        console.log('Updated User:', updatedUser);
+        console.log('New Shopify Data Saved:', newShopifyData);
 
-        res.status(200).json({
+        res.status(201).json({
             message: 'Shopify data fetched and stored successfully.',
-            shopifyData,
+            shopifyData: newShopifyData.shopifyData,
         });
     } catch (err) {
         console.error('Error saving Shopify data:', err.message);
