@@ -10,7 +10,7 @@ const Products = () => {
     const [showIntegrationModal, setShowIntegrationModal] = useState(false);
     const [integrationType, setIntegrationType] = useState('');
     const [productData, setProductData] = useState([]);
-    const [stores, setStores] = useState(['Walmart', 'Shopify']); // Initial stores list
+    const [stores, setStores] = useState(['Walmart', 'Shopify']);
     const [error, setError] = useState('');
     const navigate = useNavigate();
 
@@ -19,7 +19,7 @@ const Products = () => {
             const token = localStorage.getItem('token');
 
             if (!token) {
-                navigate('/login'); // Redirect to login if not authenticated
+                navigate('/login');
                 return;
             }
 
@@ -37,7 +37,20 @@ const Products = () => {
                 }
 
                 const data = await response.json();
-                setProductData(data.shopifyData); // Update product data with fetched Shopify data
+
+                // Flatten and format products
+                const products = data.shopifyData.flatMap((entry) =>
+                    entry.shopifyData?.products.map((product) => ({
+                        id: product.id,
+                        title: product.title,
+                        sku: product.variants?.[0]?.sku || '',
+                        price: product.variants?.[0]?.price || 'N/A',
+                        inventory: product.variants?.[0]?.inventory_quantity || 0,
+                        created_at: product.created_at || '',
+                    }))
+                );
+
+                setProductData(products);
             } catch (err) {
                 setError(err.message);
             }
@@ -57,7 +70,15 @@ const Products = () => {
     };
 
     const handleShopifyConnect = (data) => {
-        setProductData(data); // Update product data
+        const formattedProducts = data.map((product) => ({
+            id: product.id,
+            title: product.title,
+            sku: product.variants?.[0]?.sku || '',
+            price: product.variants?.[0]?.price || 'N/A',
+            inventory: product.variants?.[0]?.inventory_quantity || 0,
+            created_at: product.created_at || '',
+        }));
+        setProductData(formattedProducts);
     };
 
     const handleAddStoreName = (storeName) => {
