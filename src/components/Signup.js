@@ -63,15 +63,10 @@ const Signup = () => {
                 return;
             }
 
-            // Log the generated clientId for debugging or analytics
             console.log('Generated Client ID:', data.clientId);
 
-            // Store the clientId in localStorage for client-side reference
-            if (data.clientId) {
-                localStorage.setItem('clientId', data.clientId);
-            }
+            localStorage.setItem('clientId', data.clientId);
 
-            // On successful signup, redirect to login page
             navigate('/login');
         } catch (err) {
             setError(err.message || 'An error occurred. Please try again.');

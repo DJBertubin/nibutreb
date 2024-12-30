@@ -11,7 +11,7 @@ mongoose.connect(process.env.MONGO_URI, {
 // Define User Schema and Model
 const UserSchema = new mongoose.Schema({
     clientId: { type: String, unique: true, required: true, default: () => nanoid(10) }, // Unique Client ID
-    name: { type: String, required: true }, // Name field
+    name: { type: String, required: true }, // Ensure name is required
     username: { type: String, unique: true, required: true },
     password: { type: String, required: true },
     role: { type: String, default: 'client' },
@@ -36,9 +36,9 @@ export default async function handler(req, res) {
         // Hash the password
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        // Create and save the user with a unique clientId
+        // Create and save the user with the name
         const newUser = new User({
-            name,
+            name, // Store name in MongoDB
             username,
             password: hashedPassword,
             role: role || 'client',
