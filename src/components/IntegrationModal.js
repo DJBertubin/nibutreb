@@ -29,9 +29,17 @@ const IntegrationModal = ({ onClose, onFetchSuccess, onAddStoreName }) => {
         }
 
         try {
+            const token = localStorage.getItem('token'); // Retrieve token from localStorage
+            if (!token) {
+                throw new Error('User is not authenticated. Please log in again.');
+            }
+
             const response = await fetch('/api/shopify/fetch', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token}`, // Include Authorization header with the token
+                },
                 body: JSON.stringify({
                     storeUrl: storeUrl.trim(),
                     adminAccessToken: adminAccessToken,

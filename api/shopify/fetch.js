@@ -10,6 +10,7 @@ mongoose.connect(process.env.MONGO_URI, {
 
 // Define User Schema and Model
 const UserSchema = new mongoose.Schema({
+    clientId: { type: String, unique: true, required: true },
     username: { type: String, unique: true, required: true },
     password: { type: String, required: true },
     role: { type: String, default: 'client' },
@@ -43,7 +44,7 @@ export default async function handler(req, res) {
         // Decode JWT token to identify the requesting user
         const token = authorization.split(' ')[1];
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        const username = decoded.username;
+        const clientId = decoded.clientId;
 
         // Fetch data from Shopify API
         const response = await fetch(shopifyApiUrl, {
@@ -63,7 +64,7 @@ export default async function handler(req, res) {
 
         // Save Shopify data to the user's record in MongoDB
         const updatedUser = await User.findOneAndUpdate(
-            { username }, // Match by username
+            { clientId }, // Match by clientId
             {
                 shopifyUrl: trimmedStoreUrl,
                 shopifyToken: adminAccessToken,

@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import bcrypt from 'bcrypt';
+import { v4 as uuidv4 } from 'uuid'; // For generating unique client IDs
 
 // MongoDB Connection
 mongoose.connect(process.env.MONGO_URI, {
@@ -9,6 +10,7 @@ mongoose.connect(process.env.MONGO_URI, {
 
 // Define User Schema and Model
 const UserSchema = new mongoose.Schema({
+    clientId: { type: String, unique: true, required: true, default: uuidv4 }, // Unique Client ID
     username: { type: String, unique: true, required: true },
     password: { type: String, required: true },
     role: { type: String, default: 'client' },
@@ -33,7 +35,7 @@ export default async function handler(req, res) {
         // Step 2: Hash the password
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        // Step 3: Create and save the user
+        // Step 3: Create and save the user with a unique clientId
         const newUser = new User({
             username,
             password: hashedPassword,
@@ -42,7 +44,10 @@ export default async function handler(req, res) {
 
         await newUser.save();
 
-        res.status(201).json({ message: 'User created successfully' });
+        res.status(201).json({
+            message: 'User created successfully',
+            clientId: newUser.clientId, // Return the generated clientId
+        });
     } catch (err) {
         console.error('Error in signup:', err);
 

@@ -43,7 +43,7 @@ const Login = ({ setLoggedIn }) => {
             // Save authentication details in localStorage
             localStorage.setItem('token', data.token);
             localStorage.setItem('role', data.role);
-            localStorage.setItem('username', username); // Save the entered username
+            localStorage.setItem('clientId', data.clientId); // Save the clientId from server response
 
             // Call the setLoggedIn callback to update the app state
             if (typeof setLoggedIn === 'function') {
