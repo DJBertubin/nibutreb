@@ -8,6 +8,7 @@ const UserSchema = new mongoose.Schema({
         unique: true,
         default: () => nanoid(), // Generate unique ID
     },
+    name: { type: String, required: true }, // Add the name field
     username: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     role: { type: String, default: 'client' },
