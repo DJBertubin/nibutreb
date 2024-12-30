@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const { nanoid } = require('nanoid'); // Import nanoid
+const { nanoid } = require('nanoid'); // For generating unique client IDs
 
 const UserSchema = new mongoose.Schema({
     clientId: {
@@ -8,10 +8,10 @@ const UserSchema = new mongoose.Schema({
         unique: true,
         default: () => nanoid(), // Generate unique ID
     },
-    name: { type: String, required: true }, // Add the name field
+    name: { type: String, required: true }, // Ensure `name` is required
     username: { type: String, required: true, unique: true },
     password: { type: String, required: true },
-    role: { type: String, default: 'client' },
+    role: { type: String, default: 'client' }, // Default role is `client`
     shopifyData: { type: Object, default: {} },
     shopifyUrl: { type: String, unique: false },
     shopifyToken: { type: String },

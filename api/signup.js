@@ -1,23 +1,11 @@
 import mongoose from 'mongoose';
 import bcrypt from 'bcrypt';
-import { nanoid } from 'nanoid'; // Nano ID for generating unique IDs
+import User from '../../models/user'; // Import the User model
 
-// MongoDB Connection
 mongoose.connect(process.env.MONGO_URI, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
 });
-
-// Define User Schema and Model
-const UserSchema = new mongoose.Schema({
-    clientId: { type: String, unique: true, required: true, default: () => nanoid(10) }, // Unique Client ID
-    name: { type: String, required: true }, // Ensure name is required
-    username: { type: String, unique: true, required: true },
-    password: { type: String, required: true },
-    role: { type: String, default: 'client' },
-});
-
-const User = mongoose.models.User || mongoose.model('User', UserSchema);
 
 export default async function handler(req, res) {
     if (req.method !== 'POST') {
@@ -27,18 +15,23 @@ export default async function handler(req, res) {
     const { name, username, password, role } = req.body;
 
     try {
-        // Check if username already exists
+        // Step 1: Validate inputs
+        if (!name || !username || !password) {
+            return res.status(400).json({ error: 'Name, username, and password are required.' });
+        }
+
+        // Step 2: Check if username already exists
         const existingUser = await User.findOne({ username });
         if (existingUser) {
             return res.status(400).json({ error: 'Username already exists' });
         }
 
-        // Hash the password
+        // Step 3: Hash the password
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        // Create and save the user with the name
+        // Step 4: Create and save the user
         const newUser = new User({
-            name, // Store name in MongoDB
+            name, // Include `name` explicitly
             username,
             password: hashedPassword,
             role: role || 'client',
@@ -52,7 +45,6 @@ export default async function handler(req, res) {
         });
     } catch (err) {
         console.error('Error in signup:', err);
-
         res.status(500).json({ error: 'Internal server error. Please try again later.' });
     }
 }

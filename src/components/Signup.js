@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import './Signup.css';
 
 const Signup = () => {
-    const [name, setName] = useState(''); // Add name state
+    const [name, setName] = useState('');
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
@@ -32,28 +32,13 @@ const Signup = () => {
             setLoading(false);
             return;
         }
-        if (password.length < 8) {
-            setError('Password must be at least 8 characters long!');
-            setLoading(false);
-            return;
-        }
-        if (!/[A-Z]/.test(password) || !/[0-9]/.test(password)) {
-            setError('Password must include at least one uppercase letter and one number!');
-            setLoading(false);
-            return;
-        }
-        if (!['client', 'admin'].includes(role)) {
-            setError('Invalid role selected.');
-            setLoading(false);
-            return;
-        }
 
         try {
             const response = await fetch('/api/signup', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    name: name.trim(), // Send name
+                    name: name.trim(),
                     username: username.trim(),
                     password,
                     role,
@@ -68,7 +53,7 @@ const Signup = () => {
                 return;
             }
 
-            console.log('Generated Client ID:', data.clientId); // Log client ID for debugging
+            console.log('Generated Client ID:', data.clientId); // Debugging
             localStorage.setItem('clientId', data.clientId); // Save clientId locally
 
             navigate('/login');
