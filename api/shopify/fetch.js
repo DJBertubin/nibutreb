@@ -40,7 +40,7 @@ export default async function handler(req, res) {
     const shopifyApiUrl = `https://${trimmedStoreUrl}/admin/api/2024-01/products.json`;
 
     try {
-        // Verify the user token to get the username
+        // Decode JWT token to identify the requesting user
         const token = authorization.split(' ')[1];
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         const username = decoded.username;
@@ -69,12 +69,12 @@ export default async function handler(req, res) {
                 shopifyToken: adminAccessToken,
                 shopifyData, // Merge shopifyData into the user's record
             },
-            { new: true, upsert: true } // Create if not existing
+            { new: true, upsert: false } // Only update existing user
         );
 
         if (!updatedUser) {
             console.error('User not found or update failed.');
-            return res.status(404).json({ error: 'Failed to save Shopify data.' });
+            return res.status(404).json({ error: 'User not found or update failed.' });
         }
 
         console.log('Updated User:', updatedUser);
