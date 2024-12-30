@@ -1,6 +1,5 @@
 import mongoose from 'mongoose';
 import bcrypt from 'bcrypt';
-import { customAlphabet } from 'nanoid'; // For generating unique client IDs
 
 // MongoDB Connection
 mongoose.connect(process.env.MONGO_URI, {
@@ -18,8 +17,19 @@ const UserSchema = new mongoose.Schema({
 
 const User = mongoose.models.User || mongoose.model('User', UserSchema);
 
-// Generate a custom client ID
-const generateClientId = customAlphabet('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890', 16);
+// Generate clientId based on current date and time
+const generateClientId = () => {
+    const now = new Date();
+    return `${now.getFullYear()}${(now.getMonth() + 1)
+        .toString()
+        .padStart(2, '0')}${now.getDate().toString().padStart(2, '0')}${now
+        .getHours()
+        .toString()
+        .padStart(2, '0')}${now.getMinutes().toString().padStart(2, '0')}${now
+        .getSeconds()
+        .toString()
+        .padStart(2, '0')}`;
+};
 
 export default async function handler(req, res) {
     if (req.method !== 'POST') {
@@ -38,7 +48,7 @@ export default async function handler(req, res) {
         // Step 2: Hash the password
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        // Step 3: Generate unique client ID
+        // Step 3: Generate unique clientId
         const clientId = generateClientId();
 
         // Step 4: Create and save the user with the generated clientId
