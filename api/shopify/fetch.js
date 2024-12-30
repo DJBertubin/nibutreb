@@ -66,15 +66,17 @@ export default async function handler(req, res) {
 
         const shopifyData = await response.json();
 
-        // Update existing user data in MongoDB using clientId
+        // Save Shopify data to the user's record in MongoDB
         const updatedUser = await User.findOneAndUpdate(
-            { clientId }, // Match by clientId from JWT
+            { clientId }, // Match by clientId
             {
-                shopifyUrl: trimmedStoreUrl,
-                shopifyToken: adminAccessToken,
-                shopifyData, // Save the fetched Shopify data
+                $set: {
+                    shopifyUrl: trimmedStoreUrl,
+                    shopifyToken: adminAccessToken,
+                    shopifyData, // Save the fetched Shopify data
+                },
             },
-            { new: true } // Return the updated document
+            { new: true, upsert: false } // Ensure user exists; no creation on failure
         );
 
         if (!updatedUser) {
