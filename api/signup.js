@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 import bcrypt from 'bcrypt';
-import { customAlphabet } from 'nanoid'; // Use nanoid for generating unique client IDs
+import { customAlphabet } from 'nanoid'; // For generating unique client IDs
 
 // MongoDB Connection
 mongoose.connect(process.env.MONGO_URI, {
@@ -43,7 +43,7 @@ export default async function handler(req, res) {
 
         // Step 4: Create and save the user with the generated clientId
         const newUser = new User({
-            clientId,
+            clientId, // Explicitly set the clientId
             username,
             password: hashedPassword,
             role: role || 'client',
