@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 import bcrypt from 'bcrypt';
-import { nanoid } from 'nanoid'; // For generating unique client IDs
+import { customAlphabet } from 'nanoid'; // Use nanoid for generating unique client IDs
 
 // MongoDB Connection
 mongoose.connect(process.env.MONGO_URI, {
@@ -10,18 +10,16 @@ mongoose.connect(process.env.MONGO_URI, {
 
 // Define User Schema and Model
 const UserSchema = new mongoose.Schema({
-    clientId: {
-        type: String,
-        unique: true,
-        required: true,
-        default: () => nanoid(), // Automatically generate unique clientId
-    },
+    clientId: { type: String, unique: true, required: true }, // Unique Client ID
     username: { type: String, unique: true, required: true },
     password: { type: String, required: true },
     role: { type: String, default: 'client' },
 });
 
 const User = mongoose.models.User || mongoose.model('User', UserSchema);
+
+// Generate a custom client ID
+const generateClientId = customAlphabet('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890', 16);
 
 export default async function handler(req, res) {
     if (req.method !== 'POST') {
@@ -40,21 +38,22 @@ export default async function handler(req, res) {
         // Step 2: Hash the password
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        // Step 3: Create and save the user
+        // Step 3: Generate unique client ID
+        const clientId = generateClientId();
+
+        // Step 4: Create and save the user with the generated clientId
         const newUser = new User({
+            clientId,
             username,
             password: hashedPassword,
             role: role || 'client',
         });
 
-        // Step 4: Save user to MongoDB
         await newUser.save();
-
-        console.log(`User Created: ${JSON.stringify(newUser)}`); // Debugging log
 
         res.status(201).json({
             message: 'User created successfully',
-            clientId: newUser.clientId, // Return the generated clientId
+            clientId, // Return the generated clientId
         });
     } catch (err) {
         console.error('Error in signup:', err);

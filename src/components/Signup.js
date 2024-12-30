@@ -49,11 +49,6 @@ const Signup = () => {
                 body: JSON.stringify({ username: username.trim(), password, role }),
             });
 
-            const contentType = response.headers.get('Content-Type');
-            if (!contentType || !contentType.includes('application/json')) {
-                throw new Error('Invalid response from server. Please try again later.');
-            }
-
             const data = await response.json();
 
             if (!response.ok) {
@@ -62,7 +57,7 @@ const Signup = () => {
                 return;
             }
 
-            // Log the generated clientId for debugging or analytics (optional)
+            // Log the generated clientId for debugging or analytics
             console.log('Generated Client ID:', data.clientId);
 
             // Store the clientId in localStorage for client-side reference
