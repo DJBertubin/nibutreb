@@ -33,6 +33,11 @@ const Products = () => {
 
                 if (!response.ok) {
                     const errorData = await response.json();
+                    if (response.status === 404) {
+                        // No Shopify data found for this user
+                        setProductData([]); // Set an empty array to display the table with headers
+                        return;
+                    }
                     throw new Error(errorData.error || 'Failed to fetch Shopify data.');
                 }
 
