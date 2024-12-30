@@ -39,11 +39,19 @@ const userSchema = new mongoose.Schema({
     username: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     role: { type: String, default: 'client' },
-    shopifyData: { type: Object, default: {} },
-    shopifyUrl: { type: String },
-    shopifyToken: { type: String },
 });
 const User = mongoose.models.User || mongoose.model('User', userSchema);
+
+// Shopify Data Schema and Model
+const shopifyDataSchema = new mongoose.Schema({
+    clientId: { type: String, required: true }, // Link to the user's clientId
+    shopifyUrl: { type: String, required: true },
+    shopifyToken: { type: String, required: true },
+    shopifyData: { type: Object, default: {} },
+    createdAt: { type: Date, default: Date.now }, // Timestamp for tracking
+});
+const ShopifyData =
+    mongoose.models.ShopifyData || mongoose.model('ShopifyData', shopifyDataSchema);
 
 // Login Route
 app.post('/api/login', async (req, res) => {
@@ -59,17 +67,17 @@ app.post('/api/login', async (req, res) => {
             return res.status(401).json({ error: 'Invalid credentials' });
         }
 
-        const token = jwt.sign({ username: user.username, role: user.role }, JWT_SECRET, {
-            expiresIn: '1h',
-        });
+        const token = jwt.sign(
+            { clientId: user.clientId, username: user.username, role: user.role },
+            JWT_SECRET,
+            { expiresIn: '1h' }
+        );
 
         res.status(200).json({
             token,
             role: user.role,
             name: user.name,
             clientId: user.clientId, // Include clientId in the response
-            shopifyUrl: user.shopifyUrl || null,
-            shopifyData: user.shopifyData || {}, // Return existing shopifyData
         });
     } catch (error) {
         console.error('Login Error:', error.message);
@@ -114,15 +122,27 @@ app.post('/api/signup', async (req, res) => {
 
 // Shopify Fetch API Route
 app.post('/api/shopify/fetch', async (req, res) => {
+    const { authorization } = req.headers;
     const { storeUrl, adminAccessToken } = req.body;
+
+    if (!authorization || !authorization.startsWith('Bearer ')) {
+        return res.status(401).json({ error: 'Authorization token required.' });
+    }
 
     if (!storeUrl || !adminAccessToken) {
         return res.status(400).json({ error: 'Store URL and Admin Access Token are required.' });
     }
 
-    const shopifyApiUrl = `https://${storeUrl.trim()}/admin/api/2024-01/products.json`;
-
     try {
+        const token = authorization.split(' ')[1];
+        const decoded = jwt.verify(token, JWT_SECRET);
+        const clientId = decoded.clientId;
+
+        if (!clientId) {
+            return res.status(401).json({ error: 'Invalid or missing clientId in token.' });
+        }
+
+        const shopifyApiUrl = `https://${storeUrl.trim()}/admin/api/2024-01/products.json`;
         const response = await fetch(shopifyApiUrl, {
             method: 'GET',
             headers: {
@@ -139,19 +159,16 @@ app.post('/api/shopify/fetch', async (req, res) => {
 
         const shopifyData = await response.json();
 
-        const updatedUser = await User.findOneAndUpdate(
-            { shopifyUrl: storeUrl.trim() },
-            { shopifyToken: adminAccessToken, shopifyData: shopifyData },
-            { new: true, upsert: true }
-        );
+        const newShopifyData = new ShopifyData({
+            clientId,
+            shopifyUrl: storeUrl.trim(),
+            shopifyToken: adminAccessToken,
+            shopifyData,
+        });
 
-        if (!updatedUser) {
-            console.error('User not found or update failed.');
-            return res.status(404).json({ error: 'User not found or update failed.' });
-        }
+        await newShopifyData.save();
 
-        console.log('Updated User:', updatedUser);
-        res.status(200).json({
+        res.status(201).json({
             message: 'Shopify data fetched and stored successfully.',
             shopifyData,
         });

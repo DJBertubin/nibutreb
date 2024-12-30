@@ -1,23 +1,12 @@
 import mongoose from 'mongoose';
 import fetch from 'node-fetch';
 import jwt from 'jsonwebtoken';
+import ShopifyData from '../../models/ShopifyData';
 
-// MongoDB Connection
 mongoose.connect(process.env.MONGO_URI, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
 });
-
-// Define Shopify Data Schema
-const ShopifyDataSchema = new mongoose.Schema({
-    clientId: { type: String, required: true }, // Link to the logged-in user's clientId
-    shopifyUrl: { type: String, required: true },
-    shopifyToken: { type: String, required: true },
-    shopifyData: { type: Object, default: {} },
-    createdAt: { type: Date, default: Date.now }, // Track when the data was created
-});
-
-const ShopifyData = mongoose.models.ShopifyData || mongoose.model('ShopifyData', ShopifyDataSchema);
 
 export default async function handler(req, res) {
     if (req.method !== 'POST') {
@@ -64,12 +53,12 @@ export default async function handler(req, res) {
 
         const shopifyData = await response.json();
 
-        // Save the Shopify data as a new document linked to the clientId
+        // Save Shopify data to the `shopifydatas` collection
         const newShopifyData = new ShopifyData({
-            clientId,
+            clientId, // Link to logged-in user's clientId
             shopifyUrl: trimmedStoreUrl,
             shopifyToken: adminAccessToken,
-            shopifyData, // Save the fetched Shopify data
+            shopifyData, // Store the fetched Shopify data
         });
 
         await newShopifyData.save();
