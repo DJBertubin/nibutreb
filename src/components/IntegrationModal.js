@@ -8,20 +8,18 @@ const IntegrationModal = ({ onClose, onFetchSuccess, onAddStoreName }) => {
     const [adminAccessToken, setAdminAccessToken] = useState('');
     const [statusMessage, setStatusMessage] = useState('');
 
-    const handleSourceClick = (source) => {
-        setActiveSource(source);
-        setStatusMessage('');
-    };
-
+    // Validate Shopify URL
     const validateShopifyUrl = (url) => {
         const regex = /^[a-zA-Z0-9][a-zA-Z0-9-_]*\.myshopify\.com$/;
         return regex.test(url.trim().toLowerCase());
     };
 
+    // Extract store name from Shopify URL
     const extractStoreName = (url) => {
         return url.split('.myshopify.com')[0];
     };
 
+    // Handle connection to Shopify Admin API
     const handleShopifyAdminConnect = async () => {
         setStatusMessage('Connecting to Shopify Admin API via Proxy...');
 
@@ -49,12 +47,14 @@ const IntegrationModal = ({ onClose, onFetchSuccess, onAddStoreName }) => {
             const storeName = extractStoreName(storeUrl);
             setStatusMessage(`Successfully fetched data from ${storeName}`);
 
+            // Pass store name back to the parent if needed
             if (typeof onAddStoreName === 'function') {
                 onAddStoreName(storeName, true);
             }
 
+            // Pass fetched Shopify products to parent component
             if (typeof onFetchSuccess === 'function') {
-                onFetchSuccess(data.shopifyData.products);
+                onFetchSuccess(data.shopifyData.products || []);
             }
 
             onClose();
@@ -70,7 +70,7 @@ const IntegrationModal = ({ onClose, onFetchSuccess, onAddStoreName }) => {
                 <div className="source-buttons">
                     <button
                         className={`source-button ${activeSource === 'shopify' ? 'active' : ''}`}
-                        onClick={() => handleSourceClick('shopify')}
+                        onClick={() => setActiveSource('shopify')}
                     >
                         Shopify
                     </button>
@@ -97,11 +97,15 @@ const IntegrationModal = ({ onClose, onFetchSuccess, onAddStoreName }) => {
                                 onChange={(e) => setAdminAccessToken(e.target.value)}
                             />
                         </label>
-                        <button className="connect-button" onClick={handleShopifyAdminConnect}>Connect</button>
+                        <button className="connect-button" onClick={handleShopifyAdminConnect}>
+                            Connect
+                        </button>
                         <p>{statusMessage}</p>
                     </div>
                 )}
-                <button className="close-modal" onClick={onClose}>Close</button>
+                <button className="close-modal" onClick={onClose}>
+                    Close
+                </button>
             </div>
         </div>
     );
