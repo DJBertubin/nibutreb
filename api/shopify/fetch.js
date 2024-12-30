@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import fetch from 'node-fetch';
+import jwt from 'jsonwebtoken';
 
 // MongoDB Connection
 mongoose.connect(process.env.MONGO_URI, {
@@ -12,9 +13,9 @@ const UserSchema = new mongoose.Schema({
     username: { type: String, unique: true, required: true },
     password: { type: String, required: true },
     role: { type: String, default: 'client' },
-    shopifyUrl: { type: String, unique: true, required: true }, // Unique identifier
+    shopifyUrl: { type: String, unique: false },
     shopifyToken: { type: String },
-    shopifyData: { type: Object, default: {} }, // Default to empty object
+    shopifyData: { type: Object, default: {} },
 });
 
 const User = mongoose.models.User || mongoose.model('User', UserSchema);
@@ -24,7 +25,12 @@ export default async function handler(req, res) {
         return res.status(405).json({ error: 'Method not allowed' });
     }
 
+    const { authorization } = req.headers;
     const { storeUrl, adminAccessToken } = req.body;
+
+    if (!authorization || !authorization.startsWith('Bearer ')) {
+        return res.status(401).json({ error: 'Unauthorized. Token missing.' });
+    }
 
     if (!storeUrl || !adminAccessToken) {
         return res.status(400).json({ error: 'Store URL and Admin Access Token are required.' });
@@ -34,9 +40,12 @@ export default async function handler(req, res) {
     const shopifyApiUrl = `https://${trimmedStoreUrl}/admin/api/2024-01/products.json`;
 
     try {
-        console.log('Fetching from Shopify API:', shopifyApiUrl);
+        // Verify the user token to get the username
+        const token = authorization.split(' ')[1];
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const username = decoded.username;
 
-        // Fetch data from Shopify
+        // Fetch data from Shopify API
         const response = await fetch(shopifyApiUrl, {
             method: 'GET',
             headers: {
@@ -51,16 +60,16 @@ export default async function handler(req, res) {
         }
 
         const shopifyData = await response.json();
-        console.log('Fetched Shopify Data Size:', JSON.stringify(shopifyData).length);
 
-        // Log before saving to MongoDB
-        console.log('Before MongoDB Update:', await User.findOne({ shopifyUrl: trimmedStoreUrl }));
-
-        // Save Shopify data to MongoDB
+        // Save Shopify data to the user's record in MongoDB
         const updatedUser = await User.findOneAndUpdate(
-            { shopifyUrl: trimmedStoreUrl },
-            { shopifyToken: adminAccessToken, shopifyData },
-            { new: true, upsert: true }
+            { username }, // Match by username
+            {
+                shopifyUrl: trimmedStoreUrl,
+                shopifyToken: adminAccessToken,
+                shopifyData, // Merge shopifyData into the user's record
+            },
+            { new: true, upsert: true } // Create if not existing
         );
 
         if (!updatedUser) {
@@ -68,8 +77,7 @@ export default async function handler(req, res) {
             return res.status(404).json({ error: 'Failed to save Shopify data.' });
         }
 
-        // Log after successful save
-        console.log('After MongoDB Update:', updatedUser);
+        console.log('Updated User:', updatedUser);
 
         res.status(200).json({
             message: 'Shopify data fetched and stored successfully.',
