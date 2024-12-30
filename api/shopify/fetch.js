@@ -34,6 +34,9 @@ export default async function handler(req, res) {
     const shopifyApiUrl = `https://${trimmedStoreUrl}/admin/api/2024-01/products.json`;
 
     try {
+        console.log('Fetching from Shopify API:', shopifyApiUrl);
+
+        // Fetch data from Shopify
         const response = await fetch(shopifyApiUrl, {
             method: 'GET',
             headers: {
@@ -48,8 +51,12 @@ export default async function handler(req, res) {
         }
 
         const shopifyData = await response.json();
-        console.log('Shopify Data Size:', JSON.stringify(shopifyData).length);
+        console.log('Fetched Shopify Data Size:', JSON.stringify(shopifyData).length);
 
+        // Log before saving to MongoDB
+        console.log('Before MongoDB Update:', await User.findOne({ shopifyUrl: trimmedStoreUrl }));
+
+        // Save Shopify data to MongoDB
         const updatedUser = await User.findOneAndUpdate(
             { shopifyUrl: trimmedStoreUrl },
             { shopifyToken: adminAccessToken, shopifyData },
@@ -61,7 +68,8 @@ export default async function handler(req, res) {
             return res.status(404).json({ error: 'Failed to save Shopify data.' });
         }
 
-        console.log('After Update:', updatedUser);
+        // Log after successful save
+        console.log('After MongoDB Update:', updatedUser);
 
         res.status(200).json({
             message: 'Shopify data fetched and stored successfully.',
