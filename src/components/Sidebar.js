@@ -21,45 +21,54 @@ const Sidebar = () => {
         navigate('/login');
     };
 
-    const adminLinks = (
-        <ul>
+    const commonLinks = (
+        <>
             <li>
-                <NavLink to="/admin-dashboard" activeClassName="active">
-                    <i className="fas fa-home"></i> Dashboard
-                </NavLink>
-            </li>
-            <li>
-                <NavLink to="/products" activeClassName="active">
+                <NavLink to="/products" className={({ isActive }) => (isActive ? 'active' : '')}>
                     <i className="fas fa-box"></i> Products
                 </NavLink>
             </li>
             <li>
-                <NavLink to="/admin-reports" activeClassName="active">
+                <NavLink to="/channels" className={({ isActive }) => (isActive ? 'active' : '')}>
+                    <i className="fas fa-network-wired"></i> Channels
+                </NavLink>
+            </li>
+        </>
+    );
+
+    const adminLinks = (
+        <>
+            <li>
+                <NavLink to="/admin-dashboard" className={({ isActive }) => (isActive ? 'active' : '')}>
+                    <i className="fas fa-home"></i> Dashboard
+                </NavLink>
+            </li>
+            <li>
+                <NavLink to="/admin-reports" className={({ isActive }) => (isActive ? 'active' : '')}>
                     <i className="fas fa-chart-bar"></i> Reports
                 </NavLink>
             </li>
-        </ul>
+            {commonLinks}
+        </>
     );
 
     const clientLinks = (
-        <ul>
+        <>
             <li>
-                <NavLink to="/client-dashboard" activeClassName="active">
+                <NavLink to="/client-dashboard" className={({ isActive }) => (isActive ? 'active' : '')}>
                     <i className="fas fa-home"></i> Dashboard
                 </NavLink>
             </li>
-            <li>
-                <NavLink to="/products" activeClassName="active">
-                    <i className="fas fa-box"></i> Products
-                </NavLink>
-            </li>
-        </ul>
+            {commonLinks}
+        </>
     );
 
     return (
         <div className="sidebar">
             <h2>{username ? `${username}'s Panel` : 'User Panel'}</h2>
-            {role === 'admin' ? adminLinks : clientLinks}
+            <ul>
+                {role === 'admin' ? adminLinks : clientLinks}
+            </ul>
             <div className="sidebar-footer">
                 <button className="logout-button" onClick={handleLogout}>
                     <i className="fas fa-sign-out-alt"></i> Logout
