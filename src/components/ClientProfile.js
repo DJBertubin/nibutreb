@@ -1,60 +1,62 @@
 import React, { useEffect, useState } from 'react';
 import './ClientProfile.css';
 
-const ClientProfile = ({ clientId }) => {
-  const [clientInfo, setClientInfo] = useState({ name: '', clientId: '' });
-  const [error, setError] = useState('');
+const ClientProfile = () => {
+    const [clientInfo, setClientInfo] = useState({ name: '', clientId: '' });
+    const [error, setError] = useState('');
 
-  useEffect(() => {
-    const fetchClientInfo = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        if (!token) {
-          throw new Error('User is not authenticated. Please log in again.');
-        }
+    useEffect(() => {
+        const fetchClientInfo = async () => {
+            try {
+                const token = localStorage.getItem('token');
+                if (!token) {
+                    throw new Error('User is not authenticated. Please log in again.');
+                }
 
-        const response = await fetch(`/api/client/${clientId}`, {
-          method: 'GET',
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+                // Fetch client information
+                const response = await fetch('/api/client/info', {
+                    method: 'GET',
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                });
 
-        if (!response.ok) {
-          throw new Error('Failed to fetch client information.');
-        }
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Failed to fetch client information.');
+                }
 
-        const data = await response.json();
-        setClientInfo({
-          name: data.name,
-          clientId: data.clientId,
-        });
-      } catch (err) {
-        console.error('Error fetching client info:', err);
-        setError(err.message || 'Error fetching client information.');
-      }
-    };
+                const data = await response.json();
+                setClientInfo({
+                    name: data.name,
+                    clientId: data.clientId,
+                });
+            } catch (err) {
+                console.error('Error fetching client information:', err.message);
+                setError(err.message || 'Error fetching client information.');
+            }
+        };
 
-    fetchClientInfo();
-  }, [clientId]);
+        fetchClientInfo();
+    }, []);
 
-  if (error) {
-    return <div className="error-message">Error: {error}</div>;
-  }
+    if (error) {
+        return <div className="error-message">Error: {error}</div>;
+    }
 
-  return (
-    <div className="client-profile">
-      <img
-        src="https://via.placeholder.com/100"
-        alt="Client"
-        className="client-image"
-      />
-      <div className="client-info">
-        <h3 className="client-name">{clientInfo.name || 'Loading...'}</h3>
-        <p className="client-id">Client ID: {clientInfo.clientId || 'Loading...'}</p>
-      </div>
-    </div>
-  );
+    return (
+        <div className="client-profile">
+            <img
+                src="https://via.placeholder.com/100"
+                alt="Client"
+                className="client-image"
+            />
+            <div className="client-info">
+                <h3 className="client-name">{clientInfo.name || 'N/A'}</h3>
+                <p className="client-id">Client ID: {clientInfo.clientId || 'N/A'}</p>
+            </div>
+        </div>
+    );
 };
 
 export default ClientProfile;
