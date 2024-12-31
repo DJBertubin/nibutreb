@@ -5,7 +5,7 @@ const bcrypt = require('bcryptjs');
 const fetch = require('node-fetch');
 const dotenv = require('dotenv');
 const mongoose = require('mongoose');
-const User = require('./API/models/user'); // Import User model
+const User = require('./api/models/User'); 
 
 dotenv.config();
 
