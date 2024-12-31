@@ -99,84 +99,88 @@ const Channels = () => {
                     flexGrow: 1,
                     overflow: 'auto',
                 }}
-                className="gradient-background"
             >
                 <div className="main-content">
-                    <ClientProfile
-                        name="Jane Doe"
-                        clientId="98765"
-                        imageUrl="https://via.placeholder.com/100"
-                    />
+                    <ClientProfile name="Jane Doe" clientId="98765" imageUrl="https://via.placeholder.com/100" />
                     <div className="content">
                         <h2 className="section-title">Channels</h2>
-                        <div className="tabs">
-                            <button
-                                className={`tab-button ${activeTab === 'sources' ? 'active' : ''}`}
-                                onClick={() => setActiveTab('sources')}
-                            >
-                                Sources
-                            </button>
-                            <button
-                                className={`tab-button ${activeTab === 'targets' ? 'active' : ''}`}
-                                onClick={() => setActiveTab('targets')}
-                            >
-                                Targets
-                            </button>
-                        </div>
-                        <div className="tab-content">
-                            {activeTab === 'sources' && renderConnectedSources()}
-                            {activeTab === 'targets' && (
-                                <div>
-                                    <p>No target marketplaces yet. Add one from a source!</p>
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="add-source-section">
-                            {showAddSourceModal ? (
-                                <div className="add-source-form">
-                                    <h3>Add New Source</h3>
-                                    <label>
-                                        Store URL:
-                                        <input
-                                            type="text"
-                                            placeholder="example.myshopify.com"
-                                            value={storeUrl}
-                                            onChange={(e) => setStoreUrl(e.target.value)}
-                                            className="input-field"
-                                        />
-                                    </label>
-                                    <label>
-                                        Admin Access Token:
-                                        <input
-                                            type="password"
-                                            placeholder="Your Admin Access Token"
-                                            value={adminAccessToken}
-                                            onChange={(e) => setAdminAccessToken(e.target.value)}
-                                            className="input-field"
-                                        />
-                                    </label>
-                                    <button className="add-button" onClick={handleAddSource}>
-                                        Add Source
-                                    </button>
-                                    <button
-                                        className="cancel-button"
-                                        onClick={() => setShowAddSourceModal(false)}
-                                    >
-                                        Cancel
-                                    </button>
-                                </div>
-                            ) : (
+                        <div
+                            style={{
+                                background: 'white',
+                                borderRadius: '10px',
+                                padding: '20px',
+                                boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.1)',
+                            }}
+                        >
+                            <div className="tabs">
                                 <button
-                                    className="add-source-button"
-                                    onClick={() => setShowAddSourceModal(true)}
+                                    className={`tab-button ${activeTab === 'sources' ? 'active' : ''}`}
+                                    onClick={() => setActiveTab('sources')}
                                 >
-                                    + Add Source
+                                    Sources
                                 </button>
-                            )}
-                        </div>
+                                <button
+                                    className={`tab-button ${activeTab === 'targets' ? 'active' : ''}`}
+                                    onClick={() => setActiveTab('targets')}
+                                >
+                                    Targets
+                                </button>
+                            </div>
+                            <div className="tab-content">
+                                {activeTab === 'sources' && renderConnectedSources()}
+                                {activeTab === 'targets' && (
+                                    <div>
+                                        <p>No target marketplaces yet. Add one from a source!</p>
+                                    </div>
+                                )}
+                            </div>
 
-                        <p className="status-message">{statusMessage}</p>
+                            <div className="add-source-section">
+                                {showAddSourceModal ? (
+                                    <div className="add-source-form">
+                                        <h3>Add New Source</h3>
+                                        <label>
+                                            Store URL:
+                                            <input
+                                                type="text"
+                                                placeholder="example.myshopify.com"
+                                                value={storeUrl}
+                                                onChange={(e) => setStoreUrl(e.target.value)}
+                                                className="input-field"
+                                            />
+                                        </label>
+                                        <label>
+                                            Admin Access Token:
+                                            <input
+                                                type="password"
+                                                placeholder="Your Admin Access Token"
+                                                value={adminAccessToken}
+                                                onChange={(e) => setAdminAccessToken(e.target.value)}
+                                                className="input-field"
+                                            />
+                                        </label>
+                                        <button className="add-button" onClick={handleAddSource}>
+                                            Add Source
+                                        </button>
+                                        <button
+                                            className="cancel-button"
+                                            onClick={() => setShowAddSourceModal(false)}
+                                        >
+                                            Cancel
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <button
+                                        className="add-source-button"
+                                        onClick={() => setShowAddSourceModal(true)}
+                                    >
+                                        + Add Source
+                                    </button>
+                                )}
+                            </div>
+
+                            <p className="status-message">{statusMessage}</p>
+                        </div>
                     </div>
                 </div>
             </div>
