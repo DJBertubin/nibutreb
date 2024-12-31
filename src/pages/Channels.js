@@ -5,29 +5,68 @@ import './Channels.css';
 
 const Channels = () => {
     const [selectedTab, setSelectedTab] = useState('Shopify'); // Default selected tab
-    const [shopifyStores, setShopifyStores] = useState([
-        { id: 1, name: 'myshopify1.com' },
-    ]);
-    const [walmartStores, setWalmartStores] = useState([]);
-    const [amazonStores, setAmazonStores] = useState([]);
+    const [shopifyStores, setShopifyStores] = useState([]);
     const [storeUrl, setStoreUrl] = useState('');
-    const [storeToken, setStoreToken] = useState('');
+    const [adminAccessToken, setAdminAccessToken] = useState('');
+    const [statusMessage, setStatusMessage] = useState('');
+    const [activeSource, setActiveSource] = useState(null);
 
     const handleTabChange = (tab) => {
         setSelectedTab(tab);
+        setActiveSource(null); // Reset the active source selection when switching tabs
     };
 
-    const handleAddStore = () => {
-        if (selectedTab === 'Shopify') {
-            setShopifyStores((prev) => [...prev, { id: shopifyStores.length + 1, name: storeUrl }]);
-        } else if (selectedTab === 'Walmart') {
-            setWalmartStores((prev) => [...prev, { id: walmartStores.length + 1, name: storeUrl }]);
-        } else if (selectedTab === 'Amazon') {
-            setAmazonStores((prev) => [...prev, { id: amazonStores.length + 1, name: storeUrl }]);
+    const validateShopifyUrl = (url) => {
+        const regex = /^[a-zA-Z0-9][a-zA-Z0-9-_]*\.myshopify\.com$/;
+        return regex.test(url.trim().toLowerCase());
+    };
+
+    const extractStoreName = (url) => {
+        return url.split('.myshopify.com')[0];
+    };
+
+    const handleShopifyConnect = async () => {
+        setStatusMessage('Connecting to Shopify Admin API...');
+
+        if (!validateShopifyUrl(storeUrl)) {
+            setStatusMessage('Invalid Shopify store URL format. Use example.myshopify.com');
+            return;
         }
-        setStoreUrl('');
-        setStoreToken('');
-        alert(`${selectedTab} store ${storeUrl} connected successfully!`);
+
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                throw new Error('User is not authenticated. Please log in again.');
+            }
+
+            const response = await fetch('/api/shopify/fetch', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({
+                    storeUrl: storeUrl.trim(),
+                    adminAccessToken: adminAccessToken,
+                }),
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`Shopify API Error: ${errorText}`);
+            }
+
+            const data = await response.json();
+            const storeName = extractStoreName(storeUrl);
+
+            setShopifyStores((prev) => [
+                ...prev,
+                { id: prev.length + 1, name: storeName, url: storeUrl },
+            ]);
+            setStatusMessage(`Successfully connected to ${storeName}`);
+        } catch (error) {
+            setStatusMessage(`Failed to connect: ${error.message}`);
+        }
     };
 
     return (
@@ -50,114 +89,73 @@ const Channels = () => {
                     />
                     <div className="content">
                         <h2 className="section-title">Channels Overview</h2>
-                        <div className="channels-container">
-                            <div className="tabs">
-                                <button
-                                    className={`tab-button ${selectedTab === 'Shopify' ? 'active' : ''}`}
-                                    onClick={() => handleTabChange('Shopify')}
-                                >
-                                    Shopify
-                                </button>
-                                <button
-                                    className={`tab-button ${selectedTab === 'Walmart' ? 'active' : ''}`}
-                                    onClick={() => handleTabChange('Walmart')}
-                                >
-                                    Walmart
-                                </button>
-                                <button
-                                    className={`tab-button ${selectedTab === 'Amazon' ? 'active' : ''}`}
-                                    onClick={() => handleTabChange('Amazon')}
-                                >
-                                    Amazon
-                                </button>
-                            </div>
-                            <div className="tab-content">
-                                {selectedTab === 'Shopify' && (
-                                    <>
-                                        <h3>Connected Shopify Stores</h3>
-                                        <ul className="store-list">
-                                            {shopifyStores.map((store) => (
-                                                <li key={store.id}>{store.name}</li>
-                                            ))}
-                                        </ul>
-                                        <h4>Add a New Shopify Store</h4>
-                                        <input
-                                            type="text"
-                                            placeholder="Store URL (e.g., myshopify.com)"
-                                            value={storeUrl}
-                                            onChange={(e) => setStoreUrl(e.target.value)}
-                                            className="input-field"
-                                        />
-                                        <input
-                                            type="text"
-                                            placeholder="Access Token"
-                                            value={storeToken}
-                                            onChange={(e) => setStoreToken(e.target.value)}
-                                            className="input-field"
-                                        />
-                                        <button className="add-button" onClick={handleAddStore}>
-                                            Add Shopify Store
-                                        </button>
-                                    </>
-                                )}
-                                {selectedTab === 'Walmart' && (
-                                    <>
-                                        <h3>Connected Walmart Stores</h3>
-                                        <ul className="store-list">
-                                            {walmartStores.map((store) => (
-                                                <li key={store.id}>{store.name}</li>
-                                            ))}
-                                        </ul>
-                                        <h4>Add a New Walmart Store</h4>
-                                        <input
-                                            type="text"
-                                            placeholder="Store URL"
-                                            value={storeUrl}
-                                            onChange={(e) => setStoreUrl(e.target.value)}
-                                            className="input-field"
-                                        />
-                                        <input
-                                            type="text"
-                                            placeholder="Access Token"
-                                            value={storeToken}
-                                            onChange={(e) => setStoreToken(e.target.value)}
-                                            className="input-field"
-                                        />
-                                        <button className="add-button" onClick={handleAddStore}>
-                                            Add Walmart Store
-                                        </button>
-                                    </>
-                                )}
-                                {selectedTab === 'Amazon' && (
-                                    <>
-                                        <h3>Connected Amazon Stores</h3>
-                                        <ul className="store-list">
-                                            {amazonStores.map((store) => (
-                                                <li key={store.id}>{store.name}</li>
-                                            ))}
-                                        </ul>
-                                        <h4>Add a New Amazon Store</h4>
-                                        <input
-                                            type="text"
-                                            placeholder="Store URL"
-                                            value={storeUrl}
-                                            onChange={(e) => setStoreUrl(e.target.value)}
-                                            className="input-field"
-                                        />
-                                        <input
-                                            type="text"
-                                            placeholder="Access Token"
-                                            value={storeToken}
-                                            onChange={(e) => setStoreToken(e.target.value)}
-                                            className="input-field"
-                                        />
-                                        <button className="add-button" onClick={handleAddStore}>
-                                            Add Amazon Store
-                                        </button>
-                                    </>
-                                )}
-                            </div>
+                        <div className="tabs">
+                            <button
+                                className={`tab-button ${selectedTab === 'Shopify' ? 'active' : ''}`}
+                                onClick={() => handleTabChange('Shopify')}
+                            >
+                                Shopify
+                            </button>
+                            <button
+                                className={`tab-button ${selectedTab === 'Walmart' ? 'active' : ''}`}
+                                onClick={() => handleTabChange('Walmart')}
+                            >
+                                Walmart
+                            </button>
+                            <button
+                                className={`tab-button ${selectedTab === 'Amazon' ? 'active' : ''}`}
+                                onClick={() => handleTabChange('Amazon')}
+                            >
+                                Amazon
+                            </button>
                         </div>
+
+                        {selectedTab === 'Shopify' && (
+                            <div className="tab-content">
+                                <h3>Connected Shopify Stores</h3>
+                                <ul className="store-list">
+                                    {shopifyStores.length > 0 ? (
+                                        shopifyStores.map((store) => (
+                                            <li key={store.id}>{store.name} ({store.url})</li>
+                                        ))
+                                    ) : (
+                                        <p>No connected stores. Add a new one below.</p>
+                                    )}
+                                </ul>
+                                <h4>Add a New Shopify Store</h4>
+                                <label>
+                                    Store URL:
+                                    <input
+                                        type="text"
+                                        placeholder="example.myshopify.com"
+                                        value={storeUrl}
+                                        onChange={(e) => setStoreUrl(e.target.value)}
+                                        className="input-field"
+                                    />
+                                </label>
+                                <label>
+                                    Admin Access Token:
+                                    <input
+                                        type="password"
+                                        placeholder="Your Admin Access Token"
+                                        value={adminAccessToken}
+                                        onChange={(e) => setAdminAccessToken(e.target.value)}
+                                        className="input-field"
+                                    />
+                                </label>
+                                <button className="add-button" onClick={handleShopifyConnect}>
+                                    Connect
+                                </button>
+                                <p className="status-message">{statusMessage}</p>
+                            </div>
+                        )}
+
+                        {selectedTab !== 'Shopify' && (
+                            <div className="tab-content">
+                                <h3>{selectedTab} Integration Coming Soon!</h3>
+                                <p>Please check back later for {selectedTab} integration.</p>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
