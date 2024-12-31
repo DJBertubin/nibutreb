@@ -12,7 +12,6 @@ const Channels = () => {
     const [error, setError] = useState('');
 
     useEffect(() => {
-        // Reuse the fetch logic from the Products Page
         const fetchConnectedSources = async () => {
             try {
                 const token = localStorage.getItem('token');
@@ -104,27 +103,6 @@ const Channels = () => {
         }
     };
 
-    const renderConnectedSources = () => (
-        <div className="connected-sources">
-            {connectedSources.length > 0 ? (
-                connectedSources.map((source) => (
-                    <div key={source.id} className="source-card">
-                        <h3>{source.name}</h3>
-                        <p>{source.url}</p>
-                        <button
-                            className="add-target-button"
-                            onClick={() => console.log(`Add target for ${source.id}`)}
-                        >
-                            + Add Target Marketplace
-                        </button>
-                    </div>
-                ))
-            ) : (
-                <p>No connected sources found. Please add a source.</p>
-            )}
-        </div>
-    );
-
     return (
         <div style={{ display: 'flex', height: '100vh' }}>
             <Sidebar userType="Admin" />
@@ -148,7 +126,40 @@ const Channels = () => {
                                 boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.1)',
                             }}
                         >
-                            {renderConnectedSources()}
+                            {error && <p className="error-message">{error}</p>}
+                            <table className="modern-table">
+                                <thead>
+                                    <tr>
+                                        <th>Source Name</th>
+                                        <th>URL</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {connectedSources.length > 0 ? (
+                                        connectedSources.map((source) => (
+                                            <tr key={source.id}>
+                                                <td>{source.name}</td>
+                                                <td>{source.url}</td>
+                                                <td>
+                                                    <button
+                                                        className="add-target-button"
+                                                        onClick={() =>
+                                                            console.log(`Add target for ${source.name}`)
+                                                        }
+                                                    >
+                                                        + Add Target Marketplace
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        ))
+                                    ) : (
+                                        <tr>
+                                            <td colSpan="3">No connected sources found. Please add a source.</td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
 
                             <div className="add-source-section">
                                 {showAddSourceModal ? (
