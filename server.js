@@ -5,6 +5,7 @@ const bcrypt = require('bcryptjs');
 const fetch = require('node-fetch');
 const dotenv = require('dotenv');
 const mongoose = require('mongoose');
+const cron = require('node-cron');
 const User = require('./api/models/User'); // Import User model
 const ShopifyData = require('./api/models/ShopifyData'); // Import ShopifyData model
 
@@ -167,18 +168,15 @@ app.post('/api/shopify/fetch', async (req, res) => {
 
         const shopifyData = await response.json();
 
-        const newShopifyData = new ShopifyData({
-            clientId,
-            shopifyUrl: storeUrl.trim(),
-            shopifyToken: adminAccessToken,
-            shopifyData,
-        });
-
-        await newShopifyData.save();
+        const updatedData = await ShopifyData.findOneAndUpdate(
+            { clientId, shopifyUrl: storeUrl.trim() },
+            { shopifyData, shopifyToken: adminAccessToken, lastUpdated: new Date() },
+            { upsert: true, new: true }
+        );
 
         res.status(201).json({
             message: 'Shopify data fetched and stored successfully.',
-            shopifyData,
+            shopifyData: updatedData,
         });
     } catch (err) {
         console.error('Error fetching Shopify data:', err.message);
@@ -186,38 +184,42 @@ app.post('/api/shopify/fetch', async (req, res) => {
     }
 });
 
-// Fetch Shopify Data for Logged-In User
-app.get('/api/shopify/data', async (req, res) => {
-    const { authorization } = req.headers;
-
-    if (!authorization || !authorization.startsWith('Bearer ')) {
-        return res.status(401).json({ error: 'Authorization token required.' });
-    }
-
+// Periodic Shopify Data Fetch
+const fetchShopifyDataPeriodically = async () => {
     try {
-        const token = authorization.split(' ')[1];
-        const decoded = jwt.verify(token, JWT_SECRET);
-        const clientId = decoded.clientId;
+        const allEntries = await ShopifyData.find();
+        for (const entry of allEntries) {
+            const { shopifyUrl, shopifyToken, clientId } = entry;
 
-        if (!clientId) {
-            return res.status(401).json({ error: 'Invalid or missing clientId in token.' });
+            const shopifyApiUrl = `https://${shopifyUrl.trim()}/admin/api/2024-01/products.json`;
+            const response = await fetch(shopifyApiUrl, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Shopify-Access-Token': shopifyToken,
+                },
+            });
+
+            if (response.ok) {
+                const shopifyData = await response.json();
+                await ShopifyData.findOneAndUpdate(
+                    { clientId, shopifyUrl },
+                    { shopifyData, lastUpdated: new Date() },
+                    { upsert: true }
+                );
+
+                console.log(`Shopify data updated for clientId: ${clientId}`);
+            } else {
+                console.error(`Error fetching data for ${clientId}: ${response.statusText}`);
+            }
         }
-
-        const shopifyData = await ShopifyData.find({ clientId });
-
-        if (!shopifyData || shopifyData.length === 0) {
-            return res.status(404).json({ error: 'No Shopify data found for this user.' });
-        }
-
-        res.status(200).json({
-            message: 'Shopify data fetched successfully.',
-            shopifyData,
-        });
-    } catch (err) {
-        console.error('Error fetching Shopify data:', err.message);
-        res.status(500).json({ error: 'Internal Server Error', details: err.message });
+    } catch (error) {
+        console.error('Error during periodic Shopify data fetch:', error.message);
     }
-});
+};
+
+// Schedule periodic fetching every 10 minutes
+cron.schedule('*/10 * * * *', fetchShopifyDataPeriodically);
 
 // Error Handling Middleware
 app.use((err, req, res, next) => {
