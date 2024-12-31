@@ -1,20 +1,19 @@
 import React, { useEffect, useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import './Sidebar.css';
-import ClientProfile from './ClientProfile'; // Import ClientProfile
 
 const Sidebar = () => {
     const navigate = useNavigate();
-    const [clientInfo, setClientInfo] = useState({ name: '', clientId: '' });
+    const [username, setUsername] = useState('');
+    const [clientId, setClientId] = useState('');
     const [role, setRole] = useState('');
-    const [error, setError] = useState('');
 
     useEffect(() => {
         const fetchClientInfo = async () => {
             try {
                 const token = localStorage.getItem('token');
                 if (!token) {
-                    throw new Error('User is not authenticated. Please log in again.');
+                    throw new Error('Unauthorized');
                 }
 
                 const response = await fetch('/api/client/info', {
@@ -25,21 +24,21 @@ const Sidebar = () => {
                 });
 
                 if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.error || 'Failed to fetch client information.');
+                    throw new Error('Failed to fetch client info');
                 }
 
                 const data = await response.json();
-                setClientInfo({ name: data.name, clientId: data.clientId });
-                setRole(data.role || ''); // Set role from API response
+                setUsername(data.name || 'User');
+                setClientId(data.clientId || '');
+                setRole(data.role || '');
             } catch (err) {
-                console.error('Error fetching client information:', err.message);
-                setError(err.message || 'Error fetching client information.');
+                console.error('Error fetching client info:', err);
+                navigate('/login');
             }
         };
 
         fetchClientInfo();
-    }, []);
+    }, [navigate]);
 
     const handleLogout = () => {
         localStorage.removeItem('token');
@@ -92,15 +91,13 @@ const Sidebar = () => {
 
     return (
         <div className="sidebar">
-            {error ? (
-                <p>{error}</p>
-            ) : (
-                <ClientProfile
-                    name={clientInfo.name || 'Loading...'}
-                    clientId={clientInfo.clientId || 'Loading...'}
-                    imageUrl="https://via.placeholder.com/100"
-                />
-            )}
+            <div className="client-profile">
+                <img src="https://via.placeholder.com/100" alt="Client" className="client-image" />
+                <div className="client-info">
+                    <h4 className="client-name">{username}</h4>
+                    <p className="client-id">Client ID: {clientId}</p>
+                </div>
+            </div>
             <ul>
                 {role === 'admin' ? adminLinks : clientLinks}
             </ul>
