@@ -13,7 +13,6 @@ const ClientProfile = () => {
                     throw new Error('User is not authenticated. Please log in again.');
                 }
 
-                // Fetch client information
                 const response = await fetch('/api/client/info', {
                     method: 'GET',
                     headers: {
@@ -47,17 +46,13 @@ const ClientProfile = () => {
     return (
         <div className="client-profile">
             <img
-                src="https://via.placeholder.com/50" // Temporary placeholder image
+                src="https://via.placeholder.com/40" // Temporary placeholder image
                 alt="Client"
                 className="client-image"
             />
             <div className="client-info">
-                <h5 className="client-name">
-                    {clientInfo.name || 'N/A'}
-                </h5>
-                <p className="client-id">
-                    {clientInfo.clientId || 'N/A'}
-                </p>
+                <p className="client-name">{clientInfo.name || 'N/A'}</p>
+                <p className="client-id">Client ID: {clientInfo.clientId || 'N/A'}</p>
             </div>
         </div>
     );

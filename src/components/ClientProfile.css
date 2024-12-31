@@ -3,7 +3,7 @@
   align-items: center;
   gap: 10px; /* Space between image and text */
   padding: 10px 20px;
-  font-size: 12px; /* Smaller text for profile */
+  font-size: 12px; /* Adjusted text size */
   color: white; /* White text for both name and ID */
 }
 
@@ -21,14 +21,14 @@
 }
 
 .client-name {
-  font-size: 14px; /* Smaller size for the name */
+  font-size: 12px; /* Adjusted to 12px */
   font-weight: bold;
   color: white; /* White text for the name */
   margin: 0;
 }
 
 .client-id {
-  font-size: 12px; /* Smaller size for the ID */
+  font-size: 12px; /* Adjusted to 12px */
   color: white; /* White text for the ID */
   margin: 0;
 }
