@@ -4,32 +4,30 @@ import ClientProfile from '../components/ClientProfile';
 import './Channels.css';
 
 const Channels = () => {
-    const [showModal, setShowModal] = useState(false);
-    const [selectedSource, setSelectedSource] = useState('');
+    const [selectedTab, setSelectedTab] = useState('Shopify'); // Default selected tab
     const [shopifyStores, setShopifyStores] = useState([
         { id: 1, name: 'myshopify1.com' },
     ]);
+    const [walmartStores, setWalmartStores] = useState([]);
+    const [amazonStores, setAmazonStores] = useState([]);
+    const [storeUrl, setStoreUrl] = useState('');
+    const [storeToken, setStoreToken] = useState('');
 
-    const handleAddSource = () => {
-        setShowModal(true);
+    const handleTabChange = (tab) => {
+        setSelectedTab(tab);
     };
 
-    const handleCloseModal = () => {
-        setShowModal(false);
-        setSelectedSource('');
-    };
-
-    const handleSelectSource = (source) => {
-        setSelectedSource(source);
-    };
-
-    const handleShopifyAdd = (storeUrl, token) => {
-        setShopifyStores((prevStores) => [
-            ...prevStores,
-            { id: shopifyStores.length + 1, name: storeUrl },
-        ]);
-        handleCloseModal();
-        alert(`Shopify store ${storeUrl} connected successfully!`);
+    const handleAddStore = () => {
+        if (selectedTab === 'Shopify') {
+            setShopifyStores((prev) => [...prev, { id: shopifyStores.length + 1, name: storeUrl }]);
+        } else if (selectedTab === 'Walmart') {
+            setWalmartStores((prev) => [...prev, { id: walmartStores.length + 1, name: storeUrl }]);
+        } else if (selectedTab === 'Amazon') {
+            setAmazonStores((prev) => [...prev, { id: amazonStores.length + 1, name: storeUrl }]);
+        }
+        setStoreUrl('');
+        setStoreToken('');
+        alert(`${selectedTab} store ${storeUrl} connected successfully!`);
     };
 
     return (
@@ -53,104 +51,116 @@ const Channels = () => {
                     <div className="content">
                         <h2 className="section-title">Channels Overview</h2>
                         <div className="channels-container">
-                            <div className="source-platforms modern-box">
-                                <h3>Source Platforms</h3>
-                                <ul className="platform-list">
-                                    {shopifyStores.map((store) => (
-                                        <li key={store.id} className="platform-item">
-                                            <span>Shopify: {store.name}</span>
-                                        </li>
-                                    ))}
-                                </ul>
+                            <div className="tabs">
                                 <button
-                                    className="modern-button add-source-button"
-                                    onClick={handleAddSource}
+                                    className={`tab-button ${selectedTab === 'Shopify' ? 'active' : ''}`}
+                                    onClick={() => handleTabChange('Shopify')}
                                 >
-                                    + Add Source
+                                    Shopify
+                                </button>
+                                <button
+                                    className={`tab-button ${selectedTab === 'Walmart' ? 'active' : ''}`}
+                                    onClick={() => handleTabChange('Walmart')}
+                                >
+                                    Walmart
+                                </button>
+                                <button
+                                    className={`tab-button ${selectedTab === 'Amazon' ? 'active' : ''}`}
+                                    onClick={() => handleTabChange('Amazon')}
+                                >
+                                    Amazon
                                 </button>
                             </div>
-                            <div className="target-platforms modern-box">
-                                <h3>Target Platforms</h3>
-                                <p>Coming soon...</p>
+                            <div className="tab-content">
+                                {selectedTab === 'Shopify' && (
+                                    <>
+                                        <h3>Connected Shopify Stores</h3>
+                                        <ul className="store-list">
+                                            {shopifyStores.map((store) => (
+                                                <li key={store.id}>{store.name}</li>
+                                            ))}
+                                        </ul>
+                                        <h4>Add a New Shopify Store</h4>
+                                        <input
+                                            type="text"
+                                            placeholder="Store URL (e.g., myshopify.com)"
+                                            value={storeUrl}
+                                            onChange={(e) => setStoreUrl(e.target.value)}
+                                            className="input-field"
+                                        />
+                                        <input
+                                            type="text"
+                                            placeholder="Access Token"
+                                            value={storeToken}
+                                            onChange={(e) => setStoreToken(e.target.value)}
+                                            className="input-field"
+                                        />
+                                        <button className="add-button" onClick={handleAddStore}>
+                                            Add Shopify Store
+                                        </button>
+                                    </>
+                                )}
+                                {selectedTab === 'Walmart' && (
+                                    <>
+                                        <h3>Connected Walmart Stores</h3>
+                                        <ul className="store-list">
+                                            {walmartStores.map((store) => (
+                                                <li key={store.id}>{store.name}</li>
+                                            ))}
+                                        </ul>
+                                        <h4>Add a New Walmart Store</h4>
+                                        <input
+                                            type="text"
+                                            placeholder="Store URL"
+                                            value={storeUrl}
+                                            onChange={(e) => setStoreUrl(e.target.value)}
+                                            className="input-field"
+                                        />
+                                        <input
+                                            type="text"
+                                            placeholder="Access Token"
+                                            value={storeToken}
+                                            onChange={(e) => setStoreToken(e.target.value)}
+                                            className="input-field"
+                                        />
+                                        <button className="add-button" onClick={handleAddStore}>
+                                            Add Walmart Store
+                                        </button>
+                                    </>
+                                )}
+                                {selectedTab === 'Amazon' && (
+                                    <>
+                                        <h3>Connected Amazon Stores</h3>
+                                        <ul className="store-list">
+                                            {amazonStores.map((store) => (
+                                                <li key={store.id}>{store.name}</li>
+                                            ))}
+                                        </ul>
+                                        <h4>Add a New Amazon Store</h4>
+                                        <input
+                                            type="text"
+                                            placeholder="Store URL"
+                                            value={storeUrl}
+                                            onChange={(e) => setStoreUrl(e.target.value)}
+                                            className="input-field"
+                                        />
+                                        <input
+                                            type="text"
+                                            placeholder="Access Token"
+                                            value={storeToken}
+                                            onChange={(e) => setStoreToken(e.target.value)}
+                                            className="input-field"
+                                        />
+                                        <button className="add-button" onClick={handleAddStore}>
+                                            Add Amazon Store
+                                        </button>
+                                    </>
+                                )}
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-
-            {showModal && (
-                <div className="modal">
-                    <div className="modal-content">
-                        <h3>Select a Source Platform</h3>
-                        <div className="marketplace-options">
-                            <div
-                                className="marketplace-option"
-                                onClick={() => handleSelectSource('Shopify')}
-                            >
-                                <img
-                                    src="https://upload.wikimedia.org/wikipedia/commons/1/15/Shopify_logo_2018.svg"
-                                    alt="Shopify"
-                                />
-                                <span>Shopify</span>
-                            </div>
-                            <div
-                                className="marketplace-option"
-                                onClick={() => handleSelectSource('Walmart')}
-                            >
-                                <img
-                                    src="https://upload.wikimedia.org/wikipedia/commons/5/5a/Walmart_logo.svg"
-                                    alt="Walmart"
-                                />
-                                <span>Walmart</span>
-                            </div>
-                            <div
-                                className="marketplace-option"
-                                onClick={() => handleSelectSource('Amazon')}
-                            >
-                                <img
-                                    src="https://upload.wikimedia.org/wikipedia/commons/a/a9/Amazon_logo.svg"
-                                    alt="Amazon"
-                                />
-                                <span>Amazon</span>
-                            </div>
-                        </div>
-                        {selectedSource === 'Shopify' && (
-                            <div className="shopify-form">
-                                <h4>Connect Shopify Store</h4>
-                                <input
-                                    type="text"
-                                    placeholder="Store URL (e.g., myshop.myshopify.com)"
-                                    id="shopify-url"
-                                    className="login-input"
-                                />
-                                <input
-                                    type="text"
-                                    placeholder="Admin Access Token"
-                                    id="shopify-token"
-                                    className="login-input"
-                                />
-                                <button
-                                    className="login-button"
-                                    onClick={() =>
-                                        handleShopifyAdd(
-                                            document.getElementById('shopify-url').value,
-                                            document.getElementById('shopify-token').value
-                                        )
-                                    }
-                                >
-                                    Add Shopify Store
-                                </button>
-                            </div>
-                        )}
-                        <button
-                            className="login-button close-button"
-                            onClick={handleCloseModal}
-                        >
-                            Close
-                        </button>
-                    </div>
-                </div>
-            )}
         </div>
     );
 };
