@@ -4,14 +4,28 @@
     min-height: 100vh;
     padding: 20px;
     box-sizing: border-box;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
 }
 
-/* Tabs container */
+/* Channels container */
+.channels-container {
+    width: 100%;
+    max-width: 1200px;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+/* Tabs styling */
 .tabs {
     display: flex;
     border-bottom: 2px solid #ddd;
     margin-bottom: 20px;
-    justify-content: flex-start;
+    overflow-x: auto;
     gap: 10px;
 }
 
@@ -38,79 +52,9 @@
     color: #2193b0;
 }
 
-/* Tab content box */
+/* Content styling */
 .tab-content {
-    background: white;
-    padding: 20px;
-    border-radius: 10px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    margin-bottom: 20px;
-}
-
-/* Store list styling */
-.store-list {
-    list-style: none;
-    padding: 0;
-    margin: 0 0 20px 0;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-.store-list li {
-    padding: 10px 15px;
-    background: #f9f9f9;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    color: #333;
-}
-
-.store-list li:hover {
-    background: #e3f4fa;
-    border-color: #2193b0;
-    color: #2193b0;
-}
-
-.store-list li.active {
-    background: #2193b0;
-    color: white;
-    border-color: #2193b0;
-}
-
-/* Input fields */
-.input-field {
-    width: 100%;
-    padding: 12px 15px;
-    margin: 10px 0;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    font-size: 16px;
-    box-sizing: border-box;
-}
-
-.input-field:focus {
-    border-color: #2193b0;
-    outline: none;
-    box-shadow: 0 0 4px rgba(33, 147, 176, 0.5);
-}
-
-/* Add button */
-.add-button {
-    background: linear-gradient(135deg, #6dd5ed, #2193b0);
-    color: white;
-    padding: 10px 20px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 16px;
-    transition: background-color 0.3s ease, box-shadow 0.3s ease;
-}
-
-.add-button:hover {
-    background: linear-gradient(135deg, #2193b0, #6dd5ed);
-    box-shadow: 0 4px 6px rgba(33, 147, 176, 0.3);
+    margin-top: 20px;
 }
 
 /* Target marketplace list */
@@ -139,26 +83,43 @@
     color: #2193b0;
 }
 
+/* Add source and target form */
+.input-field {
+    width: 100%;
+    padding: 12px 15px;
+    margin: 10px 0;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 16px;
+    box-sizing: border-box;
+}
+
+.input-field:focus {
+    border-color: #2193b0;
+    outline: none;
+    box-shadow: 0 0 4px rgba(33, 147, 176, 0.5);
+}
+
+.add-button {
+    background: linear-gradient(135deg, #6dd5ed, #2193b0);
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s ease;
+}
+
+.add-button:hover {
+    background: linear-gradient(135deg, #2193b0, #6dd5ed);
+}
+
 /* Section headers */
 h3, h4 {
     color: #333;
-    margin-bottom: 15px;
 }
 
 .tab-content h3, .tab-content h4 {
     margin-bottom: 10px;
-}
-
-/* Channel container */
-.channels-container {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-}
-
-/* Status message */
-.status-message {
-    margin-top: 10px;
-    font-size: 14px;
-    color: #d9534f; /* Red color for error messages */
 }
