@@ -5,34 +5,52 @@ import './Channels.css';
 
 const Channels = () => {
     const [connectedSources, setConnectedSources] = useState([]);
-    const [activeTab, setActiveTab] = useState('sources');
     const [showAddSourceModal, setShowAddSourceModal] = useState(false);
     const [storeUrl, setStoreUrl] = useState('');
     const [adminAccessToken, setAdminAccessToken] = useState('');
     const [statusMessage, setStatusMessage] = useState('');
+    const [error, setError] = useState('');
 
     useEffect(() => {
-        // Fetch connected sources from the backend
+        // Reuse the fetch logic from the Products Page
         const fetchConnectedSources = async () => {
             try {
                 const token = localStorage.getItem('token');
-                if (!token) return;
+                if (!token) {
+                    setError('User is not authenticated. Please log in again.');
+                    return;
+                }
 
-                const response = await fetch('/api/connected-sources', {
+                const response = await fetch('/api/shopify/data', {
+                    method: 'GET',
                     headers: {
                         Authorization: `Bearer ${token}`,
                     },
                 });
 
                 if (!response.ok) {
-                    throw new Error('Failed to fetch connected sources.');
+                    const errorData = await response.json();
+                    if (response.status === 404) {
+                        // No connected sources
+                        setConnectedSources([]);
+                        return;
+                    }
+                    throw new Error(errorData.error || 'Failed to fetch connected sources.');
                 }
 
                 const data = await response.json();
-                setConnectedSources(data.sources || []);
-            } catch (error) {
-                console.error('Error fetching sources:', error);
-                setStatusMessage('Error fetching connected sources.');
+
+                // Map fetched data to display connected sources (e.g., Shopify store names)
+                const sources = data.shopifyData.map((entry) => ({
+                    id: entry._id, // MongoDB document ID
+                    name: entry.shopifyUrl.split('.myshopify.com')[0], // Extract Shopify store name
+                    url: entry.shopifyUrl,
+                }));
+
+                setConnectedSources(sources);
+            } catch (err) {
+                console.error('Error fetching sources:', err);
+                setError(err.message || 'Error fetching connected sources.');
             }
         };
 
@@ -44,7 +62,10 @@ const Channels = () => {
             setStatusMessage('Adding new source...');
 
             const token = localStorage.getItem('token');
-            if (!token) return;
+            if (!token) {
+                setError('User is not authenticated. Please log in again.');
+                return;
+            }
 
             const response = await fetch('/api/shopify/fetch', {
                 method: 'POST',
@@ -59,33 +80,48 @@ const Channels = () => {
             });
 
             if (!response.ok) {
-                throw new Error('Failed to add source.');
+                const errorText = await response.text();
+                throw new Error(errorText || 'Failed to add source.');
             }
 
             const data = await response.json();
-            setConnectedSources((prev) => [...prev, data.source]);
+
+            // Update connected sources with the newly added source
+            setConnectedSources((prev) => [
+                ...prev,
+                {
+                    id: data.source._id,
+                    name: data.source.shopifyUrl.split('.myshopify.com')[0],
+                    url: data.source.shopifyUrl,
+                },
+            ]);
+
             setStatusMessage('Source added successfully.');
             setShowAddSourceModal(false);
         } catch (error) {
             console.error('Error adding source:', error);
-            setStatusMessage('Error adding source.');
+            setStatusMessage(error.message || 'Error adding source.');
         }
     };
 
     const renderConnectedSources = () => (
         <div className="connected-sources">
-            {connectedSources.map((source) => (
-                <div key={source.id} className="source-card">
-                    <h3>{source.name}</h3>
-                    <p>{source.url}</p>
-                    <button
-                        className="add-target-button"
-                        onClick={() => console.log(`Add target for ${source.id}`)}
-                    >
-                        + Add Target Marketplace
-                    </button>
-                </div>
-            ))}
+            {connectedSources.length > 0 ? (
+                connectedSources.map((source) => (
+                    <div key={source.id} className="source-card">
+                        <h3>{source.name}</h3>
+                        <p>{source.url}</p>
+                        <button
+                            className="add-target-button"
+                            onClick={() => console.log(`Add target for ${source.id}`)}
+                        >
+                            + Add Target Marketplace
+                        </button>
+                    </div>
+                ))
+            ) : (
+                <p>No connected sources found. Please add a source.</p>
+            )}
         </div>
     );
 
@@ -112,28 +148,7 @@ const Channels = () => {
                                 boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.1)',
                             }}
                         >
-                            <div className="tabs">
-                                <button
-                                    className={`tab-button ${activeTab === 'sources' ? 'active' : ''}`}
-                                    onClick={() => setActiveTab('sources')}
-                                >
-                                    Sources
-                                </button>
-                                <button
-                                    className={`tab-button ${activeTab === 'targets' ? 'active' : ''}`}
-                                    onClick={() => setActiveTab('targets')}
-                                >
-                                    Targets
-                                </button>
-                            </div>
-                            <div className="tab-content">
-                                {activeTab === 'sources' && renderConnectedSources()}
-                                {activeTab === 'targets' && (
-                                    <div>
-                                        <p>No target marketplaces yet. Add one from a source!</p>
-                                    </div>
-                                )}
-                            </div>
+                            {renderConnectedSources()}
 
                             <div className="add-source-section">
                                 {showAddSourceModal ? (
