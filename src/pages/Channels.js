@@ -6,11 +6,15 @@ import './Channels.css';
 const Channels = () => {
     const [sources, setSources] = useState([]); // Connected source marketplaces
     const [activeSourceId, setActiveSourceId] = useState(null); // Currently selected source
-    const [targets, setTargets] = useState([]); // Target marketplaces for the active source
     const [storeUrl, setStoreUrl] = useState('');
     const [adminAccessToken, setAdminAccessToken] = useState('');
     const [statusMessage, setStatusMessage] = useState('');
     const [error, setError] = useState('');
+    const [targetMarketplaces, setTargetMarketplaces] = useState([
+        { id: 'amazon', name: 'Amazon', connected: false },
+        { id: 'walmart', name: 'Walmart', connected: false },
+        { id: 'ebay', name: 'eBay', connected: false },
+    ]);
 
     useEffect(() => {
         const fetchSources = async () => {
@@ -58,18 +62,8 @@ const Channels = () => {
         fetchSources();
     }, []);
 
-    const validateShopifyUrl = (url) => {
-        const regex = /^[a-zA-Z0-9][a-zA-Z0-9-_]*\.myshopify\.com$/;
-        return regex.test(url.trim().toLowerCase());
-    };
-
     const handleAddSource = async () => {
         setStatusMessage('Adding new source...');
-
-        if (!validateShopifyUrl(storeUrl)) {
-            setStatusMessage('Invalid Shopify store URL format. Use example.myshopify.com');
-            return;
-        }
 
         try {
             const token = localStorage.getItem('token');
@@ -114,13 +108,14 @@ const Channels = () => {
         }
     };
 
-    const handleSourceSelect = (sourceId) => {
-        setActiveSourceId(sourceId);
-        // Simulate fetching targets for the selected source
-        setTargets([
-            { id: '1', name: 'Amazon', type: 'Marketplace' },
-            { id: '2', name: 'eBay', type: 'Marketplace' },
-        ]);
+    const handleToggleMarketplace = (marketplaceId) => {
+        setTargetMarketplaces((prev) =>
+            prev.map((marketplace) =>
+                marketplace.id === marketplaceId
+                    ? { ...marketplace, connected: !marketplace.connected }
+                    : marketplace
+            )
+        );
     };
 
     return (
@@ -151,7 +146,7 @@ const Channels = () => {
                                     <button
                                         key={source.id}
                                         className={`tab-button ${activeSourceId === source.id ? 'active' : ''}`}
-                                        onClick={() => handleSourceSelect(source.id)}
+                                        onClick={() => setActiveSourceId(source.id)}
                                     >
                                         {source.name}
                                     </button>
@@ -196,28 +191,47 @@ const Channels = () => {
                             {activeSourceId !== 'addSource' && (
                                 <div className="targets-section">
                                     <h4>Target Marketplaces for {sources.find((s) => s.id === activeSourceId)?.name}</h4>
-                                    {targets.length > 0 ? (
-                                        <ul className="targets-list">
-                                            {targets.map((target) => (
-                                                <li key={target.id} className="target-item">
-                                                    {target.name} ({target.type})
-                                                </li>
-                                            ))}
-                                        </ul>
-                                    ) : (
-                                        <p>No target marketplaces connected yet for this source.</p>
-                                    )}
-                                    <button
-                                        className="add-button"
-                                        onClick={() =>
-                                            setTargets((prev) => [
-                                                ...prev,
-                                                { id: `${prev.length + 1}`, name: 'New Target', type: 'Marketplace' },
-                                            ])
-                                        }
-                                    >
-                                        Add Target Marketplace
-                                    </button>
+                                    <div className="marketplaces-container">
+                                        {targetMarketplaces.map((marketplace) => (
+                                            <div
+                                                key={marketplace.id}
+                                                className="marketplace-box"
+                                                style={{
+                                                    borderColor: marketplace.connected ? 'green' : 'red',
+                                                }}
+                                            >
+                                                <div className="marketplace-header">
+                                                    <span className={`status-dot ${marketplace.connected ? 'green' : 'red'}`}></span>
+                                                    <h5>{marketplace.name}</h5>
+                                                </div>
+                                                {marketplace.connected ? (
+                                                    <div className="marketplace-actions">
+                                                        <button
+                                                            className="settings-button"
+                                                            onClick={() =>
+                                                                alert(`${marketplace.name} Settings Clicked!`)
+                                                            }
+                                                        >
+                                                            Settings
+                                                        </button>
+                                                        <button
+                                                            className="delete-button"
+                                                            onClick={() => handleToggleMarketplace(marketplace.id)}
+                                                        >
+                                                            Disconnect
+                                                        </button>
+                                                    </div>
+                                                ) : (
+                                                    <p
+                                                        className="add-target"
+                                                        onClick={() => handleToggleMarketplace(marketplace.id)}
+                                                    >
+                                                        Add as Target Marketplace
+                                                    </p>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
                                 </div>
                             )}
                             <p className="status-message">{statusMessage}</p>
