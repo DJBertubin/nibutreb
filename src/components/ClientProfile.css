@@ -1,0 +1,31 @@
+.client-profile {
+  display: flex;
+  align-items: center;
+  gap: 10px; /* Space between image and text */
+  padding: 10px 20px;
+  font-size: 14px;
+  color: white; /* Ensure text stands out */
+}
+
+.client-image {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%; /* Circular image */
+  object-fit: cover; /* Maintain aspect ratio */
+}
+
+.client-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.client-name {
+  font-size: 16px;
+  font-weight: bold;
+  margin: 0;
+}
+
+.client-id {
+  font-size: 14px;
+  color: #b0c4de; /* Lighter color for the ID */
+}

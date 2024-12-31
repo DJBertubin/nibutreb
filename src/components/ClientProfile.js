@@ -47,13 +47,14 @@ const ClientProfile = () => {
     return (
         <div className="client-profile">
             <img
-                src="https://via.placeholder.com/100"
+                src="https://via.placeholder.com/50"
                 alt="Client"
                 className="client-image"
             />
             <div className="client-info">
-                <h3 className="client-name">{clientInfo.name || 'N/A'}</h3>
-                <p className="client-id">Client ID: {clientInfo.clientId || 'N/A'}</p>
+                <h4 className="client-name">
+                    {clientInfo.name || 'N/A'} <span className="client-id">({clientInfo.clientId || 'N/A'})</span>
+                </h4>
             </div>
         </div>
     );
