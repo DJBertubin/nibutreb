@@ -5,6 +5,7 @@ import './Channels.css';
 
 const Channels = () => {
     const [sources, setSources] = useState([]); // Connected source marketplaces
+    const [activeTab, setActiveTab] = useState('sources'); // Default active tab
     const [activeSource, setActiveSource] = useState(null); // Currently selected source marketplace
     const [targets, setTargets] = useState([]); // Connected target marketplaces
     const [storeUrl, setStoreUrl] = useState('');
@@ -137,7 +138,22 @@ const Channels = () => {
                                 boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.1)',
                             }}
                         >
-                            <div className="channels-container">
+                            <div className="tab-buttons">
+                                <button
+                                    className={`tab-button ${activeTab === 'sources' ? 'active' : ''}`}
+                                    onClick={() => setActiveTab('sources')}
+                                >
+                                    Sources
+                                </button>
+                                <button
+                                    className={`tab-button ${activeTab === 'targets' ? 'active' : ''}`}
+                                    onClick={() => setActiveTab('targets')}
+                                >
+                                    Targets
+                                </button>
+                            </div>
+
+                            {activeTab === 'sources' && (
                                 <div className="sources-section">
                                     <h3>Source Marketplaces</h3>
                                     <ul className="sources-list">
@@ -180,6 +196,9 @@ const Channels = () => {
                                         </button>
                                     </div>
                                 </div>
+                            )}
+
+                            {activeTab === 'targets' && (
                                 <div className="targets-section">
                                     <h3>Target Marketplaces</h3>
                                     {targets.length > 0 ? (
@@ -194,7 +213,7 @@ const Channels = () => {
                                         <p>No target marketplaces connected yet for this source.</p>
                                     )}
                                 </div>
-                            </div>
+                            )}
                             <p className="status-message">{statusMessage}</p>
                         </div>
                     </div>
