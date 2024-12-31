@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
 import Sidebar from '../components/Sidebar';
 import ClientProfile from '../components/ClientProfile';
-import './Channels.css'; // Import for modern styling
+import './Channels.css';
 
 const Channels = () => {
     const [showModal, setShowModal] = useState(false);
     const [selectedSource, setSelectedSource] = useState('');
     const [shopifyStores, setShopifyStores] = useState([
         { id: 1, name: 'myshopify1.com' },
-    ]); // Example connected stores
+    ]);
 
     const handleAddSource = () => {
         setShowModal(true);
@@ -42,6 +42,7 @@ const Channels = () => {
                     flexGrow: 1,
                     overflow: 'auto',
                 }}
+                className="gradient-background"
             >
                 <div className="main-content">
                     <ClientProfile
@@ -120,16 +121,16 @@ const Channels = () => {
                                     type="text"
                                     placeholder="Store URL (e.g., myshop.myshopify.com)"
                                     id="shopify-url"
-                                    className="modern-input"
+                                    className="login-input"
                                 />
                                 <input
                                     type="text"
                                     placeholder="Admin Access Token"
                                     id="shopify-token"
-                                    className="modern-input"
+                                    className="login-input"
                                 />
                                 <button
-                                    className="modern-button"
+                                    className="login-button"
                                     onClick={() =>
                                         handleShopifyAdd(
                                             document.getElementById('shopify-url').value,
@@ -142,7 +143,7 @@ const Channels = () => {
                             </div>
                         )}
                         <button
-                            className="modern-button close-button"
+                            className="login-button close-button"
                             onClick={handleCloseModal}
                         >
                             Close
