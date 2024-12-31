@@ -4,15 +4,16 @@ import ClientProfile from '../components/ClientProfile';
 import './Channels.css';
 
 const Channels = () => {
-    const [connectedSources, setConnectedSources] = useState([]);
-    const [showAddSourceModal, setShowAddSourceModal] = useState(false);
+    const [sources, setSources] = useState([]); // Connected source marketplaces
+    const [activeSource, setActiveSource] = useState(null); // Currently selected source marketplace
+    const [targets, setTargets] = useState([]); // Connected target marketplaces
     const [storeUrl, setStoreUrl] = useState('');
     const [adminAccessToken, setAdminAccessToken] = useState('');
     const [statusMessage, setStatusMessage] = useState('');
     const [error, setError] = useState('');
 
     useEffect(() => {
-        const fetchConnectedSources = async () => {
+        const fetchSources = async () => {
             try {
                 const token = localStorage.getItem('token');
                 if (!token) {
@@ -30,8 +31,7 @@ const Channels = () => {
                 if (!response.ok) {
                     const errorData = await response.json();
                     if (response.status === 404) {
-                        // No connected sources
-                        setConnectedSources([]);
+                        setSources([]); // No sources connected yet
                         return;
                     }
                     throw new Error(errorData.error || 'Failed to fetch connected sources.');
@@ -39,21 +39,24 @@ const Channels = () => {
 
                 const data = await response.json();
 
-                // Map fetched data to display connected sources (e.g., Shopify store names)
-                const sources = data.shopifyData.map((entry) => ({
+                // Map data to display sources and default active source
+                const formattedSources = data.shopifyData.map((entry) => ({
                     id: entry._id, // MongoDB document ID
                     name: entry.shopifyUrl.split('.myshopify.com')[0], // Extract Shopify store name
                     url: entry.shopifyUrl,
                 }));
 
-                setConnectedSources(sources);
+                setSources(formattedSources);
+                if (formattedSources.length > 0) {
+                    setActiveSource(formattedSources[0].id); // Set the first source as active by default
+                }
             } catch (err) {
                 console.error('Error fetching sources:', err);
                 setError(err.message || 'Error fetching connected sources.');
             }
         };
 
-        fetchConnectedSources();
+        fetchSources();
     }, []);
 
     const handleAddSource = async () => {
@@ -85,22 +88,30 @@ const Channels = () => {
 
             const data = await response.json();
 
-            // Update connected sources with the newly added source
-            setConnectedSources((prev) => [
-                ...prev,
-                {
-                    id: data.source._id,
-                    name: data.source.shopifyUrl.split('.myshopify.com')[0],
-                    url: data.source.shopifyUrl,
-                },
-            ]);
+            const newSource = {
+                id: data.source._id,
+                name: data.source.shopifyUrl.split('.myshopify.com')[0],
+                url: data.source.shopifyUrl,
+            };
 
+            setSources((prev) => [...prev, newSource]); // Add the new source
+            setActiveSource(newSource.id); // Set the new source as active
+            setStoreUrl('');
+            setAdminAccessToken('');
             setStatusMessage('Source added successfully.');
-            setShowAddSourceModal(false);
         } catch (error) {
             console.error('Error adding source:', error);
             setStatusMessage(error.message || 'Error adding source.');
         }
+    };
+
+    const handleSourceSelect = (sourceId) => {
+        setActiveSource(sourceId);
+        // Simulate fetching targets for the selected source
+        setTargets([
+            { id: '1', name: 'Amazon', type: 'Marketplace' },
+            { id: '2', name: 'eBay', type: 'Marketplace' },
+        ]);
     };
 
     return (
@@ -126,45 +137,24 @@ const Channels = () => {
                                 boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.1)',
                             }}
                         >
-                            {error && <p className="error-message">{error}</p>}
-                            <table className="modern-table">
-                                <thead>
-                                    <tr>
-                                        <th>Source Name</th>
-                                        <th>URL</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {connectedSources.length > 0 ? (
-                                        connectedSources.map((source) => (
-                                            <tr key={source.id}>
-                                                <td>{source.name}</td>
-                                                <td>{source.url}</td>
-                                                <td>
-                                                    <button
-                                                        className="add-target-button"
-                                                        onClick={() =>
-                                                            console.log(`Add target for ${source.name}`)
-                                                        }
-                                                    >
-                                                        + Add Target Marketplace
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                        ))
-                                    ) : (
-                                        <tr>
-                                            <td colSpan="3">No connected sources found. Please add a source.</td>
-                                        </tr>
-                                    )}
-                                </tbody>
-                            </table>
-
-                            <div className="add-source-section">
-                                {showAddSourceModal ? (
+                            <div className="channels-container">
+                                <div className="sources-section">
+                                    <h3>Source Marketplaces</h3>
+                                    <ul className="sources-list">
+                                        {sources.map((source) => (
+                                            <li
+                                                key={source.id}
+                                                className={`source-item ${
+                                                    activeSource === source.id ? 'active' : ''
+                                                }`}
+                                                onClick={() => handleSourceSelect(source.id)}
+                                            >
+                                                {source.name}
+                                            </li>
+                                        ))}
+                                    </ul>
                                     <div className="add-source-form">
-                                        <h3>Add New Source</h3>
+                                        <h4>Add New Source</h4>
                                         <label>
                                             Store URL:
                                             <input
@@ -188,23 +178,23 @@ const Channels = () => {
                                         <button className="add-button" onClick={handleAddSource}>
                                             Add Source
                                         </button>
-                                        <button
-                                            className="cancel-button"
-                                            onClick={() => setShowAddSourceModal(false)}
-                                        >
-                                            Cancel
-                                        </button>
                                     </div>
-                                ) : (
-                                    <button
-                                        className="add-source-button"
-                                        onClick={() => setShowAddSourceModal(true)}
-                                    >
-                                        + Add Source
-                                    </button>
-                                )}
+                                </div>
+                                <div className="targets-section">
+                                    <h3>Target Marketplaces</h3>
+                                    {targets.length > 0 ? (
+                                        <ul className="targets-list">
+                                            {targets.map((target) => (
+                                                <li key={target.id} className="target-item">
+                                                    {target.name} ({target.type})
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    ) : (
+                                        <p>No target marketplaces connected yet for this source.</p>
+                                    )}
+                                </div>
                             </div>
-
                             <p className="status-message">{statusMessage}</p>
                         </div>
                     </div>
