@@ -5,6 +5,7 @@ const bcrypt = require('bcryptjs');
 const fetch = require('node-fetch');
 const dotenv = require('dotenv');
 const mongoose = require('mongoose');
+const User = require('./API/models/user'); // Import User model
 
 dotenv.config();
 
@@ -23,35 +24,6 @@ mongoose
     })
     .then(() => console.log('Connected to MongoDB Atlas'))
     .catch((err) => console.error('MongoDB connection error:', err));
-
-// Helper function to generate a 5-digit random number
-const generateClientId = () => Math.floor(10000 + Math.random() * 90000).toString();
-
-// User Schema and Model
-const userSchema = new mongoose.Schema({
-    clientId: {
-        type: String,
-        required: true,
-        unique: true,
-        default: generateClientId, // Generate a unique 5-digit clientId
-    },
-    name: { type: String, required: true },
-    username: { type: String, required: true, unique: true },
-    password: { type: String, required: true },
-    role: { type: String, default: 'client' },
-});
-const User = mongoose.models.User || mongoose.model('User', userSchema);
-
-// Shopify Data Schema and Model
-const shopifyDataSchema = new mongoose.Schema({
-    clientId: { type: String, required: true }, // Link to the user's clientId
-    shopifyUrl: { type: String, required: true },
-    shopifyToken: { type: String, required: true },
-    shopifyData: { type: Object, default: {} },
-    createdAt: { type: Date, default: Date.now }, // Timestamp for tracking
-});
-const ShopifyData =
-    mongoose.models.ShopifyData || mongoose.model('ShopifyData', shopifyDataSchema);
 
 // Login Route
 app.post('/api/login', async (req, res) => {
@@ -77,7 +49,7 @@ app.post('/api/login', async (req, res) => {
             token,
             role: user.role,
             name: user.name,
-            clientId: user.clientId, // Include clientId in the response
+            clientId: user.clientId,
         });
     } catch (error) {
         console.error('Login Error:', error.message);
@@ -104,19 +76,54 @@ app.post('/api/signup', async (req, res) => {
             name,
             username,
             password: hashedPassword,
-            role: role || 'client', // Default to `client`
+            role: role || 'client',
         });
 
         await newUser.save();
 
         res.status(201).json({
             message: 'User created successfully',
-            userId: newUser._id, // Return MongoDB ID for reference
-            clientId: newUser.clientId, // Return the generated clientId for reference
+            userId: newUser._id,
+            clientId: newUser.clientId,
         });
     } catch (error) {
         console.error('Signup Error:', error.message);
         res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+// Fetch Client Info Route
+app.get('/api/client/info', async (req, res) => {
+    const { authorization } = req.headers;
+
+    if (!authorization || !authorization.startsWith('Bearer ')) {
+        return res.status(401).json({ error: 'Authorization token required.' });
+    }
+
+    try {
+        const token = authorization.split(' ')[1];
+        const decoded = jwt.verify(token, JWT_SECRET);
+        const clientId = decoded.clientId;
+
+        if (!clientId) {
+            return res.status(401).json({ error: 'Invalid or missing clientId in token.' });
+        }
+
+        const user = await User.findOne({ clientId });
+
+        if (!user) {
+            return res.status(404).json({ error: 'Client not found.' });
+        }
+
+        res.status(200).json({
+            clientId: user.clientId,
+            name: user.name,
+            username: user.username,
+            role: user.role,
+        });
+    } catch (err) {
+        console.error('Error fetching client info:', err.message);
+        res.status(500).json({ error: 'Internal Server Error', details: err.message });
     }
 });
 
