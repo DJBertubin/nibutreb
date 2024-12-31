@@ -1,17 +1,44 @@
 import React, { useEffect, useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import './Sidebar.css';
+import ClientProfile from './ClientProfile'; // Import ClientProfile
 
 const Sidebar = () => {
     const navigate = useNavigate();
-    const [username, setUsername] = useState('');
+    const [clientInfo, setClientInfo] = useState({ name: '', clientId: '' });
     const [role, setRole] = useState('');
+    const [error, setError] = useState('');
 
     useEffect(() => {
-        const storedUsername = localStorage.getItem('username');
-        const storedRole = localStorage.getItem('role');
-        setUsername(storedUsername || 'User'); // Fallback to "User"
-        setRole(storedRole || ''); // Fallback to empty
+        const fetchClientInfo = async () => {
+            try {
+                const token = localStorage.getItem('token');
+                if (!token) {
+                    throw new Error('User is not authenticated. Please log in again.');
+                }
+
+                const response = await fetch('/api/client/info', {
+                    method: 'GET',
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Failed to fetch client information.');
+                }
+
+                const data = await response.json();
+                setClientInfo({ name: data.name, clientId: data.clientId });
+                setRole(data.role || ''); // Set role from API response
+            } catch (err) {
+                console.error('Error fetching client information:', err.message);
+                setError(err.message || 'Error fetching client information.');
+            }
+        };
+
+        fetchClientInfo();
     }, []);
 
     const handleLogout = () => {
@@ -65,7 +92,15 @@ const Sidebar = () => {
 
     return (
         <div className="sidebar">
-            <h2>{username ? `${username}'s Panel` : 'User Panel'}</h2>
+            {error ? (
+                <p>{error}</p>
+            ) : (
+                <ClientProfile
+                    name={clientInfo.name || 'Loading...'}
+                    clientId={clientInfo.clientId || 'Loading...'}
+                    imageUrl="https://via.placeholder.com/100"
+                />
+            )}
             <ul>
                 {role === 'admin' ? adminLinks : clientLinks}
             </ul>
