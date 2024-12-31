@@ -5,7 +5,8 @@ const bcrypt = require('bcryptjs');
 const fetch = require('node-fetch');
 const dotenv = require('dotenv');
 const mongoose = require('mongoose');
-const User = require('./api/models/User'); 
+const User = require('./api/models/User'); // Import User model
+const ShopifyData = require('./api/models/ShopifyData'); // Import ShopifyData model
 
 dotenv.config();
 
