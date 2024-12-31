@@ -3,8 +3,8 @@
   align-items: center;
   gap: 10px; /* Space between image and text */
   padding: 10px 20px;
-  font-size: 14px;
-  color: white; /* Ensure text stands out */
+  font-size: 12px; /* Smaller text for profile */
+  color: white; /* White text for both name and ID */
 }
 
 .client-image {
@@ -12,6 +12,7 @@
   height: 40px;
   border-radius: 50%; /* Circular image */
   object-fit: cover; /* Maintain aspect ratio */
+  background-color: #ccc; /* Fallback background color */
 }
 
 .client-info {
@@ -20,12 +21,14 @@
 }
 
 .client-name {
-  font-size: 16px;
+  font-size: 14px; /* Smaller size for the name */
   font-weight: bold;
+  color: white; /* White text for the name */
   margin: 0;
 }
 
 .client-id {
-  font-size: 14px;
-  color: #b0c4de; /* Lighter color for the ID */
+  font-size: 12px; /* Smaller size for the ID */
+  color: white; /* White text for the ID */
+  margin: 0;
 }
