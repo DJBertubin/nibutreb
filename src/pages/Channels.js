@@ -39,7 +39,6 @@ const Channels = () => {
 
                 const data = await response.json();
 
-                // Map data to display sources
                 const formattedSources = data.shopifyData.map((entry) => ({
                     id: entry._id,
                     name: entry.shopifyUrl.split('.myshopify.com')[0],
@@ -49,7 +48,6 @@ const Channels = () => {
                 setSources(formattedSources);
                 if (formattedSources.length > 0) {
                     setActiveSourceId(formattedSources[0].id); // Default to the first source
-                    setTargets([]); // Initialize targets
                 }
             } catch (err) {
                 console.error('Error fetching sources:', err);
@@ -60,10 +58,20 @@ const Channels = () => {
         fetchSources();
     }, []);
 
-    const handleAddSource = async () => {
-        try {
-            setStatusMessage('Adding new source...');
+    const validateShopifyUrl = (url) => {
+        const regex = /^[a-zA-Z0-9][a-zA-Z0-9-_]*\.myshopify\.com$/;
+        return regex.test(url.trim().toLowerCase());
+    };
 
+    const handleAddSource = async () => {
+        setStatusMessage('Adding new source...');
+
+        if (!validateShopifyUrl(storeUrl)) {
+            setStatusMessage('Invalid Shopify store URL format. Use example.myshopify.com');
+            return;
+        }
+
+        try {
             const token = localStorage.getItem('token');
             if (!token) {
                 setError('User is not authenticated. Please log in again.');
@@ -77,7 +85,7 @@ const Channels = () => {
                     Authorization: `Bearer ${token}`,
                 },
                 body: JSON.stringify({
-                    storeUrl,
+                    storeUrl: storeUrl.trim(),
                     adminAccessToken,
                 }),
             });
@@ -90,9 +98,9 @@ const Channels = () => {
             const data = await response.json();
 
             const newSource = {
-                id: data.source._id,
-                name: data.source.shopifyUrl.split('.myshopify.com')[0],
-                url: data.source.shopifyUrl,
+                id: data.shopifyData._id,
+                name: storeUrl.split('.myshopify.com')[0],
+                url: storeUrl,
             };
 
             setSources((prev) => [...prev, newSource]); // Add the new source
