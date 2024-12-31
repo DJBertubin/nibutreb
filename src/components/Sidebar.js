@@ -4,9 +4,9 @@ import './Sidebar.css';
 
 const Sidebar = () => {
     const navigate = useNavigate();
-    const [username, setUsername] = useState('');
+    const [username, setUsername] = useState('User');
     const [clientId, setClientId] = useState('');
-    const [role, setRole] = useState('');
+    const [role, setRole] = useState('client');
 
     useEffect(() => {
         const fetchClientInfo = async () => {
@@ -30,7 +30,7 @@ const Sidebar = () => {
                 const data = await response.json();
                 setUsername(data.name || 'User');
                 setClientId(data.clientId || '');
-                setRole(data.role || '');
+                setRole(data.role || 'client');
             } catch (err) {
                 console.error('Error fetching client info:', err);
                 navigate('/login');
@@ -41,9 +41,7 @@ const Sidebar = () => {
     }, [navigate]);
 
     const handleLogout = () => {
-        localStorage.removeItem('token');
-        localStorage.removeItem('username');
-        localStorage.removeItem('role');
+        localStorage.clear();
         navigate('/login');
     };
 
@@ -92,10 +90,14 @@ const Sidebar = () => {
     return (
         <div className="sidebar">
             <div className="client-profile">
-                <img src="https://via.placeholder.com/100" alt="Client" className="client-image" />
+                <img
+                    src="https://via.placeholder.com/50"
+                    alt="Client"
+                    className="client-image"
+                />
                 <div className="client-info">
                     <h4 className="client-name">{username}</h4>
-                    <p className="client-id">Client ID: {clientId}</p>
+                    <p className="client-id">ID: {clientId}</p>
                 </div>
             </div>
             <ul>
