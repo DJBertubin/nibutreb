@@ -13,6 +13,26 @@
   padding: 20px 0;
   box-shadow: 2px 0px 5px rgba(0, 0, 0, 0.1);
   box-sizing: border-box;
+  transition: width 0.3s ease; /* For collapsible functionality */
+}
+
+.sidebar.collapsed {
+  width: 80px; /* Collapsed width */
+}
+
+.sidebar.collapsed .client-profile,
+.sidebar.collapsed .client-name,
+.sidebar.collapsed .client-id {
+  display: none; /* Hide client profile in collapsed mode */
+}
+
+.sidebar.collapsed ul li a {
+  justify-content: center; /* Center align icons in collapsed mode */
+  padding: 12px 0; /* Adjust padding */
+}
+
+.sidebar.collapsed ul li a span {
+  display: none; /* Hide text in collapsed mode */
 }
 
 /* Client Profile Styling */
@@ -69,6 +89,15 @@
   background-color: #34495e;
 }
 
+.sidebar ul li a i {
+  margin-right: 10px;
+  font-size: 18px;
+}
+
+.sidebar ul li a span {
+  display: inline-block;
+}
+
 /* Sidebar Footer */
 .sidebar-footer {
   margin-top: auto;
@@ -90,4 +119,81 @@
 
 .logout-button:hover {
   background-color: #c0392b;
+}
+
+/* Toggle Button */
+.sidebar-toggle {
+  position: fixed;
+  top: 20px;
+  left: 240px; /* Align with sidebar width */
+  background-color: #2c3e50;
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease, left 0.3s ease;
+  z-index: 100;
+}
+
+.sidebar.collapsed ~ .sidebar-toggle {
+  left: 80px; /* Adjust toggle button position in collapsed mode */
+}
+
+.sidebar-toggle:hover {
+  background-color: #34495e;
+}
+
+/* Main Content */
+.main-content {
+  margin-left: 240px; /* Matches the sidebar width */
+  padding: 20px;
+  background-color: #f5f5f5;
+  min-height: 100vh;
+  box-sizing: border-box;
+  transition: margin-left 0.3s ease; /* Adjust when sidebar collapses */
+}
+
+.sidebar.collapsed ~ .main-content {
+  margin-left: 80px; /* Adjust for collapsed sidebar */
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .sidebar {
+    width: 200px; /* Smaller sidebar for tablets */
+  }
+
+  .sidebar.collapsed {
+    width: 60px; /* Smaller collapsed width for tablets */
+  }
+
+  .main-content {
+    margin-left: 200px; /* Adjust main content margin */
+  }
+
+  .sidebar.collapsed ~ .main-content {
+    margin-left: 60px; /* Adjust margin for collapsed sidebar */
+  }
+}
+
+@media (max-width: 576px) {
+  .sidebar {
+    position: absolute;
+    width: 0;
+    overflow: hidden;
+    transition: width 0.3s ease;
+  }
+
+  .sidebar.open {
+    width: 200px;
+  }
+
+  .main-content {
+    margin-left: 0;
+  }
+
+  .sidebar.open ~ .main-content {
+    margin-left: 200px;
+  }
 }
