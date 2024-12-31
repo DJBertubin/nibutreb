@@ -1,43 +1,50 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Sidebar from '../components/Sidebar';
 import ClientProfile from '../components/ClientProfile';
 import './Channels.css';
 
 const Channels = () => {
-    const [selectedTab, setSelectedTab] = useState('Shopify'); // Default selected tab
-    const [shopifyStores, setShopifyStores] = useState([]);
+    const [connectedSources, setConnectedSources] = useState([]);
+    const [activeTab, setActiveTab] = useState('sources');
+    const [showAddSourceModal, setShowAddSourceModal] = useState(false);
     const [storeUrl, setStoreUrl] = useState('');
     const [adminAccessToken, setAdminAccessToken] = useState('');
     const [statusMessage, setStatusMessage] = useState('');
-    const [activeSource, setActiveSource] = useState(null);
 
-    const handleTabChange = (tab) => {
-        setSelectedTab(tab);
-        setActiveSource(null); // Reset the active source selection when switching tabs
-    };
+    useEffect(() => {
+        // Fetch connected sources from the backend
+        const fetchConnectedSources = async () => {
+            try {
+                const token = localStorage.getItem('token');
+                if (!token) return;
 
-    const validateShopifyUrl = (url) => {
-        const regex = /^[a-zA-Z0-9][a-zA-Z0-9-_]*\.myshopify\.com$/;
-        return regex.test(url.trim().toLowerCase());
-    };
+                const response = await fetch('/api/connected-sources', {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                });
 
-    const extractStoreName = (url) => {
-        return url.split('.myshopify.com')[0];
-    };
+                if (!response.ok) {
+                    throw new Error('Failed to fetch connected sources.');
+                }
 
-    const handleShopifyConnect = async () => {
-        setStatusMessage('Connecting to Shopify Admin API...');
-
-        if (!validateShopifyUrl(storeUrl)) {
-            setStatusMessage('Invalid Shopify store URL format. Use example.myshopify.com');
-            return;
-        }
-
-        try {
-            const token = localStorage.getItem('token');
-            if (!token) {
-                throw new Error('User is not authenticated. Please log in again.');
+                const data = await response.json();
+                setConnectedSources(data.sources || []);
+            } catch (error) {
+                console.error('Error fetching sources:', error);
+                setStatusMessage('Error fetching connected sources.');
             }
+        };
+
+        fetchConnectedSources();
+    }, []);
+
+    const handleAddSource = async () => {
+        try {
+            setStatusMessage('Adding new source...');
+
+            const token = localStorage.getItem('token');
+            if (!token) return;
 
             const response = await fetch('/api/shopify/fetch', {
                 method: 'POST',
@@ -46,28 +53,41 @@ const Channels = () => {
                     Authorization: `Bearer ${token}`,
                 },
                 body: JSON.stringify({
-                    storeUrl: storeUrl.trim(),
-                    adminAccessToken: adminAccessToken,
+                    storeUrl,
+                    adminAccessToken,
                 }),
             });
 
             if (!response.ok) {
-                const errorText = await response.text();
-                throw new Error(`Shopify API Error: ${errorText}`);
+                throw new Error('Failed to add source.');
             }
 
             const data = await response.json();
-            const storeName = extractStoreName(storeUrl);
-
-            setShopifyStores((prev) => [
-                ...prev,
-                { id: prev.length + 1, name: storeName, url: storeUrl },
-            ]);
-            setStatusMessage(`Successfully connected to ${storeName}`);
+            setConnectedSources((prev) => [...prev, data.source]);
+            setStatusMessage('Source added successfully.');
+            setShowAddSourceModal(false);
         } catch (error) {
-            setStatusMessage(`Failed to connect: ${error.message}`);
+            console.error('Error adding source:', error);
+            setStatusMessage('Error adding source.');
         }
     };
+
+    const renderConnectedSources = () => (
+        <div className="connected-sources">
+            {connectedSources.map((source) => (
+                <div key={source.id} className="source-card">
+                    <h3>{source.name}</h3>
+                    <p>{source.url}</p>
+                    <button
+                        className="add-target-button"
+                        onClick={() => console.log(`Add target for ${source.id}`)}
+                    >
+                        + Add Target Marketplace
+                    </button>
+                </div>
+            ))}
+        </div>
+    );
 
     return (
         <div style={{ display: 'flex', height: '100vh' }}>
@@ -88,74 +108,75 @@ const Channels = () => {
                         imageUrl="https://via.placeholder.com/100"
                     />
                     <div className="content">
-                        <h2 className="section-title">Channels Overview</h2>
+                        <h2 className="section-title">Channels</h2>
                         <div className="tabs">
                             <button
-                                className={`tab-button ${selectedTab === 'Shopify' ? 'active' : ''}`}
-                                onClick={() => handleTabChange('Shopify')}
+                                className={`tab-button ${activeTab === 'sources' ? 'active' : ''}`}
+                                onClick={() => setActiveTab('sources')}
                             >
-                                Shopify
+                                Sources
                             </button>
                             <button
-                                className={`tab-button ${selectedTab === 'Walmart' ? 'active' : ''}`}
-                                onClick={() => handleTabChange('Walmart')}
+                                className={`tab-button ${activeTab === 'targets' ? 'active' : ''}`}
+                                onClick={() => setActiveTab('targets')}
                             >
-                                Walmart
-                            </button>
-                            <button
-                                className={`tab-button ${selectedTab === 'Amazon' ? 'active' : ''}`}
-                                onClick={() => handleTabChange('Amazon')}
-                            >
-                                Amazon
+                                Targets
                             </button>
                         </div>
+                        <div className="tab-content">
+                            {activeTab === 'sources' && renderConnectedSources()}
+                            {activeTab === 'targets' && (
+                                <div>
+                                    <p>No target marketplaces yet. Add one from a source!</p>
+                                </div>
+                            )}
+                        </div>
 
-                        {selectedTab === 'Shopify' && (
-                            <div className="tab-content">
-                                <h3>Connected Shopify Stores</h3>
-                                <ul className="store-list">
-                                    {shopifyStores.length > 0 ? (
-                                        shopifyStores.map((store) => (
-                                            <li key={store.id}>{store.name} ({store.url})</li>
-                                        ))
-                                    ) : (
-                                        <p>No connected stores. Add a new one below.</p>
-                                    )}
-                                </ul>
-                                <h4>Add a New Shopify Store</h4>
-                                <label>
-                                    Store URL:
-                                    <input
-                                        type="text"
-                                        placeholder="example.myshopify.com"
-                                        value={storeUrl}
-                                        onChange={(e) => setStoreUrl(e.target.value)}
-                                        className="input-field"
-                                    />
-                                </label>
-                                <label>
-                                    Admin Access Token:
-                                    <input
-                                        type="password"
-                                        placeholder="Your Admin Access Token"
-                                        value={adminAccessToken}
-                                        onChange={(e) => setAdminAccessToken(e.target.value)}
-                                        className="input-field"
-                                    />
-                                </label>
-                                <button className="add-button" onClick={handleShopifyConnect}>
-                                    Connect
+                        <div className="add-source-section">
+                            {showAddSourceModal ? (
+                                <div className="add-source-form">
+                                    <h3>Add New Source</h3>
+                                    <label>
+                                        Store URL:
+                                        <input
+                                            type="text"
+                                            placeholder="example.myshopify.com"
+                                            value={storeUrl}
+                                            onChange={(e) => setStoreUrl(e.target.value)}
+                                            className="input-field"
+                                        />
+                                    </label>
+                                    <label>
+                                        Admin Access Token:
+                                        <input
+                                            type="password"
+                                            placeholder="Your Admin Access Token"
+                                            value={adminAccessToken}
+                                            onChange={(e) => setAdminAccessToken(e.target.value)}
+                                            className="input-field"
+                                        />
+                                    </label>
+                                    <button className="add-button" onClick={handleAddSource}>
+                                        Add Source
+                                    </button>
+                                    <button
+                                        className="cancel-button"
+                                        onClick={() => setShowAddSourceModal(false)}
+                                    >
+                                        Cancel
+                                    </button>
+                                </div>
+                            ) : (
+                                <button
+                                    className="add-source-button"
+                                    onClick={() => setShowAddSourceModal(true)}
+                                >
+                                    + Add Source
                                 </button>
-                                <p className="status-message">{statusMessage}</p>
-                            </div>
-                        )}
+                            )}
+                        </div>
 
-                        {selectedTab !== 'Shopify' && (
-                            <div className="tab-content">
-                                <h3>{selectedTab} Integration Coming Soon!</h3>
-                                <p>Please check back later for {selectedTab} integration.</p>
-                            </div>
-                        )}
+                        <p className="status-message">{statusMessage}</p>
                     </div>
                 </div>
             </div>
