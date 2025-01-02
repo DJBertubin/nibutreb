@@ -12,6 +12,10 @@ const Channels = () => {
     const [showAddSourceModal, setShowAddSourceModal] = useState(false);
     const [showMarketplaceModal, setShowMarketplaceModal] = useState(false);
     const [selectedMarketplace, setSelectedMarketplace] = useState(null);
+    const [targetMarketplaces, setTargetMarketplaces] = useState([
+        { id: 'amazon', name: 'Amazon', connected: false },
+        { id: 'walmart', name: 'Walmart', connected: false },
+    ]);
 
     useEffect(() => {
         const fetchSources = async () => {
@@ -107,6 +111,8 @@ const Channels = () => {
         }
     };
 
+    const handleSourceClick = (sourceId) => setActiveSourceId(sourceId);
+
     return (
         <div style={{ display: 'flex', height: '100vh' }}>
             <Sidebar userType="Admin" />
@@ -114,28 +120,80 @@ const Channels = () => {
                 <div className="main-content">
                     <ClientProfile name="Jane Doe" clientId="98765" imageUrl="https://via.placeholder.com/100" />
                     <h2 className="section-title">Channels</h2>
-                    <div
-                        style={{
-                            background: 'white',
-                            borderRadius: '10px',
-                            padding: '20px',
-                            boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.1)',
-                        }}
-                    >
-                        {sources.length === 0 ? (
+                    <div className="channels-content">
+                        <div className="source-grid">
+                            {sources.map((source) => (
+                                <div
+                                    key={source.id}
+                                    className="source-item"
+                                    onClick={() => handleSourceClick(source.id)}
+                                >
+                                    <span>{source.name}</span>
+                                </div>
+                            ))}
                             <div className="add-source-box" onClick={handleAddSourceClick}>
                                 <h4>Add Source</h4>
                             </div>
-                        ) : (
-                            sources.map((source) => (
-                                <div key={source.id} className="source-item">
-                                    <span>{source.name}</span>
-                                    <div>
-                                        <button className="settings-button">Settings</button>
-                                        <span className="status-active">Status: Active</span>
-                                    </div>
+                        </div>
+
+                        {activeSourceId && (
+                            <div className="targets-section">
+                                <h4>Target Marketplaces for {sources.find((s) => s.id === activeSourceId)?.name}</h4>
+                                <div className="marketplaces-container">
+                                    {targetMarketplaces.map((marketplace) => (
+                                        <div
+                                            key={marketplace.id}
+                                            className="marketplace-box"
+                                            style={{
+                                                borderColor: marketplace.connected ? 'green' : 'red',
+                                            }}
+                                        >
+                                            <div className="marketplace-header">
+                                                <span
+                                                    className={`status-dot ${
+                                                        marketplace.connected ? 'green' : 'red'
+                                                    }`}
+                                                ></span>
+                                                <h5>{marketplace.name}</h5>
+                                            </div>
+                                            {marketplace.connected ? (
+                                                <div className="marketplace-actions">
+                                                    <button className="settings-button">Settings</button>
+                                                    <button
+                                                        className="delete-button"
+                                                        onClick={() =>
+                                                            setTargetMarketplaces((prev) =>
+                                                                prev.map((m) =>
+                                                                    m.id === marketplace.id
+                                                                        ? { ...m, connected: false }
+                                                                        : m
+                                                                )
+                                                            )
+                                                        }
+                                                    >
+                                                        Disconnect
+                                                    </button>
+                                                </div>
+                                            ) : (
+                                                <p
+                                                    className="add-target"
+                                                    onClick={() =>
+                                                        setTargetMarketplaces((prev) =>
+                                                            prev.map((m) =>
+                                                                m.id === marketplace.id
+                                                                    ? { ...m, connected: true }
+                                                                    : m
+                                                            )
+                                                        )
+                                                    }
+                                                >
+                                                    Add as Target Marketplace
+                                                </p>
+                                            )}
+                                        </div>
+                                    ))}
                                 </div>
-                            ))
+                            </div>
                         )}
                     </div>
 
@@ -155,7 +213,10 @@ const Channels = () => {
                                         </button>
                                     ))}
                                 </div>
-                                <button onClick={() => setShowMarketplaceModal(false)} className="cancel-button">
+                                <button
+                                    onClick={() => setShowMarketplaceModal(false)}
+                                    className="cancel-button"
+                                >
                                     Cancel
                                 </button>
                             </div>
