@@ -2,16 +2,19 @@
 .source-grid {
     display: grid;
     grid-template-columns: 1fr;
-    grid-auto-rows: minmax(150px, auto);
     gap: 20px;
 }
 
 /* Add Source Box */
 .add-source-box {
+    width: 100px;
+    height: 200px;
     border: 2px dashed gray;
     border-radius: 10px;
-    padding: 20px;
-    text-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
     cursor: pointer;
     background: #f9f9f9;
     transition: all 0.3s ease;
@@ -24,13 +27,17 @@
 
 /* Linked Account Box */
 .source-item {
+    width: 100px;
+    height: 200px;
     border: 1px solid #ddd;
     border-radius: 5px;
-    padding: 10px 15px;
+    padding: 10px;
     background: white;
     display: flex;
-    justify-content: space-between;
+    flex-direction: column;
+    justify-content: center;
     align-items: center;
+    cursor: pointer;
     transition: all 0.3s ease;
 }
 
@@ -39,57 +46,71 @@
     border-color: #2193b0;
 }
 
-/* Settings and Status Dropdown */
-.source-options {
-    display: flex;
-    align-items: center;
-    gap: 10px;
+.source-name {
+    font-size: 16px;
+    font-weight: bold;
+    margin-bottom: 10px;
 }
 
-.settings-button {
+.settings-button, .status-button {
     background: #2193b0;
     color: white;
     border: none;
     padding: 5px 10px;
     border-radius: 5px;
+    margin-top: 5px;
     cursor: pointer;
+    font-size: 12px;
 }
 
-.dropdown {
-    position: relative;
-    display: inline-block;
+.settings-button:hover, .status-button:hover {
+    background: #176aa8;
 }
 
-.dropdown-button {
-    background: #6dd5ed;
+/* Modal Styling */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    width: 90%;
+    max-width: 400px;
+    text-align: center;
+}
+
+/* Buttons */
+.marketplace-button, .cancel-button {
+    background: linear-gradient(135deg, #6dd5ed, #2193b0);
     color: white;
-    padding: 5px 10px;
+    padding: 10px 15px;
     border: none;
     border-radius: 5px;
     cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s ease;
 }
 
-.dropdown-content {
-    display: none;
-    position: absolute;
-    background: white;
-    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-    padding: 10px;
-    border-radius: 5px;
-    z-index: 1;
+.marketplace-button:hover, .cancel-button:hover {
+    background: linear-gradient(135deg, #2193b0, #6dd5ed);
 }
 
-.dropdown:hover .dropdown-content {
-    display: block;
+.cancel-button {
+    background: #ff4c4c;
 }
 
-.dropdown-content span {
-    display: block;
-    padding: 5px 10px;
-    cursor: pointer;
-    transition: background 0.2s;
-}
-
-.dropdown-content span:hover {
-    background: #f0f8ff;
+.cancel-button:hover {
+    background: #ff3333;
 }
