@@ -12,7 +12,7 @@
 .add-source-box {
     width: 400px;
     height: 150px;
-    border: 2px dashed #2193b0; /* Dashed border for running ants effect */
+    border: 2px dashed #ddd; /* Consistent dashed border color */
     border-radius: 5px;
     display: flex;
     flex-direction: column;
@@ -22,30 +22,11 @@
     cursor: pointer;
     text-align: center;
     transition: all 0.3s ease;
-    animation: dash-animation 2s linear infinite; /* Animation for running ants */
-}
-
-/* Animation for Running Ants Effect */
-@keyframes dash-animation {
-    to {
-        border-color: #2193b0;
-        border-style: dashed;
-        border-width: 2px;
-        border-radius: 5px;
-        outline-offset: -1px;
-        border-image: repeating-linear-gradient(
-            to right,
-            #2193b0 0%,
-            #6dd5ed 10%,
-            #2193b0 20%
-        );
-        border-image-slice: 1;
-    }
 }
 
 .add-source-box:hover {
     background: #f0f8ff;
-    border-color: #176aa8;
+    border-color: #2193b0;
 }
 
 /* Linked Account Box */
