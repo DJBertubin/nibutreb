@@ -19,7 +19,7 @@ export default async function handler(req, res) {
     }
 
     try {
-        // Extract the token and decode it 
+        // Extract the token and decode it
         const token = authorization.split(' ')[1];
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
