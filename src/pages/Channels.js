@@ -135,9 +135,20 @@ const Channels = () => {
                             <h4>Add Source</h4>
                         </div>
                         {sources.map((source) => (
-                            <div key={source.id} className="source-item" onClick={() => handleLinkedAccountClick(source)}>
+                            <div key={source.id} className="source-item">
                                 <div className="source-content">
+                                    <img
+                                        className="marketplace-logo"
+                                        src={`/${source.marketplace.toLowerCase()}-logo.png`}
+                                        alt={`${source.marketplace} logo`}
+                                    />
                                     <span className="source-name">{source.name}</span>
+                                </div>
+                                <div className="source-buttons">
+                                    <button className="settings-button" onClick={() => handleLinkedAccountClick(source)}>
+                                        Settings
+                                    </button>
+                                    <span className="status-text">Status: Active</span>
                                 </div>
                             </div>
                         ))}
