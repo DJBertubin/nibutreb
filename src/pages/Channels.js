@@ -8,7 +8,7 @@ const Channels = () => {
     const [storeUrl, setStoreUrl] = useState('');
     const [adminAccessToken, setAdminAccessToken] = useState('');
     const [showModal, setShowModal] = useState(false);
-    const [modalType, setModalType] = useState(''); // 'addSource', 'linkedAccount', 'settings'
+    const [modalType, setModalType] = useState(''); // 'addSource', 'linkedAccount', 'settings', 'addTarget'
     const [selectedSource, setSelectedSource] = useState(null);
     const [activeSource, setActiveSource] = useState(null);
     const [statusMessage, setStatusMessage] = useState('');
@@ -61,6 +61,12 @@ const Channels = () => {
     const handleSettingsClick = (source) => {
         setSelectedSource(source);
         setModalType('settings');
+        setShowModal(true);
+    };
+
+    const handleAddTargetClick = (source) => {
+        setSelectedSource(source);
+        setModalType('addTarget');
         setShowModal(true);
     };
 
@@ -154,6 +160,9 @@ const Channels = () => {
                                     <button className="settings-button" onClick={() => handleSettingsClick(source)}>
                                         Settings
                                     </button>
+                                    <button className="add-target-button" onClick={() => handleAddTargetClick(source)}>
+                                        Add Target
+                                    </button>
                                     <span className="status-text">Status: Active</span>
                                 </div>
                             </div>
@@ -221,7 +230,7 @@ const Channels = () => {
                                             </div>
                                         )}
                                     </>
-                                ) : modalType === 'linkedAccount' ? (
+                                ) : modalType === 'addTarget' ? (
                                     <>
                                         <h2>Select Target Marketplace</h2>
                                         <div className="source-buttons-horizontal">
