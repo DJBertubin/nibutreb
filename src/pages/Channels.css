@@ -1,57 +1,4 @@
-/* Modal styling */
-.modal {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background: white;
-    padding: 20px;
-    border-radius: 10px;
-    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
-    z-index: 1000;
-    width: 90%;
-    max-width: 500px;
-}
-
-.modal-content {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
-
-.modal h4 {
-    color: #2193b0;
-    margin-bottom: 20px;
-    font-size: 18px;
-    text-align: center;
-}
-
-.modal button {
-    margin: 10px 0;
-    padding: 10px 15px;
-    background: linear-gradient(135deg, #6dd5ed, #2193b0);
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 16px;
-    transition: background-color 0.3s ease;
-    width: 100%;
-}
-
-.modal button:hover {
-    background: linear-gradient(135deg, #2193b0, #6dd5ed);
-}
-
-.modal .cancel-button {
-    background: #ff4c4c;
-}
-
-.modal .cancel-button:hover {
-    background: #ff3333;
-}
-
-/* Modal overlay styling */
+/* Modal Styling */
 .modal-overlay {
     position: fixed;
     top: 0;
@@ -60,21 +7,77 @@
     height: 100%;
     background: rgba(0, 0, 0, 0.5);
     z-index: 999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
-/* Input fields in the modal */
-.modal input {
-    width: 100%;
-    padding: 12px;
-    margin: 10px 0;
+.modal {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    width: 90%;
+    max-width: 400px;
+    text-align: center;
+}
+
+.marketplace-options {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin: 20px 0;
+}
+
+.marketplace-button {
+    background: linear-gradient(135deg, #6dd5ed, #2193b0);
+    color: white;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s ease;
+}
+
+.marketplace-button:hover {
+    background: linear-gradient(135deg, #2193b0, #6dd5ed);
+}
+
+.cancel-button {
+    background: #ff4c4c;
+    color: white;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.cancel-button:hover {
+    background: #ff3333;
+}
+
+.add-source-box {
+    border: 2px dashed gray;
+    border-radius: 10px;
+    padding: 50px;
+    cursor: pointer;
+    text-align: center;
+    background: #f9f9f9;
+}
+
+.source-item {
     border: 1px solid #ddd;
     border-radius: 5px;
-    font-size: 16px;
-    box-sizing: border-box;
+    padding: 10px 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 10px 0;
 }
 
-.modal input:focus {
-    border-color: #2193b0;
-    outline: none;
-    box-shadow: 0 0 4px rgba(33, 147, 176, 0.5);
+.status-active {
+    color: green;
+    font-weight: bold;
 }
