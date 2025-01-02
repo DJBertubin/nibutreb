@@ -5,7 +5,6 @@ import './Channels.css';
 
 const Channels = () => {
     const [sources, setSources] = useState([]);
-    const [activeSourceId, setActiveSourceId] = useState(null);
     const [storeUrl, setStoreUrl] = useState('');
     const [adminAccessToken, setAdminAccessToken] = useState('');
     const [showAddSourceModal, setShowAddSourceModal] = useState(false);
