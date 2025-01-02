@@ -122,14 +122,18 @@ const Channels = () => {
                                 className="source-item"
                                 onClick={() => handleSourceClick(source)}
                             >
-                                <img
-                                    src={getMarketplaceLogo(source.marketplace)}
-                                    alt={source.marketplace}
-                                    className="marketplace-logo"
-                                />
-                                <span className="source-name">{source.name}</span>
-                                <button className="settings-button">Settings</button>
-                                <button className="status-button">Status</button>
+                                <div className="source-content">
+                                    <img
+                                        src={getMarketplaceLogo(source.marketplace)}
+                                        alt={source.marketplace}
+                                        className="marketplace-logo"
+                                    />
+                                    <span className="source-name">{source.name}</span>
+                                </div>
+                                <div className="source-buttons">
+                                    <button className="settings-button">Settings</button>
+                                    <button className="status-button">Status</button>
+                                </div>
                             </div>
                         ))}
                     </div>

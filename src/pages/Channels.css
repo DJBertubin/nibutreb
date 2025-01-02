@@ -1,22 +1,22 @@
-/* Grid Layout for Add Source and Linked Accounts */
+/* Center Alignment */
 .source-grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 20px;
+    display: flex;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
+    gap: 20px;
     margin-top: 100px;
 }
 
 /* Add Source and Linked Account Box */
 .add-source-box, .source-item {
-    width: 300px;
+    width: 400px;
     height: 100px;
     border: 1px solid #ddd;
     border-radius: 5px;
     display: flex;
     flex-direction: column;
-    justify-content: center;
+    justify-content: space-around;
     align-items: center;
     background: #f9f9f9;
     cursor: pointer;
@@ -29,58 +29,34 @@
     border-color: #2193b0;
 }
 
-/* Marketplace Logo */
-.marketplace-logo {
-    width: 40px;
-    height: 40px;
-    margin-bottom: 10px;
-}
-
-/* Modal Styling */
-.modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.5);
-    z-index: 999;
+/* Horizontal Layout for Logo and Store Name */
+.source-content {
     display: flex;
-    justify-content: center;
     align-items: center;
+    gap: 10px;
 }
 
-.modal {
-    background: white;
-    padding: 20px;
-    border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    width: 90%;
-    max-width: 400px;
-    text-align: center;
+.marketplace-logo {
+    width: 50px;
+    height: 50px;
 }
 
-/* Buttons */
-.marketplace-button, .cancel-button {
-    background: linear-gradient(135deg, #6dd5ed, #2193b0);
+/* Buttons Below Store Name and Logo */
+.source-buttons {
+    display: flex;
+    gap: 10px;
+}
+
+.settings-button, .status-button {
+    background: #2193b0;
     color: white;
-    padding: 10px 15px;
     border: none;
+    padding: 5px 15px;
     border-radius: 5px;
     cursor: pointer;
-    font-size: 16px;
-    margin: 10px 0;
-    transition: background-color 0.3s ease;
+    font-size: 14px;
 }
 
-.marketplace-button:hover, .cancel-button:hover {
-    background: linear-gradient(135deg, #2193b0, #6dd5ed);
-}
-
-.cancel-button {
-    background: #ff4c4c;
-}
-
-.cancel-button:hover {
-    background: #ff3333;
+.settings-button:hover, .status-button:hover {
+    background: #176aa8;
 }
