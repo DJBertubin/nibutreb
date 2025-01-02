@@ -12,7 +12,7 @@
 /* Channels Container */
 .channels-container {
     width: 100%;
-    max-width: 1200px;
+    max-width: 600px;
     background: white;
     border-radius: 10px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
@@ -27,38 +27,46 @@
     margin-bottom: 20px;
 }
 
-/* Source Grid Layout */
-.source-grid {
-    display: grid;
-    grid-template-columns: 1fr 2fr;
+/* Source Box */
+.source-list {
+    display: flex;
+    flex-direction: column;
     gap: 20px;
+    margin-top: 20px;
 }
 
-/* Source Items */
-.source-item, .add-source-box {
-    background: white;
-    border: 1px solid #ddd;
+/* Add Source Box */
+.add-source-box {
+    border: 2px dashed gray;
     border-radius: 10px;
     padding: 20px;
-    text-align: center;
     cursor: pointer;
+    text-align: center;
+    background: #f9f9f9;
     transition: all 0.3s ease;
 }
 
-.source-item:hover, .add-source-box:hover {
+.add-source-box:hover {
     background: #f0f8ff;
     border-color: #2193b0;
 }
 
-/* Target Marketplaces */
-.targets-section {
-    margin-top: 20px;
+/* Linked Source Item */
+.source-item {
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    padding: 10px 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    background: white;
+    transition: all 0.3s ease;
 }
 
-.marketplaces-container {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
+.source-item:hover {
+    background: #f0f8ff;
+    border-color: #2193b0;
 }
 
 /* Modal Styling */
@@ -85,7 +93,7 @@
     text-align: center;
 }
 
-/* Marketplace Options */
+/* Modal Buttons */
 .marketplace-options {
     display: flex;
     flex-direction: column;
@@ -93,7 +101,7 @@
     margin: 20px 0;
 }
 
-.marketplace-button {
+.marketplace-button, .cancel-button {
     background: linear-gradient(135deg, #6dd5ed, #2193b0);
     color: white;
     padding: 10px 15px;
@@ -104,87 +112,15 @@
     transition: background-color 0.3s ease;
 }
 
-.marketplace-button:hover {
+.marketplace-button:hover, .cancel-button:hover {
     background: linear-gradient(135deg, #2193b0, #6dd5ed);
 }
 
 /* Cancel Button */
 .cancel-button {
     background: #ff4c4c;
-    color: white;
-    padding: 10px 15px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 16px;
 }
 
 .cancel-button:hover {
     background: #ff3333;
-}
-
-/* Add Source Box */
-.add-source-box {
-    border: 2px dashed gray;
-    border-radius: 10px;
-    padding: 50px;
-    cursor: pointer;
-    text-align: center;
-    background: #f9f9f9;
-}
-
-/* Source Item Styling */
-.source-item {
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    padding: 10px 15px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin: 10px 0;
-}
-
-.status-active {
-    color: green;
-    font-weight: bold;
-}
-
-/* Input Fields */
-.input-field {
-    width: 100%;
-    padding: 12px 15px;
-    margin: 10px 0;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    font-size: 16px;
-    box-sizing: border-box;
-}
-
-.input-field:focus {
-    border-color: #2193b0;
-    outline: none;
-    box-shadow: 0 0 4px rgba(33, 147, 176, 0.5);
-}
-
-/* Add Button */
-.add-button {
-    background: linear-gradient(135deg, #6dd5ed, #2193b0);
-    color: white;
-    padding: 10px 20px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 16px;
-    transition: background-color 0.3s ease;
-}
-
-.add-button:hover {
-    background: linear-gradient(135deg, #2193b0, #6dd5ed);
-}
-
-/* Status Message */
-.status-message {
-    margin-top: 20px;
-    color: #2193b0;
-    font-size: 16px;
 }
