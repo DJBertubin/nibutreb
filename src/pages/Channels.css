@@ -12,7 +12,7 @@
 /* Channels Container */
 .channels-container {
     width: 100%;
-    max-width: 600px;
+    max-width: 1200px;
     background: white;
     border-radius: 10px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
@@ -27,7 +27,7 @@
     margin-bottom: 20px;
 }
 
-/* Source Box */
+/* Source List */
 .source-list {
     display: flex;
     flex-direction: column;
@@ -57,7 +57,7 @@
     border-radius: 5px;
     padding: 10px 15px;
     display: flex;
-    justify-content: space-between;
+    justify-content: center;
     align-items: center;
     cursor: pointer;
     background: white;
@@ -93,14 +93,7 @@
     text-align: center;
 }
 
-/* Modal Buttons */
-.marketplace-options {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    margin: 20px 0;
-}
-
+/* Buttons */
 .marketplace-button, .cancel-button {
     background: linear-gradient(135deg, #6dd5ed, #2193b0);
     color: white;
@@ -116,7 +109,6 @@
     background: linear-gradient(135deg, #2193b0, #6dd5ed);
 }
 
-/* Cancel Button */
 .cancel-button {
     background: #ff4c4c;
 }
