@@ -9,7 +9,6 @@ const Channels = () => {
     const [storeUrl, setStoreUrl] = useState('');
     const [adminAccessToken, setAdminAccessToken] = useState('');
     const [showAddSourceModal, setShowAddSourceModal] = useState(false);
-    const [showTargetModal, setShowTargetModal] = useState(false);
     const [selectedSource, setSelectedSource] = useState(null);
 
     useEffect(() => {
@@ -79,9 +78,9 @@ const Channels = () => {
         }
     };
 
-    const handleSourceClick = (source) => {
-        setSelectedSource(source);
-        setShowTargetModal(true);
+    const handleSettingsAction = (sourceId, action) => {
+        console.log(`Source ID: ${sourceId}, Action: ${action}`);
+        // Implement actions: Pause, Activate, or Deactivate
     };
 
     return (
@@ -92,17 +91,30 @@ const Channels = () => {
                     <ClientProfile name="Jane Doe" clientId="98765" imageUrl="https://via.placeholder.com/100" />
                     <h2 className="section-title">Channels</h2>
                     <div className="content">
-                        <div className="source-list">
+                        <div className="source-grid">
                             <div className="add-source-box" onClick={handleAddSourceClick}>
                                 <h4>Add Source</h4>
                             </div>
                             {sources.map((source) => (
-                                <div
-                                    key={source.id}
-                                    className="source-item"
-                                    onClick={() => handleSourceClick(source)}
-                                >
-                                    {source.name}
+                                <div key={source.id} className="source-item">
+                                    <span>{source.name}</span>
+                                    <div className="source-options">
+                                        <button className="settings-button">Settings</button>
+                                        <div className="dropdown">
+                                            <button className="dropdown-button">Status</button>
+                                            <div className="dropdown-content">
+                                                <span onClick={() => handleSettingsAction(source.id, 'Pause')}>
+                                                    Pause
+                                                </span>
+                                                <span onClick={() => handleSettingsAction(source.id, 'Activate')}>
+                                                    Activate
+                                                </span>
+                                                <span onClick={() => handleSettingsAction(source.id, 'Deactivate')}>
+                                                    Deactivate
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             ))}
                         </div>
@@ -144,26 +156,6 @@ const Channels = () => {
                                         Cancel
                                     </button>
                                 </div>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Target Marketplace Modal */}
-                    {showTargetModal && selectedSource && (
-                        <div className="modal-overlay">
-                            <div className="modal">
-                                <h4>Target Marketplaces for {selectedSource.name}</h4>
-                                {['Walmart', 'Amazon'].map((marketplace) => (
-                                    <button key={marketplace} className="marketplace-button">
-                                        {marketplace}
-                                    </button>
-                                ))}
-                                <button
-                                    onClick={() => setShowTargetModal(false)}
-                                    className="cancel-button"
-                                >
-                                    Close
-                                </button>
                             </div>
                         </div>
                     )}
