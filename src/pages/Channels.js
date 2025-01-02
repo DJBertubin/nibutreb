@@ -7,11 +7,11 @@ const Channels = () => {
     const [sources, setSources] = useState([]);
     const [storeUrl, setStoreUrl] = useState('');
     const [adminAccessToken, setAdminAccessToken] = useState('');
-    const [showAddSourceModal, setShowAddSourceModal] = useState(false);
-    const [showMarketplaceSelection, setShowMarketplaceSelection] = useState(true);
-    const [selectedMarketplace, setSelectedMarketplace] = useState('');
-    const [showTargetModal, setShowTargetModal] = useState(false);
+    const [showModal, setShowModal] = useState(false);
+    const [modalType, setModalType] = useState(''); // 'addSource' or 'linkedAccount'
     const [selectedSource, setSelectedSource] = useState(null);
+    const [activeSource, setActiveSource] = useState(null);
+    const [statusMessage, setStatusMessage] = useState('');
 
     useEffect(() => {
         const fetchSources = async () => {
@@ -46,19 +46,28 @@ const Channels = () => {
     }, []);
 
     const handleAddSourceClick = () => {
-        setShowAddSourceModal(true);
-        setShowMarketplaceSelection(true);
+        setModalType('addSource');
+        setShowModal(true);
+    };
+
+    const handleLinkedAccountClick = (source) => {
+        setSelectedSource(source);
+        setModalType('linkedAccount');
+        setShowModal(true);
     };
 
     const handleMarketplaceSelection = (marketplace) => {
-        setSelectedMarketplace(marketplace);
-        setShowMarketplaceSelection(false);
+        setActiveSource(marketplace);
     };
 
-    const handleAddSource = async () => {
+    const handleShopifyConnect = async () => {
+        setStatusMessage('Connecting to Shopify Admin API...');
+
         try {
             const token = localStorage.getItem('token');
-            if (!token) return;
+            if (!token) {
+                throw new Error('User is not authenticated. Please log in again.');
+            }
 
             const response = await fetch('/api/shopify/fetch', {
                 method: 'POST',
@@ -68,40 +77,31 @@ const Channels = () => {
                 },
                 body: JSON.stringify({
                     storeUrl: storeUrl.trim(),
-                    adminAccessToken,
+                    adminAccessToken: adminAccessToken,
                 }),
             });
 
-            if (!response.ok) throw new Error('Failed to add source.');
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`Shopify API Error: ${errorText}`);
+            }
 
             const data = await response.json();
-            const newSource = {
-                id: data.shopifyData._id,
-                name: storeUrl.split('.myshopify.com')[0],
-                marketplace: 'Shopify',
-            };
+            setSources((prev) => [
+                ...prev,
+                {
+                    id: data.shopifyData._id,
+                    name: storeUrl.split('.myshopify.com')[0],
+                    marketplace: 'Shopify',
+                },
+            ]);
 
-            setSources((prev) => [...prev, newSource]);
+            setShowModal(false);
             setStoreUrl('');
             setAdminAccessToken('');
-            setShowAddSourceModal(false);
-        } catch (err) {
-            console.error('Error adding source:', err);
+        } catch (error) {
+            setStatusMessage(`Failed to connect: ${error.message}`);
         }
-    };
-
-    const handleSourceClick = (source) => {
-        setSelectedSource(source);
-        setShowTargetModal(true);
-    };
-
-    const getMarketplaceLogo = (marketplace) => {
-        const logos = {
-            Shopify: 'https://cdn.shopify.com/shopify-logo.png',
-            Walmart: 'https://cdn.walmart.com/walmart-logo.png',
-            Amazon: 'https://cdn.amazon.com/amazon-logo.png',
-        };
-        return logos[marketplace] || '';
     };
 
     return (
@@ -119,110 +119,85 @@ const Channels = () => {
                             <div
                                 key={source.id}
                                 className="source-item"
-                                onClick={() => handleSourceClick(source)}
+                                onClick={() => handleLinkedAccountClick(source)}
                             >
                                 <div className="source-content">
-                                    <img
-                                        src={getMarketplaceLogo(source.marketplace)}
-                                        alt={source.marketplace}
-                                        className="marketplace-logo"
-                                    />
                                     <span className="source-name">{source.name}</span>
-                                </div>
-                                <div className="source-buttons">
-                                    <button className="settings-button">Settings</button>
-                                    <button className="status-button">Status</button>
                                 </div>
                             </div>
                         ))}
                     </div>
 
-                    {/* Add Source Modal */}
-                    {showAddSourceModal && (
+                    {/* Modal */}
+                    {showModal && (
                         <div className="modal-overlay">
                             <div className="modal">
-                                {showMarketplaceSelection ? (
+                                {modalType === 'addSource' ? (
                                     <>
-                                        <h4>Select Marketplace</h4>
-                                        <button
-                                            className="marketplace-button"
-                                            onClick={() => handleMarketplaceSelection('Shopify')}
-                                        >
-                                            Shopify
-                                        </button>
-                                        <button
-                                            className="marketplace-button"
-                                            onClick={() => handleMarketplaceSelection('Walmart')}
-                                        >
-                                            Walmart
-                                        </button>
-                                        <button
-                                            className="marketplace-button"
-                                            onClick={() => handleMarketplaceSelection('Amazon')}
-                                        >
-                                            Amazon
-                                        </button>
-                                        <button
-                                            onClick={() => setShowAddSourceModal(false)}
-                                            className="cancel-button"
-                                        >
-                                            Cancel
-                                        </button>
-                                    </>
-                                ) : (
-                                    <>
-                                        <h4>Add Shopify Store</h4>
-                                        <label>
-                                            Store URL:
-                                            <input
-                                                type="text"
-                                                value={storeUrl}
-                                                onChange={(e) => setStoreUrl(e.target.value)}
-                                                className="input-field"
-                                                placeholder="example.myshopify.com"
-                                            />
-                                        </label>
-                                        <label>
-                                            Admin Access Token:
-                                            <input
-                                                type="password"
-                                                value={adminAccessToken}
-                                                onChange={(e) => setAdminAccessToken(e.target.value)}
-                                                className="input-field"
-                                                placeholder="Enter Admin Token"
-                                            />
-                                        </label>
-                                        <div className="modal-actions">
-                                            <button onClick={handleAddSource} className="add-button">
-                                                Save
+                                        <h2>Add New Source</h2>
+                                        <div className="source-buttons">
+                                            <button
+                                                className={`source-button ${
+                                                    activeSource === 'Shopify' ? 'active' : ''
+                                                }`}
+                                                onClick={() => handleMarketplaceSelection('Shopify')}
+                                            >
+                                                Shopify
                                             </button>
                                             <button
-                                                onClick={() => setShowAddSourceModal(false)}
-                                                className="cancel-button"
+                                                className={`source-button ${
+                                                    activeSource === 'Walmart' ? 'active' : ''
+                                                }`}
+                                                onClick={() => handleMarketplaceSelection('Walmart')}
                                             >
-                                                Cancel
+                                                Walmart
+                                            </button>
+                                            <button
+                                                className={`source-button ${
+                                                    activeSource === 'Amazon' ? 'active' : ''
+                                                }`}
+                                                onClick={() => handleMarketplaceSelection('Amazon')}
+                                            >
+                                                Amazon
                                             </button>
                                         </div>
-                                    </>
-                                )}
-                            </div>
-                        </div>
-                    )}
 
-                    {/* Target Marketplace Modal */}
-                    {showTargetModal && selectedSource && (
-                        <div className="modal-overlay">
-                            <div className="modal">
-                                <h4>Target Marketplaces for {selectedSource.name}</h4>
-                                {['Walmart', 'Amazon'].map((marketplace) => (
-                                    <button key={marketplace} className="marketplace-button">
-                                        {marketplace}
-                                    </button>
-                                ))}
-                                <button
-                                    onClick={() => setShowTargetModal(false)}
-                                    className="cancel-button"
-                                >
+                                        {activeSource === 'Shopify' && (
+                                            <div className="shopify-integration">
+                                                <label>
+                                                    Store URL:
+                                                    <input
+                                                        type="text"
+                                                        placeholder="example.myshopify.com"
+                                                        value={storeUrl}
+                                                        onChange={(e) => setStoreUrl(e.target.value)}
+                                                    />
+                                                </label>
+                                                <label>
+                                                    Admin Access Token:
+                                                    <input
+                                                        type="password"
+                                                        placeholder="Your Admin Access Token"
+                                                        value={adminAccessToken}
+                                                        onChange={(e) => setAdminAccessToken(e.target.value)}
+                                                    />
+                                                </label>
+                                                <button className="connect-button" onClick={handleShopifyConnect}>
+                                                    Connect
+                                                </button>
+                                                <p>{statusMessage}</p>
+                                            </div>
+                                        )}
+                                    </>
+                                ) : modalType === 'linkedAccount' ? (
+                                    <>
+                                        <h2>Target Marketplaces</h2>
+                                        <p>Configure target marketplaces for {selectedSource?.name}</p>
+                                        <button className="marketplace-button">Amazon</button>
+                                        <button className="marketplace-button">Walmart</button>
+                                    </>
+                                ) : null}
+                                <button className="close-modal" onClick={() => setShowModal(false)}>
                                     Close
                                 </button>
                             </div>
