@@ -58,6 +58,12 @@ const Channels = () => {
         setShowModal(true);
     };
 
+    const handleSettingsClick = (source) => {
+        setSelectedSource(source);
+        setModalType('settings');
+        setShowModal(true);
+    };
+
     const handleMarketplaceSelection = (marketplace) => {
         setActiveSource(marketplace);
     };
@@ -136,7 +142,7 @@ const Channels = () => {
                         </div>
                         {sources.map((source) => (
                             <div key={source.id} className="source-item">
-                                <div className="source-content">
+                                <div className="source-content" onClick={() => handleLinkedAccountClick(source)}>
                                     <img
                                         className="marketplace-logo"
                                         src={`/${source.marketplace.toLowerCase()}-logo.png`}
@@ -145,7 +151,7 @@ const Channels = () => {
                                     <span className="source-name">{source.name}</span>
                                 </div>
                                 <div className="source-buttons">
-                                    <button className="settings-button" onClick={() => handleLinkedAccountClick(source)}>
+                                    <button className="settings-button" onClick={() => handleSettingsClick(source)}>
                                         Settings
                                     </button>
                                     <span className="status-text">Status: Active</span>
@@ -223,6 +229,17 @@ const Channels = () => {
                                             <button className="marketplace-button">Walmart</button>
                                             <button className="marketplace-button">Amazon</button>
                                         </div>
+                                    </>
+                                ) : modalType === 'settings' ? (
+                                    <>
+                                        <h2>Account Settings</h2>
+                                        <p>Store URL: {selectedSource.url}</p>
+                                        <button
+                                            className="delete-button"
+                                            onClick={() => handleDeleteAccount(selectedSource)}
+                                        >
+                                            Delete Account
+                                        </button>
                                     </>
                                 ) : null}
                                 <button className="close-modal" onClick={() => setShowModal(false)}>
