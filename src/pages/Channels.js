@@ -8,9 +8,10 @@ const Channels = () => {
     const [storeUrl, setStoreUrl] = useState('');
     const [adminAccessToken, setAdminAccessToken] = useState('');
     const [showModal, setShowModal] = useState(false);
-    const [modalType, setModalType] = useState(''); // 'addSource', 'linkedAccount', or 'settings'
+    const [modalType, setModalType] = useState(''); // 'addSource', 'linkedAccount', 'settings'
     const [selectedSource, setSelectedSource] = useState(null);
     const [activeSource, setActiveSource] = useState(null);
+    const [statusMessage, setStatusMessage] = useState('');
 
     useEffect(() => {
         const fetchSources = async () => {
@@ -35,7 +36,6 @@ const Channels = () => {
                     marketplace: 'Shopify',
                     url: entry.shopifyUrl,
                     token: entry.adminAccessToken,
-                    status: 'active', // Assuming status is active by default
                 }));
 
                 setSources(formattedSources);
@@ -52,15 +52,16 @@ const Channels = () => {
         setShowModal(true);
     };
 
+    const handleLinkedAccountClick = (source) => {
+        setSelectedSource(source);
+        setModalType('linkedAccount');
+        setShowModal(true);
+    };
+
     const handleSettingsClick = (source) => {
         setSelectedSource(source);
         setModalType('settings');
         setShowModal(true);
-    };
-
-    const handleDeleteAccount = () => {
-        setSources((prev) => prev.filter((source) => source.id !== selectedSource.id));
-        setShowModal(false);
     };
 
     const handleMarketplaceSelection = (marketplace) => {
@@ -68,6 +69,8 @@ const Channels = () => {
     };
 
     const handleShopifyConnect = async () => {
+        setStatusMessage('Connecting to Shopify Admin API...');
+
         try {
             const token = localStorage.getItem('token');
             if (!token) {
@@ -98,9 +101,6 @@ const Channels = () => {
                     id: data.shopifyData._id,
                     name: storeUrl.split('.myshopify.com')[0],
                     marketplace: 'Shopify',
-                    url: storeUrl,
-                    token: adminAccessToken,
-                    status: 'active',
                 },
             ]);
 
@@ -108,7 +108,24 @@ const Channels = () => {
             setStoreUrl('');
             setAdminAccessToken('');
         } catch (error) {
-            console.error(`Failed to connect: ${error.message}`);
+            setStatusMessage(`Failed to connect: ${error.message}`);
+        }
+    };
+
+    const handleDeleteAccount = async (source) => {
+        try {
+            const response = await fetch(`/api/shopify/delete/${source.id}`, {
+                method: 'DELETE',
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to delete account');
+            }
+
+            setSources((prev) => prev.filter((item) => item.id !== source.id));
+            setShowModal(false);
+        } catch (error) {
+            console.error(`Error deleting account: ${error.message}`);
         }
     };
 
@@ -127,16 +144,13 @@ const Channels = () => {
                             <div key={source.id} className="source-item">
                                 <div className="source-content">
                                     <span className="source-name">{source.name}</span>
-                                    <span className="source-status">
-                                        Status: {source.status.charAt(0).toUpperCase() + source.status.slice(1)}
-                                    </span>
                                 </div>
-                                <button
-                                    className="settings-button"
-                                    onClick={() => handleSettingsClick(source)}
-                                >
-                                    Settings
-                                </button>
+                                <div className="source-buttons">
+                                    <button className="settings-button" onClick={() => handleSettingsClick(source)}>
+                                        Settings
+                                    </button>
+                                    <span className="status-text">Status: Active</span>
+                                </div>
                             </div>
                         ))}
                     </div>
@@ -157,7 +171,24 @@ const Channels = () => {
                                             >
                                                 Shopify
                                             </button>
+                                            <button
+                                                className={`source-button ${
+                                                    activeSource === 'Walmart' ? 'active' : ''
+                                                }`}
+                                                onClick={() => handleMarketplaceSelection('Walmart')}
+                                            >
+                                                Walmart
+                                            </button>
+                                            <button
+                                                className={`source-button ${
+                                                    activeSource === 'Amazon' ? 'active' : ''
+                                                }`}
+                                                onClick={() => handleMarketplaceSelection('Amazon')}
+                                            >
+                                                Amazon
+                                            </button>
                                         </div>
+
                                         {activeSource === 'Shopify' && (
                                             <div className="shopify-integration">
                                                 <label>
@@ -181,15 +212,19 @@ const Channels = () => {
                                                 <button className="connect-button" onClick={handleShopifyConnect}>
                                                     Connect
                                                 </button>
+                                                <p>{statusMessage}</p>
                                             </div>
                                         )}
                                     </>
-                                ) : modalType === 'settings' ? (
+                                ) : modalType === 'settings' && selectedSource ? (
                                     <>
                                         <h2>Account Settings</h2>
-                                        <p><strong>Store URL:</strong> {selectedSource.url}</p>
-                                        <p><strong>Admin Token:</strong> {selectedSource.token}</p>
-                                        <button className="delete-button" onClick={handleDeleteAccount}>
+                                        <p>Store URL: {selectedSource.url}</p>
+                                        <p>Admin Access Token: {selectedSource.token}</p>
+                                        <button
+                                            className="delete-button"
+                                            onClick={() => handleDeleteAccount(selectedSource)}
+                                        >
                                             Delete Account
                                         </button>
                                     </>
