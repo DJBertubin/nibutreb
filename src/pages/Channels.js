@@ -33,7 +33,7 @@ const Channels = () => {
                 const formattedSources = data.shopifyData.map((entry) => ({
                     id: entry._id,
                     name: entry.shopifyUrl.split('.myshopify.com')[0],
-                    marketplace: 'Shopify', // Assign marketplace dynamically if needed
+                    marketplace: 'Shopify',
                 }));
 
                 setSources(formattedSources);
@@ -78,7 +78,7 @@ const Channels = () => {
             const newSource = {
                 id: data.shopifyData._id,
                 name: storeUrl.split('.myshopify.com')[0],
-                marketplace: 'Shopify', // Default to Shopify for this example
+                marketplace: 'Shopify',
             };
 
             setSources((prev) => [...prev, newSource]);
@@ -169,7 +169,7 @@ const Channels = () => {
                                             Cancel
                                         </button>
                                     </>
-                                ) : selectedMarketplace === 'Shopify' ? (
+                                ) : (
                                     <>
                                         <h4>Add Shopify Store</h4>
                                         <label>
@@ -204,8 +204,6 @@ const Channels = () => {
                                             </button>
                                         </div>
                                     </>
-                                ) : (
-                                    <p>Additional setup for {selectedMarketplace} will be added here.</p>
                                 )}
                             </div>
                         </div>
