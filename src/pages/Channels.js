@@ -166,7 +166,7 @@ const Channels = () => {
                                         ? 'No Targeted Marketplace'
                                         : `Targeted: ${source.targetMarketplaces.join(', ')}`}
                                 </p>
-                                <div className="source-buttons">
+                                <div className="source-buttons-horizontal">
                                     <button className="add-target-button" onClick={() => handleAddTargetClick(source)}>
                                         Add Target
                                     </button>

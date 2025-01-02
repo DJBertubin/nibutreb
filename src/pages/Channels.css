@@ -11,17 +11,18 @@
 /* Add Source and Linked Account Box */
 .add-source-box, .source-item {
     width: 400px;
-    height: 100px;
+    height: 200px;
     border: 1px solid #ddd;
     border-radius: 5px;
     display: flex;
     flex-direction: column;
-    justify-content: space-around;
+    justify-content: space-between;
     align-items: center;
     background: #f9f9f9;
     cursor: pointer;
     transition: all 0.3s ease;
     text-align: center;
+    padding: 10px;
 }
 
 .add-source-box:hover, .source-item:hover {
@@ -34,6 +35,7 @@
     display: flex;
     align-items: center;
     gap: 10px;
+    margin-top: 10px;
 }
 
 .marketplace-logo {
@@ -41,35 +43,42 @@
     height: 50px;
 }
 
-/* Inline Settings and Status */
-.source-buttons {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    gap: 20px;
-    margin-top: 10px;
+/* Target Marketplace and Status Below Store Name */
+.target-status {
+    font-size: 14px;
+    color: #666;
+    margin: 10px 0;
+    text-align: center;
 }
 
-.status-text {
-    font-size: 14px;
-    color: #555;
-    margin-left: auto;
+/* Buttons Inside the Box */
+.source-buttons-horizontal {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    width: 100%;
 }
 
 /* Buttons Styling */
-.settings-button, .status-button {
+.add-target-button, .settings-button {
     background: #2193b0;
     color: white;
     border: none;
-    padding: 5px 15px;
+    padding: 10px 15px;
     border-radius: 5px;
     cursor: pointer;
     font-size: 14px;
     transition: background-color 0.3s ease;
 }
 
-.settings-button:hover, .status-button:hover {
+.add-target-button:hover, .settings-button:hover {
     background: #176aa8;
+}
+
+/* Status Text */
+.status-text {
+    font-size: 14px;
+    color: #555;
 }
 
 /* Modal Overlay */
