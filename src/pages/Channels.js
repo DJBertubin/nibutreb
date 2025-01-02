@@ -4,131 +4,58 @@ import ClientProfile from '../components/ClientProfile';
 import './Channels.css';
 
 const Channels = () => {
-    const [sources, setSources] = useState([]); // Connected source marketplaces
-    const [activeSourceId, setActiveSourceId] = useState(null); // Currently selected source
+    const [sources, setSources] = useState([]);
     const [storeUrl, setStoreUrl] = useState('');
     const [adminAccessToken, setAdminAccessToken] = useState('');
-    const [statusMessage, setStatusMessage] = useState('');
-    const [error, setError] = useState('');
-    const [targetMarketplaces, setTargetMarketplaces] = useState([
-        { id: 'amazon', name: 'Amazon', connected: false },
-        { id: 'walmart', name: 'Walmart', connected: false },
-        { id: 'ebay', name: 'eBay', connected: false },
-    ]);
+    const [selectedMarketplace, setSelectedMarketplace] = useState(null);
+    const [showAddSourceModal, setShowAddSourceModal] = useState(false);
+    const [activeSource, setActiveSource] = useState(null);
+    const targetMarketplaces = [
+        { id: 'amazon', name: 'Amazon' },
+        { id: 'walmart', name: 'Walmart' },
+    ];
 
     useEffect(() => {
         const fetchSources = async () => {
-            try {
-                const token = localStorage.getItem('token');
-                if (!token) {
-                    setError('User is not authenticated. Please log in again.');
-                    return;
-                }
-
-                const response = await fetch('/api/shopify/data', {
-                    method: 'GET',
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                });
-
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    if (response.status === 404) {
-                        setSources([]); // No sources connected yet
-                        return;
-                    }
-                    throw new Error(errorData.error || 'Failed to fetch connected sources.');
-                }
-
+            // Fetch connected sources
+            const response = await fetch('/api/shopify/data');
+            if (response.ok) {
                 const data = await response.json();
-
                 const formattedSources = data.shopifyData.map((entry) => ({
                     id: entry._id,
                     name: entry.shopifyUrl.split('.myshopify.com')[0],
                     url: entry.shopifyUrl,
                 }));
-
                 setSources(formattedSources);
-                if (formattedSources.length > 0) {
-                    setActiveSourceId(formattedSources[0].id); // Default to the first source
-                }
-            } catch (err) {
-                console.error('Error fetching sources:', err);
-                setError(err.message || 'Error fetching connected sources.');
+            } else {
+                setSources([]);
             }
         };
-
         fetchSources();
     }, []);
 
-    const handleAddSource = async () => {
-        setStatusMessage('Adding new source...');
+    const handleAddSourceClick = () => setShowAddSourceModal(true);
 
-        try {
-            const token = localStorage.getItem('token');
-            if (!token) {
-                setError('User is not authenticated. Please log in again.');
-                return;
-            }
-
-            const response = await fetch('/api/shopify/fetch', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${token}`,
-                },
-                body: JSON.stringify({
-                    storeUrl: storeUrl.trim(),
-                    adminAccessToken,
-                }),
-            });
-
-            if (!response.ok) {
-                const errorText = await response.text();
-                throw new Error(errorText || 'Failed to add source.');
-            }
-
-            const data = await response.json();
-
+    const handleSaveSource = () => {
+        if (selectedMarketplace === 'Shopify') {
             const newSource = {
-                id: data.shopifyData._id,
+                id: Date.now().toString(),
                 name: storeUrl.split('.myshopify.com')[0],
                 url: storeUrl,
             };
-
-            setSources((prev) => [...prev, newSource]); // Add the new source
-            setActiveSourceId(newSource.id); // Set the new source as active
-            setStoreUrl('');
-            setAdminAccessToken('');
-            setStatusMessage('Source added successfully.');
-        } catch (error) {
-            console.error('Error adding source:', error);
-            setStatusMessage(error.message || 'Error adding source.');
+            setSources((prev) => [...prev, newSource]);
         }
+        setShowAddSourceModal(false);
+        setStoreUrl('');
+        setAdminAccessToken('');
     };
 
-    const handleToggleMarketplace = (marketplaceId) => {
-        setTargetMarketplaces((prev) =>
-            prev.map((marketplace) =>
-                marketplace.id === marketplaceId
-                    ? { ...marketplace, connected: !marketplace.connected }
-                    : marketplace
-            )
-        );
-    };
+    const handleSourceClick = (source) => setActiveSource(source);
 
     return (
         <div style={{ display: 'flex', height: '100vh' }}>
             <Sidebar userType="Admin" />
-            <div
-                style={{
-                    marginLeft: '200px',
-                    padding: '20px',
-                    flexGrow: 1,
-                    overflow: 'auto',
-                }}
-            >
+            <div style={{ marginLeft: '200px', padding: '20px', flexGrow: 1, overflow: 'auto' }}>
                 <div className="main-content">
                     <ClientProfile name="Jane Doe" clientId="98765" imageUrl="https://via.placeholder.com/100" />
                     <div className="content">
@@ -138,104 +65,120 @@ const Channels = () => {
                                 background: 'white',
                                 borderRadius: '10px',
                                 padding: '20px',
+                                textAlign: 'center',
                                 boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.1)',
+                                minHeight: '200px',
                             }}
                         >
-                            <div className="tabs">
-                                {sources.map((source) => (
-                                    <button
-                                        key={source.id}
-                                        className={`tab-button ${activeSourceId === source.id ? 'active' : ''}`}
-                                        onClick={() => setActiveSourceId(source.id)}
-                                    >
-                                        {source.name}
-                                    </button>
-                                ))}
-                                <button
-                                    className={`tab-button ${activeSourceId === 'addSource' ? 'active' : ''}`}
-                                    onClick={() => setActiveSourceId('addSource')}
+                            {sources.length === 0 ? (
+                                <div
+                                    style={{
+                                        border: '2px dashed gray',
+                                        borderRadius: '10px',
+                                        padding: '50px',
+                                        cursor: 'pointer',
+                                    }}
+                                    onClick={handleAddSourceClick}
                                 >
-                                    Add Source
-                                </button>
-                            </div>
-
-                            {activeSourceId === 'addSource' && (
-                                <div className="add-source-section">
-                                    <h4>Add New Source</h4>
-                                    <label>
-                                        Store URL:
-                                        <input
-                                            type="text"
-                                            className="input-field"
-                                            placeholder="example.myshopify.com"
-                                            value={storeUrl}
-                                            onChange={(e) => setStoreUrl(e.target.value)}
-                                        />
-                                    </label>
-                                    <label>
-                                        Admin Access Token:
-                                        <input
-                                            type="password"
-                                            className="input-field"
-                                            placeholder="Your Admin Access Token"
-                                            value={adminAccessToken}
-                                            onChange={(e) => setAdminAccessToken(e.target.value)}
-                                        />
-                                    </label>
-                                    <button className="add-button" onClick={handleAddSource}>
-                                        Add Source
-                                    </button>
+                                    <h4>Add Source</h4>
                                 </div>
-                            )}
-
-                            {activeSourceId !== 'addSource' && (
-                                <div className="targets-section">
-                                    <h4>Target Marketplaces for {sources.find((s) => s.id === activeSourceId)?.name}</h4>
-                                    <div className="marketplaces-container">
-                                        {targetMarketplaces.map((marketplace) => (
-                                            <div
-                                                key={marketplace.id}
-                                                className="marketplace-box"
-                                                style={{
-                                                    borderColor: marketplace.connected ? 'green' : 'red',
-                                                }}
-                                            >
-                                                <div className="marketplace-header">
-                                                    <span className={`status-dot ${marketplace.connected ? 'green' : 'red'}`}></span>
-                                                    <h5>{marketplace.name}</h5>
-                                                </div>
-                                                {marketplace.connected ? (
-                                                    <div className="marketplace-actions">
-                                                        <button
-                                                            className="settings-button"
-                                                            onClick={() =>
-                                                                alert(`${marketplace.name} Settings Clicked!`)
-                                                            }
-                                                        >
-                                                            Settings
-                                                        </button>
-                                                        <button
-                                                            className="delete-button"
-                                                            onClick={() => handleToggleMarketplace(marketplace.id)}
-                                                        >
-                                                            Disconnect
-                                                        </button>
-                                                    </div>
-                                                ) : (
-                                                    <p
-                                                        className="add-target"
-                                                        onClick={() => handleToggleMarketplace(marketplace.id)}
-                                                    >
-                                                        Add as Target Marketplace
-                                                    </p>
-                                                )}
+                            ) : (
+                                <div>
+                                    {sources.map((source) => (
+                                        <div
+                                            key={source.id}
+                                            style={{
+                                                border: '1px solid #ccc',
+                                                margin: '10px',
+                                                padding: '10px',
+                                                borderRadius: '5px',
+                                                display: 'flex',
+                                                justifyContent: 'space-between',
+                                                alignItems: 'center',
+                                            }}
+                                            onClick={() => handleSourceClick(source)}
+                                        >
+                                            <span>{source.name}</span>
+                                            <div>
+                                                <button>Settings</button>
+                                                <span>Status: Active</span>
                                             </div>
-                                        ))}
-                                    </div>
+                                        </div>
+                                    ))}
                                 </div>
                             )}
-                            <p className="status-message">{statusMessage}</p>
                         </div>
+
+                        {showAddSourceModal && (
+                            <div className="modal">
+                                <h4>Select Marketplace</h4>
+                                <div>
+                                    {['Shopify', 'Walmart', 'Amazon'].map((marketplace) => (
+                                        <button
+                                            key={marketplace}
+                                            onClick={() => setSelectedMarketplace(marketplace)}
+                                            style={{
+                                                margin: '5px',
+                                                padding: '10px',
+                                                backgroundColor:
+                                                    selectedMarketplace === marketplace ? '#007bff' : '#ccc',
+                                                color: 'white',
+                                            }}
+                                        >
+                                            {marketplace}
+                                        </button>
+                                    ))}
+                                </div>
+                                {selectedMarketplace === 'Shopify' && (
+                                    <div style={{ marginTop: '20px' }}>
+                                        <label>
+                                            Store URL:
+                                            <input
+                                                type="text"
+                                                value={storeUrl}
+                                                onChange={(e) => setStoreUrl(e.target.value)}
+                                                placeholder="example.myshopify.com"
+                                                style={{ marginLeft: '10px' }}
+                                            />
+                                        </label>
+                                        <label>
+                                            Admin Access Token:
+                                            <input
+                                                type="password"
+                                                value={adminAccessToken}
+                                                onChange={(e) => setAdminAccessToken(e.target.value)}
+                                                placeholder="Enter Admin Token"
+                                                style={{ marginLeft: '10px' }}
+                                            />
+                                        </label>
+                                        <button onClick={handleSaveSource}>Save</button>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {activeSource && (
+                            <div style={{ marginTop: '20px' }}>
+                                <h4>Target Marketplaces</h4>
+                                {targetMarketplaces.map((marketplace) => (
+                                    <div
+                                        key={marketplace.id}
+                                        style={{
+                                            border: '1px solid #ccc',
+                                            margin: '10px',
+                                            padding: '10px',
+                                            borderRadius: '5px',
+                                            display: 'flex',
+                                            justifyContent: 'space-between',
+                                            alignItems: 'center',
+                                        }}
+                                    >
+                                        <span>{marketplace.name}</span>
+                                        <button>Add as Target</button>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
