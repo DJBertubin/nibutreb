@@ -8,7 +8,7 @@ const Channels = () => {
     const [storeUrl, setStoreUrl] = useState('');
     const [adminAccessToken, setAdminAccessToken] = useState('');
     const [showModal, setShowModal] = useState(false);
-    const [modalType, setModalType] = useState(''); // 'addSource', 'linkedAccount', 'settings', 'addTarget'
+    const [modalType, setModalType] = useState(''); // 'addSource', 'addTarget', 'settings'
     const [selectedSource, setSelectedSource] = useState(null);
     const [activeSource, setActiveSource] = useState(null);
     const [statusMessage, setStatusMessage] = useState('');
@@ -36,6 +36,7 @@ const Channels = () => {
                     marketplace: 'Shopify',
                     url: entry.shopifyUrl,
                     token: entry.adminAccessToken,
+                    targetMarketplaces: [], // Add placeholder for targeted marketplaces
                 }));
 
                 setSources(formattedSources);
@@ -52,9 +53,9 @@ const Channels = () => {
         setShowModal(true);
     };
 
-    const handleLinkedAccountClick = (source) => {
+    const handleAddTargetClick = (source) => {
         setSelectedSource(source);
-        setModalType('linkedAccount');
+        setModalType('addTarget');
         setShowModal(true);
     };
 
@@ -64,14 +65,17 @@ const Channels = () => {
         setShowModal(true);
     };
 
-    const handleAddTargetClick = (source) => {
-        setSelectedSource(source);
-        setModalType('addTarget');
-        setShowModal(true);
-    };
-
     const handleMarketplaceSelection = (marketplace) => {
-        setActiveSource(marketplace);
+        if (selectedSource) {
+            setSources((prev) =>
+                prev.map((source) =>
+                    source.id === selectedSource.id
+                        ? { ...source, targetMarketplaces: [...source.targetMarketplaces, marketplace] }
+                        : source
+                )
+            );
+            setShowModal(false);
+        }
     };
 
     const handleShopifyConnect = async () => {
@@ -107,6 +111,7 @@ const Channels = () => {
                     id: data.shopifyData._id,
                     name: storeUrl.split('.myshopify.com')[0],
                     marketplace: 'Shopify',
+                    targetMarketplaces: [],
                 },
             ]);
 
@@ -148,7 +153,7 @@ const Channels = () => {
                         </div>
                         {sources.map((source) => (
                             <div key={source.id} className="source-item">
-                                <div className="source-content" onClick={() => handleLinkedAccountClick(source)}>
+                                <div className="source-content">
                                     <img
                                         className="marketplace-logo"
                                         src={`/${source.marketplace.toLowerCase()}-logo.png`}
@@ -156,12 +161,17 @@ const Channels = () => {
                                     />
                                     <span className="source-name">{source.name}</span>
                                 </div>
+                                <p className="target-status">
+                                    {source.targetMarketplaces.length === 0
+                                        ? 'No Targeted Marketplace'
+                                        : `Targeted: ${source.targetMarketplaces.join(', ')}`}
+                                </p>
                                 <div className="source-buttons">
-                                    <button className="settings-button" onClick={() => handleSettingsClick(source)}>
-                                        Settings
-                                    </button>
                                     <button className="add-target-button" onClick={() => handleAddTargetClick(source)}>
                                         Add Target
+                                    </button>
+                                    <button className="settings-button" onClick={() => handleSettingsClick(source)}>
+                                        Settings
                                     </button>
                                     <span className="status-text">Status: Active</span>
                                 </div>
@@ -181,7 +191,7 @@ const Channels = () => {
                                                 className={`source-button ${
                                                     activeSource === 'Shopify' ? 'active' : ''
                                                 }`}
-                                                onClick={() => handleMarketplaceSelection('Shopify')}
+                                                onClick={() => setActiveSource('Shopify')}
                                             >
                                                 Shopify
                                             </button>
@@ -189,7 +199,7 @@ const Channels = () => {
                                                 className={`source-button ${
                                                     activeSource === 'Walmart' ? 'active' : ''
                                                 }`}
-                                                onClick={() => handleMarketplaceSelection('Walmart')}
+                                                onClick={() => setActiveSource('Walmart')}
                                             >
                                                 Walmart
                                             </button>
@@ -197,7 +207,7 @@ const Channels = () => {
                                                 className={`source-button ${
                                                     activeSource === 'Amazon' ? 'active' : ''
                                                 }`}
-                                                onClick={() => handleMarketplaceSelection('Amazon')}
+                                                onClick={() => setActiveSource('Amazon')}
                                             >
                                                 Amazon
                                             </button>
@@ -234,9 +244,15 @@ const Channels = () => {
                                     <>
                                         <h2>Select Target Marketplace</h2>
                                         <div className="source-buttons-horizontal">
-                                            <button className="marketplace-button">eBay</button>
-                                            <button className="marketplace-button">Walmart</button>
-                                            <button className="marketplace-button">Amazon</button>
+                                            <button onClick={() => handleMarketplaceSelection('eBay')}>
+                                                eBay
+                                            </button>
+                                            <button onClick={() => handleMarketplaceSelection('Walmart')}>
+                                                Walmart
+                                            </button>
+                                            <button onClick={() => handleMarketplaceSelection('Amazon')}>
+                                                Amazon
+                                            </button>
                                         </div>
                                     </>
                                 ) : modalType === 'settings' ? (
