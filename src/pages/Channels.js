@@ -9,6 +9,8 @@ const Channels = () => {
     const [storeUrl, setStoreUrl] = useState('');
     const [adminAccessToken, setAdminAccessToken] = useState('');
     const [showAddSourceModal, setShowAddSourceModal] = useState(false);
+    const [showMarketplaceSelection, setShowMarketplaceSelection] = useState(true);
+    const [selectedMarketplace, setSelectedMarketplace] = useState('');
     const [showTargetModal, setShowTargetModal] = useState(false);
     const [selectedSource, setSelectedSource] = useState(null);
 
@@ -32,6 +34,7 @@ const Channels = () => {
                 const formattedSources = data.shopifyData.map((entry) => ({
                     id: entry._id,
                     name: entry.shopifyUrl.split('.myshopify.com')[0],
+                    marketplace: 'Shopify', // Assign marketplace dynamically if needed
                 }));
 
                 setSources(formattedSources);
@@ -43,7 +46,15 @@ const Channels = () => {
         fetchSources();
     }, []);
 
-    const handleAddSourceClick = () => setShowAddSourceModal(true);
+    const handleAddSourceClick = () => {
+        setShowAddSourceModal(true);
+        setShowMarketplaceSelection(true);
+    };
+
+    const handleMarketplaceSelection = (marketplace) => {
+        setSelectedMarketplace(marketplace);
+        setShowMarketplaceSelection(false);
+    };
 
     const handleAddSource = async () => {
         try {
@@ -68,6 +79,7 @@ const Channels = () => {
             const newSource = {
                 id: data.shopifyData._id,
                 name: storeUrl.split('.myshopify.com')[0],
+                marketplace: 'Shopify', // Default to Shopify for this example
             };
 
             setSources((prev) => [...prev, newSource]);
@@ -84,6 +96,15 @@ const Channels = () => {
         setShowTargetModal(true);
     };
 
+    const getMarketplaceLogo = (marketplace) => {
+        const logos = {
+            Shopify: 'https://cdn.shopify.com/shopify-logo.png',
+            Walmart: 'https://cdn.walmart.com/walmart-logo.png',
+            Amazon: 'https://cdn.amazon.com/amazon-logo.png',
+        };
+        return logos[marketplace] || '';
+    };
+
     return (
         <div style={{ display: 'flex', height: '100vh' }}>
             <Sidebar userType="Admin" />
@@ -91,61 +112,98 @@ const Channels = () => {
                 <div className="main-content">
                     <ClientProfile name="Jane Doe" clientId="98765" imageUrl="https://via.placeholder.com/100" />
                     <h2 className="section-title">Channels</h2>
-                    <div className="content">
-                        <div className="source-grid">
-                            <div className="add-source-box" onClick={handleAddSourceClick}>
-                                <h4>Add Source</h4>
-                            </div>
-                            {sources.map((source) => (
-                                <div
-                                    key={source.id}
-                                    className="source-item"
-                                    onClick={() => handleSourceClick(source)}
-                                >
-                                    <span className="source-name">{source.name}</span>
-                                    <button className="settings-button">Settings</button>
-                                    <button className="status-button">Status</button>
-                                </div>
-                            ))}
+                    <div className="source-grid">
+                        <div className="add-source-box" onClick={handleAddSourceClick}>
+                            <h4>Add Source</h4>
                         </div>
+                        {sources.map((source) => (
+                            <div
+                                key={source.id}
+                                className="source-item"
+                                onClick={() => handleSourceClick(source)}
+                            >
+                                <img
+                                    src={getMarketplaceLogo(source.marketplace)}
+                                    alt={source.marketplace}
+                                    className="marketplace-logo"
+                                />
+                                <span className="source-name">{source.name}</span>
+                                <button className="settings-button">Settings</button>
+                                <button className="status-button">Status</button>
+                            </div>
+                        ))}
                     </div>
 
                     {/* Add Source Modal */}
                     {showAddSourceModal && (
                         <div className="modal-overlay">
                             <div className="modal">
-                                <h4>Add Shopify Store</h4>
-                                <label>
-                                    Store URL:
-                                    <input
-                                        type="text"
-                                        value={storeUrl}
-                                        onChange={(e) => setStoreUrl(e.target.value)}
-                                        className="input-field"
-                                        placeholder="example.myshopify.com"
-                                    />
-                                </label>
-                                <label>
-                                    Admin Access Token:
-                                    <input
-                                        type="password"
-                                        value={adminAccessToken}
-                                        onChange={(e) => setAdminAccessToken(e.target.value)}
-                                        className="input-field"
-                                        placeholder="Enter Admin Token"
-                                    />
-                                </label>
-                                <div className="modal-actions">
-                                    <button onClick={handleAddSource} className="add-button">
-                                        Save
-                                    </button>
-                                    <button
-                                        onClick={() => setShowAddSourceModal(false)}
-                                        className="cancel-button"
-                                    >
-                                        Cancel
-                                    </button>
-                                </div>
+                                {showMarketplaceSelection ? (
+                                    <>
+                                        <h4>Select Marketplace</h4>
+                                        <button
+                                            className="marketplace-button"
+                                            onClick={() => handleMarketplaceSelection('Shopify')}
+                                        >
+                                            Shopify
+                                        </button>
+                                        <button
+                                            className="marketplace-button"
+                                            onClick={() => handleMarketplaceSelection('Walmart')}
+                                        >
+                                            Walmart
+                                        </button>
+                                        <button
+                                            className="marketplace-button"
+                                            onClick={() => handleMarketplaceSelection('Amazon')}
+                                        >
+                                            Amazon
+                                        </button>
+                                        <button
+                                            onClick={() => setShowAddSourceModal(false)}
+                                            className="cancel-button"
+                                        >
+                                            Cancel
+                                        </button>
+                                    </>
+                                ) : selectedMarketplace === 'Shopify' ? (
+                                    <>
+                                        <h4>Add Shopify Store</h4>
+                                        <label>
+                                            Store URL:
+                                            <input
+                                                type="text"
+                                                value={storeUrl}
+                                                onChange={(e) => setStoreUrl(e.target.value)}
+                                                className="input-field"
+                                                placeholder="example.myshopify.com"
+                                            />
+                                        </label>
+                                        <label>
+                                            Admin Access Token:
+                                            <input
+                                                type="password"
+                                                value={adminAccessToken}
+                                                onChange={(e) => setAdminAccessToken(e.target.value)}
+                                                className="input-field"
+                                                placeholder="Enter Admin Token"
+                                            />
+                                        </label>
+                                        <div className="modal-actions">
+                                            <button onClick={handleAddSource} className="add-button">
+                                                Save
+                                            </button>
+                                            <button
+                                                onClick={() => setShowAddSourceModal(false)}
+                                                className="cancel-button"
+                                            >
+                                                Cancel
+                                            </button>
+                                        </div>
+                                    </>
+                                ) : (
+                                    <p>Additional setup for {selectedMarketplace} will be added here.</p>
+                                )}
                             </div>
                         </div>
                     )}

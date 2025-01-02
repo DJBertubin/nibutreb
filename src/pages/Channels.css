@@ -3,68 +3,37 @@
     display: grid;
     grid-template-columns: 1fr;
     gap: 20px;
-}
-
-/* Add Source Box */
-.add-source-box {
-    width: 100px;
-    height: 200px;
-    border: 2px dashed gray;
-    border-radius: 10px;
-    display: flex;
-    flex-direction: column;
     justify-content: center;
     align-items: center;
-    cursor: pointer;
-    background: #f9f9f9;
-    transition: all 0.3s ease;
+    margin-top: 100px;
 }
 
-.add-source-box:hover {
-    background: #f0f8ff;
-    border-color: #2193b0;
-}
-
-/* Linked Account Box */
-.source-item {
-    width: 100px;
-    height: 200px;
+/* Add Source and Linked Account Box */
+.add-source-box, .source-item {
+    width: 300px;
+    height: 100px;
     border: 1px solid #ddd;
     border-radius: 5px;
-    padding: 10px;
-    background: white;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
+    background: #f9f9f9;
     cursor: pointer;
     transition: all 0.3s ease;
+    text-align: center;
 }
 
-.source-item:hover {
+.add-source-box:hover, .source-item:hover {
     background: #f0f8ff;
     border-color: #2193b0;
 }
 
-.source-name {
-    font-size: 16px;
-    font-weight: bold;
+/* Marketplace Logo */
+.marketplace-logo {
+    width: 40px;
+    height: 40px;
     margin-bottom: 10px;
-}
-
-.settings-button, .status-button {
-    background: #2193b0;
-    color: white;
-    border: none;
-    padding: 5px 10px;
-    border-radius: 5px;
-    margin-top: 5px;
-    cursor: pointer;
-    font-size: 12px;
-}
-
-.settings-button:hover, .status-button:hover {
-    background: #176aa8;
 }
 
 /* Modal Styling */
@@ -100,6 +69,7 @@
     border-radius: 5px;
     cursor: pointer;
     font-size: 16px;
+    margin: 10px 0;
     transition: background-color 0.3s ease;
 }
 
