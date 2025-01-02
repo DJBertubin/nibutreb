@@ -8,10 +8,50 @@
     margin-top: 100px;
 }
 
-/* Add Source and Linked Account Box */
-.add-source-box, .source-item {
+/* Add Source Box */
+.add-source-box {
     width: 400px;
-    height: 200px;
+    height: 150px;
+    border: 2px dashed #2193b0; /* Dashed border for running ants effect */
+    border-radius: 5px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background: #f9f9f9;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.3s ease;
+    animation: dash-animation 2s linear infinite; /* Animation for running ants */
+}
+
+/* Animation for Running Ants Effect */
+@keyframes dash-animation {
+    to {
+        border-color: #2193b0;
+        border-style: dashed;
+        border-width: 2px;
+        border-radius: 5px;
+        outline-offset: -1px;
+        border-image: repeating-linear-gradient(
+            to right,
+            #2193b0 0%,
+            #6dd5ed 10%,
+            #2193b0 20%
+        );
+        border-image-slice: 1;
+    }
+}
+
+.add-source-box:hover {
+    background: #f0f8ff;
+    border-color: #176aa8;
+}
+
+/* Linked Account Box */
+.source-item {
+    width: 400px;
+    height: 150px;
     border: 1px solid #ddd;
     border-radius: 5px;
     display: flex;
@@ -19,28 +59,14 @@
     justify-content: space-between;
     align-items: center;
     background: #f9f9f9;
-    cursor: pointer;
-    transition: all 0.3s ease;
     text-align: center;
     padding: 10px;
+    cursor: default;
 }
 
-.add-source-box:hover, .source-item:hover {
+.source-item:hover {
     background: #f0f8ff;
     border-color: #2193b0;
-}
-
-/* Horizontal Layout for Logo and Store Name */
-.source-content {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-top: 10px;
-}
-
-.marketplace-logo {
-    width: 50px;
-    height: 50px;
 }
 
 /* Target Marketplace and Status Below Store Name */
