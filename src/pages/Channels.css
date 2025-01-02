@@ -69,6 +69,14 @@
     border-color: #2193b0;
 }
 
+/* Store Name Styling */
+.source-name {
+    font-size: 16px;
+    font-weight: bold;
+    color: #333;
+    margin-top: 10px;
+}
+
 /* Target Marketplace and Status Below Store Name */
 .target-status {
     font-size: 14px;
