@@ -10,7 +10,9 @@ const Channels = () => {
     const [showModal, setShowModal] = useState(false);
     const [modalType, setModalType] = useState(''); // 'addSource', 'addTarget', 'settings'
     const [selectedSource, setSelectedSource] = useState(null);
-    const [activeSource, setActiveSource] = useState(null);
+    const [activeTarget, setActiveTarget] = useState(null); // eBay, Walmart, Amazon
+    const [clientId, setClientId] = useState('');
+    const [clientSecret, setClientSecret] = useState('');
     const [statusMessage, setStatusMessage] = useState('');
 
     useEffect(() => {
@@ -36,7 +38,7 @@ const Channels = () => {
                     marketplace: 'Shopify',
                     url: entry.shopifyUrl,
                     token: entry.adminAccessToken,
-                    targetMarketplaces: [], // Add placeholder for targeted marketplaces
+                    targetMarketplaces: [], // Placeholder for targeted marketplaces
                 }));
 
                 setSources(formattedSources);
@@ -66,60 +68,59 @@ const Channels = () => {
     };
 
     const handleMarketplaceSelection = (marketplace) => {
-        if (selectedSource) {
-            setSources((prev) =>
-                prev.map((source) =>
-                    source.id === selectedSource.id
-                        ? { ...source, targetMarketplaces: [...source.targetMarketplaces, marketplace] }
-                        : source
-                )
-            );
+        if (marketplace === 'Walmart') {
+            setActiveTarget(marketplace);
+        } else {
+            if (selectedSource) {
+                setSources((prev) =>
+                    prev.map((source) =>
+                        source.id === selectedSource.id
+                            ? { ...source, targetMarketplaces: [...source.targetMarketplaces, marketplace] }
+                            : source
+                    )
+                );
+            }
             setShowModal(false);
         }
     };
 
-    const handleShopifyConnect = async () => {
-        setStatusMessage('Connecting to Shopify Admin API...');
-
+    const handleSaveWalmartCredentials = async () => {
+        setStatusMessage('Saving Walmart credentials...');
         try {
             const token = localStorage.getItem('token');
-            if (!token) {
-                throw new Error('User is not authenticated. Please log in again.');
-            }
+            if (!token) throw new Error('User is not authenticated.');
 
-            const response = await fetch('/api/shopify/fetch', {
+            const response = await fetch('/api/walmart/save', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     Authorization: `Bearer ${token}`,
                 },
                 body: JSON.stringify({
-                    storeUrl: storeUrl.trim(),
-                    adminAccessToken: adminAccessToken,
+                    shopifySourceId: selectedSource.id,
+                    clientId: clientId.trim(),
+                    clientSecret: clientSecret.trim(),
                 }),
             });
 
             if (!response.ok) {
                 const errorText = await response.text();
-                throw new Error(`Shopify API Error: ${errorText}`);
+                throw new Error(`Error saving Walmart credentials: ${errorText}`);
             }
 
-            const data = await response.json();
-            setSources((prev) => [
-                ...prev,
-                {
-                    id: data.shopifyData._id,
-                    name: storeUrl.split('.myshopify.com')[0],
-                    marketplace: 'Shopify',
-                    targetMarketplaces: [],
-                },
-            ]);
-
+            setSources((prev) =>
+                prev.map((source) =>
+                    source.id === selectedSource.id
+                        ? { ...source, targetMarketplaces: [...source.targetMarketplaces, 'Walmart'] }
+                        : source
+                )
+            );
+            setStatusMessage('Walmart credentials saved successfully!');
             setShowModal(false);
-            setStoreUrl('');
-            setAdminAccessToken('');
+            setClientId('');
+            setClientSecret('');
         } catch (error) {
-            setStatusMessage(`Failed to connect: ${error.message}`);
+            setStatusMessage(`Failed to save credentials: ${error.message}`);
         }
     };
 
@@ -154,11 +155,6 @@ const Channels = () => {
                         {sources.map((source) => (
                             <div key={source.id} className="source-item">
                                 <div className="source-content">
-                                    <img
-                                        className="marketplace-logo"
-                                        src={`/${source.marketplace.toLowerCase()}-logo.png`}
-                                        alt={`${source.marketplace} logo`}
-                                    />
                                     <span className="source-name">{source.name}</span>
                                 </div>
                                 <p className="target-status">
@@ -183,79 +179,58 @@ const Channels = () => {
                     {showModal && (
                         <div className="modal-overlay">
                             <div className="modal">
-                                {modalType === 'addSource' ? (
+                                {modalType === 'addSource' && (
                                     <>
                                         <h2>Add New Source</h2>
-                                        <div className="source-buttons-horizontal">
-                                            <button
-                                                className={`source-button ${
-                                                    activeSource === 'Shopify' ? 'active' : ''
-                                                }`}
-                                                onClick={() => setActiveSource('Shopify')}
-                                            >
-                                                Shopify
-                                            </button>
-                                            <button
-                                                className={`source-button ${
-                                                    activeSource === 'Walmart' ? 'active' : ''
-                                                }`}
-                                                onClick={() => setActiveSource('Walmart')}
-                                            >
-                                                Walmart
-                                            </button>
-                                            <button
-                                                className={`source-button ${
-                                                    activeSource === 'Amazon' ? 'active' : ''
-                                                }`}
-                                                onClick={() => setActiveSource('Amazon')}
-                                            >
-                                                Amazon
-                                            </button>
-                                        </div>
-
-                                        {activeSource === 'Shopify' && (
-                                            <div className="shopify-integration">
+                                        <button className="source-button" onClick={() => setActiveTarget('Shopify')}>
+                                            Shopify
+                                        </button>
+                                    </>
+                                )}
+                                {modalType === 'addTarget' && (
+                                    <>
+                                        <h2>Select Target Marketplace</h2>
+                                        {activeTarget === 'Walmart' ? (
+                                            <>
                                                 <label>
-                                                    Store URL:
+                                                    Client ID:
                                                     <input
                                                         type="text"
-                                                        placeholder="example.myshopify.com"
-                                                        value={storeUrl}
-                                                        onChange={(e) => setStoreUrl(e.target.value)}
+                                                        value={clientId}
+                                                        onChange={(e) => setClientId(e.target.value)}
+                                                        placeholder="Enter Walmart Client ID"
+                                                        className="input-field"
                                                     />
                                                 </label>
                                                 <label>
-                                                    Admin Access Token:
+                                                    Client Secret:
                                                     <input
                                                         type="password"
-                                                        placeholder="Your Admin Access Token"
-                                                        value={adminAccessToken}
-                                                        onChange={(e) => setAdminAccessToken(e.target.value)}
+                                                        value={clientSecret}
+                                                        onChange={(e) => setClientSecret(e.target.value)}
+                                                        placeholder="Enter Walmart Client Secret"
+                                                        className="input-field"
                                                     />
                                                 </label>
-                                                <button className="connect-button" onClick={handleShopifyConnect}>
-                                                    Connect
+                                                <button
+                                                    className="connect-button"
+                                                    onClick={handleSaveWalmartCredentials}
+                                                >
+                                                    Save
                                                 </button>
-                                                <p>{statusMessage}</p>
+                                            </>
+                                        ) : (
+                                            <div className="source-buttons-horizontal">
+                                                <button onClick={() => handleMarketplaceSelection('eBay')}>eBay</button>
+                                                <button onClick={() => handleMarketplaceSelection('Walmart')}>
+                                                    Walmart
+                                                </button>
+                                                <button onClick={() => handleMarketplaceSelection('Amazon')}>Amazon</button>
                                             </div>
                                         )}
                                     </>
-                                ) : modalType === 'addTarget' ? (
-                                    <>
-                                        <h2>Select Target Marketplace</h2>
-                                        <div className="source-buttons-horizontal">
-                                            <button onClick={() => handleMarketplaceSelection('eBay')}>
-                                                eBay
-                                            </button>
-                                            <button onClick={() => handleMarketplaceSelection('Walmart')}>
-                                                Walmart
-                                            </button>
-                                            <button onClick={() => handleMarketplaceSelection('Amazon')}>
-                                                Amazon
-                                            </button>
-                                        </div>
-                                    </>
-                                ) : modalType === 'settings' ? (
+                                )}
+                                {modalType === 'settings' && selectedSource && (
                                     <>
                                         <h2>Account Settings</h2>
                                         <p>Store URL: {selectedSource.url}</p>
@@ -266,7 +241,7 @@ const Channels = () => {
                                             Delete Account
                                         </button>
                                     </>
-                                ) : null}
+                                )}
                                 <button className="close-modal" onClick={() => setShowModal(false)}>
                                     Close
                                 </button>
