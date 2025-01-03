@@ -7,10 +7,10 @@ const Channels = () => {
     const [sources, setSources] = useState([]);
     const [storeUrl, setStoreUrl] = useState('');
     const [adminAccessToken, setAdminAccessToken] = useState('');
-    const [walmartClientID, setWalmartClientID] = useState(''); // Updated to Walmart Client ID
-    const [walmartClientSecret, setWalmartClientSecret] = useState(''); // Updated to Walmart Client Secret
+    const [walmartClientID, setWalmartClientID] = useState('');
+    const [walmartClientSecret, setWalmartClientSecret] = useState('');
     const [showModal, setShowModal] = useState(false);
-    const [modalType, setModalType] = useState(''); // 'addSource', 'addTarget', 'settings'
+    const [modalType, setModalType] = useState('');
     const [selectedSource, setSelectedSource] = useState(null);
     const [activeSource, setActiveSource] = useState(null);
     const [statusMessage, setStatusMessage] = useState('');
@@ -38,7 +38,7 @@ const Channels = () => {
                     marketplace: 'Shopify',
                     url: entry.shopifyUrl,
                     token: entry.adminAccessToken,
-                    targetMarketplaces: [],
+                    targetMarketplaces: entry.targetMarketplaces || [], // Handle pre-existing target marketplaces
                 }));
 
                 setSources(formattedSources);
@@ -67,16 +67,33 @@ const Channels = () => {
         setShowModal(true);
     };
 
-    const handleMarketplaceSelection = (marketplace) => {
-        if (selectedSource) {
-            setSources((prev) =>
-                prev.map((source) =>
-                    source.id === selectedSource.id
-                        ? { ...source, targetMarketplaces: [...source.targetMarketplaces, marketplace] }
-                        : source
-                )
-            );
-            setShowModal(false);
+    const handleMarketplaceSelection = async (marketplace) => {
+        if (!selectedSource) return;
+
+        // Update the source to include the selected target marketplace
+        const updatedSources = sources.map((source) =>
+            source.id === selectedSource.id
+                ? { ...source, targetMarketplaces: [...source.targetMarketplaces, marketplace] }
+                : source
+        );
+
+        setSources(updatedSources);
+        setShowModal(false); // Close the modal after selecting a marketplace
+
+        // Optionally send update request to backend
+        try {
+            const token = localStorage.getItem('token');
+            await fetch(`/api/shopify/update-target/${selectedSource.id}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({ targetMarketplaces: updatedSources.find((s) => s.id === selectedSource.id).targetMarketplaces }),
+            });
+            console.log(`Successfully added ${marketplace} as a target marketplace.`);
+        } catch (err) {
+            console.error('Failed to update target marketplace:', err);
         }
     };
 
@@ -141,8 +158,8 @@ const Channels = () => {
                     Authorization: `Bearer ${token}`,
                 },
                 body: JSON.stringify({
-                    walmartClientID: walmartClientID.trim(), // Ensure correct field name
-                    walmartClientSecret: walmartClientSecret.trim(), // Ensure correct field name
+                    walmartClientID: walmartClientID.trim(),
+                    walmartClientSecret: walmartClientSecret.trim(),
                 }),
             });
 
