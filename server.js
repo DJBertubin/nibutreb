@@ -8,6 +8,7 @@ const mongoose = require('mongoose');
 const cron = require('node-cron');
 const User = require('./api/models/User'); // Import User model
 const ShopifyData = require('./api/models/ShopifyData'); // Import ShopifyData model
+const walmartRoutes = require('./api/walmart/walmart'); // Import Walmart routes
 
 dotenv.config();
 
@@ -27,45 +28,8 @@ mongoose
     .then(() => console.log('Connected to MongoDB Atlas'))
     .catch((err) => console.error('MongoDB connection error:', err));
 
-// **Walmart Schema and Model**
-const walmartSchema = new mongoose.Schema({
-    walmartClientID: { type: String, required: true },  // Using "Walmart Client ID"
-    walmartClientSecret: { type: String, required: true },  // Using "Walmart Client Secret"
-    createdAt: { type: Date, default: Date.now },
-});
-const WalmartData = mongoose.model('WalmartData', walmartSchema, 'walmartdatas');
-
-// **Walmart API Route**: Store Walmart Client ID and Client Secret
-app.post('/api/walmart/credentials', async (req, res) => {
-    const { authorization } = req.headers;
-    const { walmartClientID, walmartClientSecret } = req.body;
-
-    if (!authorization || !authorization.startsWith('Bearer ')) {
-        return res.status(401).json({ error: 'Authorization token required.' });
-    }
-
-    if (!walmartClientID || !walmartClientSecret) {
-        return res.status(400).json({ error: 'Walmart Client ID and Walmart Client Secret are required.' });
-    }
-
-    try {
-        const token = authorization.split(' ')[1];
-        const decoded = jwt.verify(token, JWT_SECRET);
-        const clientId = decoded.clientId;
-
-        if (!clientId) {
-            return res.status(401).json({ error: 'Invalid or missing clientId in token.' });
-        }
-
-        const newWalmartData = new WalmartData({ walmartClientID, walmartClientSecret });
-        await newWalmartData.save(); // Save Walmart credentials to the database
-
-        res.status(201).json({ message: 'Walmart credentials saved successfully!' });
-    } catch (error) {
-        console.error('Error saving Walmart credentials:', error.message);
-        res.status(500).json({ error: 'Failed to save Walmart credentials', details: error.message });
-    }
-});
+// **Use Walmart API routes**
+app.use('/api/walmart', walmartRoutes);
 
 // **Login Route**
 app.post('/api/login', async (req, res) => {

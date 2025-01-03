@@ -1,34 +1,39 @@
-// Import required modules
 const express = require('express');
+const jwt = require('jsonwebtoken');
+const WalmartData = require('../models/WalmartData'); // Import the database model
 const router = express.Router();
-const mongoose = require('mongoose');
+const JWT_SECRET = process.env.JWT_SECRET;
 
-// Walmart data schema for MongoDB
-const walmartSchema = new mongoose.Schema({
-  clientID: { type: String, required: true },
-  clientSecret: { type: String, required: true },
-  createdAt: { type: Date, default: Date.now },
-});
-
-// Create a model for Walmart data
-const WalmartData = mongoose.model('WalmartData', walmartSchema, 'walmartdatas');
-
-// API route to save Walmart credentials
+// **POST route to save Walmart credentials**
 router.post('/credentials', async (req, res) => {
-  const { clientID, clientSecret } = req.body;
+    const { authorization } = req.headers;
+    const { walmartClientID, walmartClientSecret } = req.body;
 
-  if (!clientID || !clientSecret) {
-    return res.status(400).json({ error: 'Client ID and Client Secret are required.' });
-  }
+    if (!authorization || !authorization.startsWith('Bearer ')) {
+        return res.status(401).json({ error: 'Authorization token required.' });
+    }
 
-  try {
-    const newWalmartData = new WalmartData({ clientID, clientSecret });
-    await newWalmartData.save(); // Save to the `walmartdatas` collection in MongoDB
-    res.status(201).send({ message: 'Walmart credentials saved successfully!' });
-  } catch (error) {
-    console.error('Error saving Walmart credentials:', error);
-    res.status(500).send({ error: 'Failed to save Walmart credentials' });
-  }
+    if (!walmartClientID || !walmartClientSecret) {
+        return res.status(400).json({ error: 'Walmart Client ID and Secret are required.' });
+    }
+
+    try {
+        const token = authorization.split(' ')[1];
+        const decoded = jwt.verify(token, JWT_SECRET);
+        const clientId = decoded.clientId;
+
+        if (!clientId) {
+            return res.status(401).json({ error: 'Invalid or missing clientId.' });
+        }
+
+        const walmartData = new WalmartData({ clientId, walmartClientID, walmartClientSecret });
+        await walmartData.save();
+
+        res.status(201).json({ message: 'Walmart credentials saved successfully!' });
+    } catch (error) {
+        console.error('Error saving Walmart credentials:', error.message);
+        res.status(500).json({ error: 'Failed to save Walmart credentials', details: error.message });
+    }
 });
 
 module.exports = router;

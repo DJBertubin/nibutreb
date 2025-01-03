@@ -35,6 +35,7 @@ const Channels = () => {
                 const data = await response.json();
                 const formattedSources = data.shopifyData.map((entry) => ({
                     id: entry._id,
+                    clientId: entry.clientId,  // Ensure clientId is available
                     name: entry.shopifyUrl.split('.myshopify.com')[0],
                     marketplace: 'Shopify',
                     url: entry.shopifyUrl,
@@ -90,6 +91,7 @@ const Channels = () => {
                 body: JSON.stringify({
                     walmartClientID: walmartClientID.trim(),
                     walmartClientSecret: walmartClientSecret.trim(),
+                    clientId: selectedSource?.clientId, // Include clientId from selected source
                 }),
             });
 
