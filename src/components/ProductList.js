@@ -74,10 +74,10 @@ const ProductList = ({ products }) => {
                                 </td>
                                 <td className="product-details">
                                     <img
-                                        src={product.image || '/placeholder.png'}
+                                        src={product.image || product.imageSrc || 'https://via.placeholder.com/50'}
                                         alt={product.title || 'Product'}
                                         className="product-image"
-                                        onError={(e) => (e.target.src = '/placeholder.png')}
+                                        onError={(e) => (e.target.src = 'https://via.placeholder.com/50')}
                                     />
                                     <div className="product-info">
                                         <strong
