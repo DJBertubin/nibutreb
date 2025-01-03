@@ -2,12 +2,10 @@ const express = require('express');
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
-const fetch = require('node-fetch');
 const dotenv = require('dotenv');
 const mongoose = require('mongoose');
-const cron = require('node-cron');
-const User = require('./api/models/User'); // Import User model
-const ShopifyData = require('./api/models/ShopifyData'); // Import ShopifyData model
+const User = require('./api/models/User'); // User model for login credentials
+const WalmartData = require('./api/models/WalmartData'); // Walmart credentials model
 
 dotenv.config();
 
@@ -19,13 +17,95 @@ app.use(cors());
 app.use(express.json());
 
 // MongoDB Connection
-mongoose
-    .connect(process.env.MONGO_URI, {
-        useNewUrlParser: true,
-        useUnifiedTopology: true,
-    })
+mongoose.connect(process.env.MONGO_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+})
     .then(() => console.log('Connected to MongoDB Atlas'))
     .catch((err) => console.error('MongoDB connection error:', err));
+
+// Walmart Save API Route
+app.post('/api/walmart/save', async (req, res) => {
+    const { authorization } = req.headers;
+    const { walmartClientId, clientSecret } = req.body;
+
+    // Check for missing authorization header
+    if (!authorization || !authorization.startsWith('Bearer ')) {
+        return res.status(401).json({ error: 'Authorization token required.' });
+    }
+
+    try {
+        // Extract and verify the token
+        const token = authorization.split(' ')[1];
+        const decoded = jwt.verify(token, JWT_SECRET);
+        const linkedToClientId = decoded.clientId; // Identify the user who is saving the data
+
+        // Ensure the token contains a valid clientId
+        if (!linkedToClientId) {
+            return res.status(401).json({ error: 'Invalid or missing clientId in token.' });
+        }
+
+        // Check if Walmart data already exists for the user
+        const existingData = await WalmartData.findOne({ linkedToClientId });
+
+        if (existingData) {
+            // Update existing Walmart data
+            existingData.walmartClientId = walmartClientId;
+            existingData.clientSecret = clientSecret;
+            existingData.updatedAt = new Date();
+            await existingData.save();
+            console.log(`Walmart credentials updated for clientId: ${linkedToClientId}`);
+            res.status(200).json({ message: 'Walmart credentials updated successfully.' });
+        } else {
+            // Create new Walmart data entry
+            const walmartData = new WalmartData({
+                walmartClientId,
+                clientSecret,
+                linkedToClientId,
+                createdAt: new Date(),
+            });
+            await walmartData.save();
+            console.log(`New Walmart credentials saved for clientId: ${linkedToClientId}`);
+            res.status(201).json({ message: 'Walmart credentials saved successfully.' });
+        }
+    } catch (error) {
+        console.error('Error saving Walmart credentials:', error.message);
+        res.status(500).json({ error: 'Internal Server Error', details: error.message });
+    }
+});
+
+// Fetch Walmart Data for Logged-In User
+app.get('/api/walmart/data', async (req, res) => {
+    const { authorization } = req.headers;
+
+    if (!authorization || !authorization.startsWith('Bearer ')) {
+        return res.status(401).json({ error: 'Authorization token required.' });
+    }
+
+    try {
+        const token = authorization.split(' ')[1];
+        const decoded = jwt.verify(token, JWT_SECRET);
+        const clientId = decoded.clientId;
+
+        if (!clientId) {
+            return res.status(401).json({ error: 'Invalid or missing clientId in token.' });
+        }
+
+        const walmartData = await WalmartData.find({ linkedToClientId: clientId });
+
+        if (!walmartData || walmartData.length === 0) {
+            return res.status(404).json({ error: 'No Walmart data found for this user.' });
+        }
+
+        res.status(200).json({
+            message: 'Walmart data fetched successfully.',
+            walmartData,
+        });
+    } catch (err) {
+        console.error('Error fetching Walmart data:', err.message);
+        res.status(500).json({ error: 'Internal Server Error', details: err.message });
+    }
+});
 
 // Login Route
 app.post('/api/login', async (req, res) => {
@@ -56,209 +136,6 @@ app.post('/api/login', async (req, res) => {
     } catch (error) {
         console.error('Login Error:', error.message);
         res.status(500).json({ error: 'Internal Server Error' });
-    }
-});
-
-// Signup Route
-app.post('/api/signup', async (req, res) => {
-    const { name, username, password, role } = req.body;
-
-    if (!name || !username || !password) {
-        return res.status(400).json({ error: 'Name, username, and password are required.' });
-    }
-
-    try {
-        const existingUser = await User.findOne({ username });
-        if (existingUser) {
-            return res.status(400).json({ error: 'Username already exists' });
-        }
-
-        const hashedPassword = await bcrypt.hash(password, 10);
-        const newUser = new User({
-            name,
-            username,
-            password: hashedPassword,
-            role: role || 'client',
-        });
-
-        await newUser.save();
-
-        res.status(201).json({
-            message: 'User created successfully',
-            userId: newUser._id,
-            clientId: newUser.clientId,
-        });
-    } catch (error) {
-        console.error('Signup Error:', error.message);
-        res.status(500).json({ error: 'Internal Server Error' });
-    }
-});
-
-// Fetch Client Info Route
-app.get('/api/client/info', async (req, res) => {
-    const { authorization } = req.headers;
-
-    if (!authorization || !authorization.startsWith('Bearer ')) {
-        return res.status(401).json({ error: 'Authorization token required.' });
-    }
-
-    try {
-        const token = authorization.split(' ')[1];
-        const decoded = jwt.verify(token, JWT_SECRET);
-        const clientId = decoded.clientId;
-
-        if (!clientId) {
-            return res.status(401).json({ error: 'Invalid or missing clientId in token.' });
-        }
-
-        const user = await User.findOne({ clientId });
-
-        if (!user) {
-            return res.status(404).json({ error: 'Client not found.' });
-        }
-
-        res.status(200).json({
-            clientId: user.clientId,
-            name: user.name,
-            username: user.username,
-            role: user.role,
-        });
-    } catch (err) {
-        console.error('Error fetching client info:', err.message);
-        res.status(500).json({ error: 'Internal Server Error', details: err.message });
-    }
-});
-
-// Shopify Fetch API Route
-app.post('/api/shopify/fetch', async (req, res) => {
-    const { authorization } = req.headers;
-    const { storeUrl, adminAccessToken } = req.body;
-
-    if (!authorization || !authorization.startsWith('Bearer ')) {
-        return res.status(401).json({ error: 'Authorization token required.' });
-    }
-
-    if (!storeUrl || !adminAccessToken) {
-        return res.status(400).json({ error: 'Store URL and Admin Access Token are required.' });
-    }
-
-    try {
-        const token = authorization.split(' ')[1];
-        const decoded = jwt.verify(token, JWT_SECRET);
-        const clientId = decoded.clientId;
-
-        if (!clientId) {
-            return res.status(401).json({ error: 'Invalid or missing clientId in token.' });
-        }
-
-        const shopifyApiUrl = `https://${storeUrl.trim()}/admin/api/2024-01/products.json`;
-        const response = await fetch(shopifyApiUrl, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-Shopify-Access-Token': adminAccessToken,
-            },
-        });
-
-        if (!response.ok) {
-            const errorText = await response.text();
-            console.error('Shopify API Error:', errorText);
-            return res.status(response.status).json({ error: errorText });
-        }
-
-        const shopifyData = await response.json();
-
-        const updatedData = await ShopifyData.findOneAndUpdate(
-            { clientId, shopifyUrl: storeUrl.trim() },
-            { shopifyData, shopifyToken: adminAccessToken, lastUpdated: new Date() },
-            { upsert: true, new: true }
-        );
-
-        res.status(201).json({
-            message: 'Shopify data fetched and stored successfully.',
-            shopifyData: updatedData,
-        });
-    } catch (err) {
-        console.error('Error fetching Shopify data:', err.message);
-        res.status(500).json({ error: 'Internal Server Error', details: err.message });
-    }
-});
-
-// Periodic Shopify Data Fetch
-const fetchShopifyDataPeriodically = async () => {
-    try {
-        const allEntries = await ShopifyData.find();
-        for (const entry of allEntries) {
-            const { shopifyUrl, shopifyToken, clientId } = entry;
-
-            try {
-                const shopifyApiUrl = `https://${shopifyUrl.trim()}/admin/api/2024-01/products.json`;
-                const response = await fetch(shopifyApiUrl, {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-Shopify-Access-Token': shopifyToken,
-                    },
-                });
-
-                if (response.ok) {
-                    const shopifyData = await response.json();
-                    await ShopifyData.findOneAndUpdate(
-                        { clientId, shopifyUrl },
-                        { shopifyData, lastUpdated: new Date() },
-                        { upsert: true }
-                    );
-
-                    console.log(`Shopify data updated for clientId: ${clientId}`);
-                } else {
-                    console.error(
-                        `Error fetching Shopify data for clientId ${clientId}: ${response.statusText}`
-                    );
-                }
-            } catch (error) {
-                console.error(
-                    `Failed to fetch Shopify data for clientId ${clientId}: ${error.message}`
-                );
-            }
-        }
-    } catch (error) {
-        console.error('Periodic fetch encountered an error:', error.message);
-    }
-};
-
-// Schedule periodic fetching every 10 minutes
-cron.schedule('*/10 * * * *', fetchShopifyDataPeriodically);
-
-// Fetch Shopify Data for Logged-In User
-app.get('/api/shopify/data', async (req, res) => {
-    const { authorization } = req.headers;
-
-    if (!authorization || !authorization.startsWith('Bearer ')) {
-        return res.status(401).json({ error: 'Authorization token required.' });
-    }
-
-    try {
-        const token = authorization.split(' ')[1];
-        const decoded = jwt.verify(token, JWT_SECRET);
-        const clientId = decoded.clientId;
-
-        if (!clientId) {
-            return res.status(401).json({ error: 'Invalid or missing clientId in token.' });
-        }
-
-        const shopifyData = await ShopifyData.find({ clientId });
-
-        if (!shopifyData || shopifyData.length === 0) {
-            return res.status(404).json({ error: 'No Shopify data found for this user.' });
-        }
-
-        res.status(200).json({
-            message: 'Shopify data fetched successfully.',
-            shopifyData,
-        });
-    } catch (err) {
-        console.error('Error fetching Shopify data:', err.message);
-        res.status(500).json({ error: 'Internal Server Error', details: err.message });
     }
 });
 

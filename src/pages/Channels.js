@@ -5,87 +5,51 @@ import './Channels.css';
 
 const Channels = () => {
     const [sources, setSources] = useState([]);
-    const [storeUrl, setStoreUrl] = useState('');
-    const [adminAccessToken, setAdminAccessToken] = useState('');
     const [showModal, setShowModal] = useState(false);
-    const [modalType, setModalType] = useState(''); // 'addSource', 'addTarget', 'settings'
-    const [selectedSource, setSelectedSource] = useState(null);
-    const [activeTarget, setActiveTarget] = useState(null); // eBay, Walmart, Amazon
-    const [clientId, setClientId] = useState('');
+    const [modalType, setModalType] = useState(''); // 'addTarget', 'settings'
+    const [activeTarget, setActiveTarget] = useState(''); // Walmart, eBay, Amazon
+    const [walmartClientId, setWalmartClientId] = useState('');
     const [clientSecret, setClientSecret] = useState('');
     const [statusMessage, setStatusMessage] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
 
+    // Fetch Walmart Data
     useEffect(() => {
-        const fetchSources = async () => {
+        const fetchWalmartData = async () => {
             try {
                 const token = localStorage.getItem('token');
-                if (!token) return;
+                if (!token) throw new Error('No token found. Please log in.');
 
-                const response = await fetch('/api/shopify/data', {
+                const response = await fetch('/api/walmart/data', {
                     method: 'GET',
                     headers: { Authorization: `Bearer ${token}` },
                 });
 
                 if (!response.ok) {
-                    setSources([]);
-                    return;
+                    throw new Error(`Failed to fetch Walmart data: ${response.statusText}`);
                 }
 
                 const data = await response.json();
-                const formattedSources = data.shopifyData.map((entry) => ({
-                    id: entry._id,
-                    name: entry.shopifyUrl.split('.myshopify.com')[0],
-                    marketplace: 'Shopify',
-                    url: entry.shopifyUrl,
-                    token: entry.adminAccessToken,
-                    targetMarketplaces: [], // Placeholder for targeted marketplaces
-                }));
-
-                setSources(formattedSources);
+                setSources(data.walmartData || []);
+                setStatusMessage('');
             } catch (err) {
-                console.error('Error fetching sources:', err);
+                console.error('Error fetching Walmart data:', err.message);
+                setStatusMessage('Failed to fetch Walmart data. Please try again.');
             }
         };
 
-        fetchSources();
+        fetchWalmartData();
     }, []);
 
-    const handleAddSourceClick = () => {
-        setModalType('addSource');
-        setShowModal(true);
-    };
-
-    const handleAddTargetClick = (source) => {
-        setSelectedSource(source);
+    const handleAddTargetClick = () => {
         setModalType('addTarget');
+        setActiveTarget('Walmart');
         setShowModal(true);
-    };
-
-    const handleSettingsClick = (source) => {
-        setSelectedSource(source);
-        setModalType('settings');
-        setShowModal(true);
-    };
-
-    const handleMarketplaceSelection = (marketplace) => {
-        if (marketplace === 'Walmart') {
-            setActiveTarget(marketplace);
-        } else {
-            if (selectedSource) {
-                setSources((prev) =>
-                    prev.map((source) =>
-                        source.id === selectedSource.id
-                            ? { ...source, targetMarketplaces: [...source.targetMarketplaces, marketplace] }
-                            : source
-                    )
-                );
-            }
-            setShowModal(false);
-        }
     };
 
     const handleSaveWalmartCredentials = async () => {
-        setStatusMessage('Saving Walmart credentials...');
+        setIsLoading(true);
+        setStatusMessage('Connecting to Walmart...');
         try {
             const token = localStorage.getItem('token');
             if (!token) throw new Error('User is not authenticated.');
@@ -97,47 +61,27 @@ const Channels = () => {
                     Authorization: `Bearer ${token}`,
                 },
                 body: JSON.stringify({
-                    shopifySourceId: selectedSource.id,
-                    clientId: clientId.trim(),
+                    walmartClientId: walmartClientId.trim(),
                     clientSecret: clientSecret.trim(),
                 }),
             });
 
             if (!response.ok) {
                 const errorText = await response.text();
-                throw new Error(`Error saving Walmart credentials: ${errorText}`);
+                throw new Error(`Error connecting to Walmart: ${errorText}`);
             }
 
-            setSources((prev) =>
-                prev.map((source) =>
-                    source.id === selectedSource.id
-                        ? { ...source, targetMarketplaces: [...source.targetMarketplaces, 'Walmart'] }
-                        : source
-                )
-            );
-            setStatusMessage('Walmart credentials saved successfully!');
+            const savedData = await response.json();
+            setSources((prev) => [...prev, savedData]);
+            setStatusMessage('Successfully connected to Walmart!');
             setShowModal(false);
-            setClientId('');
+            setWalmartClientId('');
             setClientSecret('');
         } catch (error) {
-            setStatusMessage(`Failed to save credentials: ${error.message}`);
-        }
-    };
-
-    const handleDeleteAccount = async (source) => {
-        try {
-            const response = await fetch(`/api/shopify/delete/${source.id}`, {
-                method: 'DELETE',
-            });
-
-            if (!response.ok) {
-                throw new Error('Failed to delete account');
-            }
-
-            setSources((prev) => prev.filter((item) => item.id !== source.id));
-            setShowModal(false);
-        } catch (error) {
-            console.error(`Error deleting account: ${error.message}`);
+            console.error('Error connecting to Walmart:', error.message);
+            setStatusMessage(`Failed to connect: ${error.message}`);
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -149,28 +93,15 @@ const Channels = () => {
                     <ClientProfile name="Jane Doe" clientId="98765" imageUrl="https://via.placeholder.com/100" />
                     <h2 className="section-title">Channels</h2>
                     <div className="source-grid">
-                        <div className="add-source-box" onClick={handleAddSourceClick}>
-                            <h4>Add Source</h4>
-                        </div>
-                        {sources.map((source) => (
-                            <div key={source.id} className="source-item">
+                        <button className="add-target-button" onClick={handleAddTargetClick}>
+                            Add Target
+                        </button>
+                        {sources.map((source, index) => (
+                            <div key={index} className="source-item">
                                 <div className="source-content">
-                                    <span className="source-name">{source.name}</span>
+                                    <span className="source-name">Walmart Client ID: {source.walmartClientId}</span>
                                 </div>
-                                <p className="target-status">
-                                    {source.targetMarketplaces.length === 0
-                                        ? 'No Targeted Marketplace'
-                                        : `Targeted: ${source.targetMarketplaces.join(', ')}`}
-                                </p>
-                                <div className="source-buttons-horizontal">
-                                    <button className="add-target-button" onClick={() => handleAddTargetClick(source)}>
-                                        Add Target
-                                    </button>
-                                    <button className="settings-button" onClick={() => handleSettingsClick(source)}>
-                                        Settings
-                                    </button>
-                                    <span className="status-text">Status: Active</span>
-                                </div>
+                                <p className="target-status">User Client ID: {source.clientId}</p>
                             </div>
                         ))}
                     </div>
@@ -179,66 +110,36 @@ const Channels = () => {
                     {showModal && (
                         <div className="modal-overlay">
                             <div className="modal">
-                                {modalType === 'addSource' && (
+                                <h2>Connect to Walmart</h2>
+                                {activeTarget === 'Walmart' && (
                                     <>
-                                        <h2>Add New Source</h2>
-                                        <button className="source-button" onClick={() => setActiveTarget('Shopify')}>
-                                            Shopify
-                                        </button>
-                                    </>
-                                )}
-                                {modalType === 'addTarget' && (
-                                    <>
-                                        <h2>Select Target Marketplace</h2>
-                                        {activeTarget === 'Walmart' ? (
-                                            <>
-                                                <label>
-                                                    Client ID:
-                                                    <input
-                                                        type="text"
-                                                        value={clientId}
-                                                        onChange={(e) => setClientId(e.target.value)}
-                                                        placeholder="Enter Walmart Client ID"
-                                                        className="input-field"
-                                                    />
-                                                </label>
-                                                <label>
-                                                    Client Secret:
-                                                    <input
-                                                        type="password"
-                                                        value={clientSecret}
-                                                        onChange={(e) => setClientSecret(e.target.value)}
-                                                        placeholder="Enter Walmart Client Secret"
-                                                        className="input-field"
-                                                    />
-                                                </label>
-                                                <button
-                                                    className="connect-button"
-                                                    onClick={handleSaveWalmartCredentials}
-                                                >
-                                                    Save
-                                                </button>
-                                            </>
-                                        ) : (
-                                            <div className="source-buttons-horizontal">
-                                                <button onClick={() => handleMarketplaceSelection('eBay')}>eBay</button>
-                                                <button onClick={() => handleMarketplaceSelection('Walmart')}>
-                                                    Walmart
-                                                </button>
-                                                <button onClick={() => handleMarketplaceSelection('Amazon')}>Amazon</button>
-                                            </div>
-                                        )}
-                                    </>
-                                )}
-                                {modalType === 'settings' && selectedSource && (
-                                    <>
-                                        <h2>Account Settings</h2>
-                                        <p>Store URL: {selectedSource.url}</p>
+                                        {statusMessage && <p className="status-message">{statusMessage}</p>}
+                                        <label>
+                                            Walmart Client ID:
+                                            <input
+                                                type="text"
+                                                value={walmartClientId}
+                                                onChange={(e) => setWalmartClientId(e.target.value)}
+                                                placeholder="Enter Walmart Client ID"
+                                                className="input-field"
+                                            />
+                                        </label>
+                                        <label>
+                                            Client Secret:
+                                            <input
+                                                type="password"
+                                                value={clientSecret}
+                                                onChange={(e) => setClientSecret(e.target.value)}
+                                                placeholder="Enter Walmart Client Secret"
+                                                className="input-field"
+                                            />
+                                        </label>
                                         <button
-                                            className="delete-button"
-                                            onClick={() => handleDeleteAccount(selectedSource)}
+                                            className="connect-button"
+                                            onClick={handleSaveWalmartCredentials}
+                                            disabled={isLoading}
                                         >
-                                            Delete Account
+                                            {isLoading ? 'Connecting...' : 'Connect'}
                                         </button>
                                     </>
                                 )}

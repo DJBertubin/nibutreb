@@ -23,21 +23,21 @@ export default async function handler(req, res) {
         const token = authorization.split(' ')[1];
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-        const clientId = decoded.clientId;
+        const linkedToClientId = decoded.clientId;
 
-        if (!clientId) {
+        if (!linkedToClientId) {
             console.error('Missing clientId in token.');
             return res.status(401).json({ error: 'Invalid or missing clientId in token.' });
         }
 
-        const { clientId: walmartClientId, clientSecret, sourceId } = req.body;
+        const { clientId: walmartClientId, clientSecret } = req.body;
 
-        if (!walmartClientId || !clientSecret || !sourceId) {
+        if (!walmartClientId || !clientSecret) {
             return res.status(400).json({ error: 'Missing required fields' });
         }
 
-        // Check if Walmart data for the source already exists
-        const existingData = await WalmartData.findOne({ sourceId });
+        // Check if Walmart data for the client already exists
+        const existingData = await WalmartData.findOne({ linkedToClientId });
 
         if (existingData) {
             // Update the existing data
@@ -50,8 +50,7 @@ export default async function handler(req, res) {
             const walmartData = new WalmartData({
                 clientId: walmartClientId,
                 clientSecret,
-                sourceId,
-                linkedToClientId: clientId,
+                linkedToClientId,
                 createdAt: new Date(),
             });
             await walmartData.save();
