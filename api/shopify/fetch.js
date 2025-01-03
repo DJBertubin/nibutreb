@@ -53,19 +53,25 @@ export default async function handler(req, res) {
 
         const shopifyData = await response.json();
 
-        // Extract necessary data and structure it for the response
-        const formattedProducts = shopifyData.products.map((product) => {
-            const variant = product.variants[0]; // Using the first variant as default
-            return {
-                id: product.id,
-                title: product.title,
-                price: variant ? variant.price : 'N/A',
-                sku: variant ? variant.sku : 'N/A',
-                inventory: variant ? variant.inventory_quantity : 'N/A',
-                created_at: product.created_at,
-                sourceCategory: product.product_type || 'N/A', // Product type/category from Shopify
-                image: variant && variant.image ? variant.image.src : product.image ? product.image.src : '', // Variant image or fallback to main product image
-            };
+        // Format data to include all product variants
+        const formattedProducts = shopifyData.products.flatMap((product) => {
+            return product.variants.map((variant) => {
+                // Find the image associated with the variant using image_id or variant_ids
+                let variantImage = product.images.find((img) => img.id === variant.image_id) || 
+                                   product.images.find((img) => img.variant_ids.includes(variant.id));
+
+                return {
+                    id: variant.id,  // Unique variant ID
+                    product_id: product.id,  // Product ID for reference
+                    title: `${product.title} (${variant.title})`,  // Show variant name
+                    price: variant.price,
+                    sku: variant.sku,
+                    inventory: variant.inventory_quantity,
+                    created_at: product.created_at,
+                    sourceCategory: product.product_type || 'N/A',  // Product type/category from Shopify
+                    image: variantImage ? variantImage.src : product.image ? product.image.src : '',  // Variant image or fallback
+                };
+            });
         });
 
         // Save formatted Shopify data to the database
