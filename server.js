@@ -174,7 +174,12 @@ app.post('/api/shopify/fetch', async (req, res) => {
 
         const updatedData = await ShopifyData.findOneAndUpdate(
             { clientId, shopifyUrl: storeUrl.trim() },
-            { shopifyData, shopifyToken: adminAccessToken, lastUpdated: new Date() },
+            {
+                shopifyData,
+                shopifyToken: adminAccessToken,
+                lastUpdated: new Date(),
+                targetMarketplaces: [],
+            },
             { upsert: true, new: true }
         );
 
