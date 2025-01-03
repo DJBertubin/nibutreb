@@ -26,12 +26,17 @@ const ProductList = ({ products }) => {
 
     // Helper function to get the correct image URL
     const getImageUrl = (product) => {
+        if (product.image) {
+            return product.image; // If the image URL is already passed, return it
+        }
+
         if (product.image_id) {
             // Find the image that matches the image_id
             const variantImage = product.images?.find((img) => img.id === product.image_id);
             if (variantImage) return variantImage.src;
         }
-        // If no specific variant image, return the first image in the product's images array
+
+        // Fallback to the first image in the product's images array
         return product.images?.[0]?.src || 'https://via.placeholder.com/50';
     };
 
@@ -73,13 +78,9 @@ const ProductList = ({ products }) => {
                                     </td>
                                     <td className="status-column">
                                         {product.syncStatus?.toLowerCase() === 'synced' ? (
-                                            <span className="status-synced">
-                                                &#x2714; Synced
-                                            </span>
+                                            <span className="status-synced">&#x2714; Synced</span>
                                         ) : (
-                                            <span className="status-not-synced">
-                                                &#x2716; Not Synced
-                                            </span>
+                                            <span className="status-not-synced">&#x2716; Not Synced</span>
                                         )}
                                     </td>
                                     <td className="product-details">
@@ -90,11 +91,10 @@ const ProductList = ({ products }) => {
                                             onError={(e) => (e.target.src = 'https://via.placeholder.com/50')}
                                         />
                                         <div className="product-info">
-                                            <strong
-                                                className="product-title"
-                                                title={product.title || 'N/A'}
-                                            >
-                                                {product.title || 'N/A'}
+                                            <strong className="product-title" title={product.title || 'N/A'}>
+                                                {product.title?.length > 80
+                                                    ? `${product.title.substring(0, 77)}...`
+                                                    : product.title || 'N/A'}
                                             </strong>
                                             <div className="sku">SKU: {product.sku || 'N/A'}</div>
                                         </div>

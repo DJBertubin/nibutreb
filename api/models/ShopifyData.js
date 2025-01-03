@@ -7,6 +7,7 @@ const VariantSchema = new mongoose.Schema({
     price: { type: String, required: true }, // Variant price
     sku: { type: String, required: true }, // SKU for the variant
     inventory: { type: Number, required: true }, // Inventory count
+    image_id: { type: Number }, // Image ID for variant-specific image
     image: { type: String, default: '' }, // Image URL for the variant
 });
 
@@ -20,14 +21,13 @@ const ProductSchema = new mongoose.Schema({
 });
 
 const ShopifyDataSchema = new mongoose.Schema({
-    clientId: { type: String, required: true, index: true }, // Link to the user's clientId
+    clientId: { type: String, required: true, index: true },
     shopifyUrl: { type: String, required: true },
     shopifyToken: { type: String, required: true },
-    products: [ProductSchema], // Store all products as an array
-    createdAt: { type: Date, default: Date.now }, // Timestamp for tracking creation
-    updatedAt: { type: Date, default: Date.now }, // Timestamp for the last data update
-    lastUpdated: { type: Date, default: Date.now }, // Timestamp for the last successful fetch
+    products: [ProductSchema],
+    createdAt: { type: Date, default: Date.now },
+    updatedAt: { type: Date, default: Date.now },
+    lastUpdated: { type: Date, default: Date.now },
 });
 
-module.exports =
-    mongoose.models.ShopifyData || mongoose.model('ShopifyData', ShopifyDataSchema);
+module.exports = mongoose.models.ShopifyData || mongoose.model('ShopifyData', ShopifyDataSchema);

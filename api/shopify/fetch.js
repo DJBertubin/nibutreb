@@ -53,12 +53,12 @@ export default async function handler(req, res) {
 
         const shopifyData = await response.json();
 
-        // Format data to include all product variants
+        // Format data to include all product variants with correct image mapping
         const formattedProducts = shopifyData.products.flatMap((product) => {
             return product.variants.map((variant) => {
                 // Find the image associated with the variant using image_id or variant_ids
                 let variantImage = product.images.find((img) => img.id === variant.image_id) || 
-                                   product.images.find((img) => img.variant_ids.includes(variant.id));
+                                   product.images.find((img) => img.variant_ids?.includes(variant.id));
 
                 if (!variantImage && product.images.length > 0) {
                     // If no variant-specific image, fallback to the first product image
@@ -68,28 +68,30 @@ export default async function handler(req, res) {
                 return {
                     id: variant.id,  // Unique variant ID
                     product_id: product.id,  // Product ID for reference
-                    title: `${product.title} (${variant.title})`,  // Show variant name
-                    price: variant.price,
-                    sku: variant.sku,
-                    inventory: variant.inventory_quantity,
+                    title: `${product.title} (${variant.title})`,  // Show variant title
+                    price: variant.price || '0.00',
+                    sku: variant.sku || 'N/A',
+                    inventory: variant.inventory_quantity || 0,
                     created_at: product.created_at,
-                    sourceCategory: product.product_type || 'N/A',  // Product type/category from Shopify
+                    sourceCategory: product.product_type || 'N/A',  // Product type/category
                     image: variantImage ? variantImage.src : 'https://via.placeholder.com/50',  // Variant image or fallback
                 };
             });
         });
 
         // Save formatted Shopify data to the database
-        const newShopifyData = new ShopifyData({
-            clientId, // Link to logged-in user's clientId
-            shopifyUrl: trimmedStoreUrl,
-            shopifyToken: adminAccessToken,
-            shopifyData: formattedProducts, // Store the formatted Shopify data
-        });
+        const updatedShopifyData = await ShopifyData.findOneAndUpdate(
+            { clientId, shopifyUrl: trimmedStoreUrl },
+            {
+                shopifyUrl: trimmedStoreUrl,
+                shopifyToken: adminAccessToken,
+                products: formattedProducts,
+                lastUpdated: new Date(),
+            },
+            { upsert: true, new: true }
+        );
 
-        await newShopifyData.save();
-
-        console.log('New Shopify Data Saved:', newShopifyData);
+        console.log('Shopify Data Saved:', updatedShopifyData);
 
         res.status(201).json({
             message: 'Shopify data fetched and stored successfully.',
