@@ -1,3 +1,5 @@
+// utils/sendToWalmart.js
+
 import fetch from 'node-fetch';
 import crypto from 'crypto';
 
@@ -33,6 +35,8 @@ export async function sendItemToWalmart(itemData) {
         const accessToken = await getWalmartAccessToken();
         const requestId = crypto.randomUUID(); // Unique ID for the request
 
+        // Walmart API requires multipart/form-data if it's a zip file (e.g., FITMENT_ACES/PIES)
+        // However, for MP_ITEM JSON payloads, application/json is sufficient.
         const response = await fetch(`${WALMART_API_URL}?feedType=MP_ITEM`, {
             method: 'POST',
             headers: {
@@ -42,17 +46,19 @@ export async function sendItemToWalmart(itemData) {
                 'WM_SVC.NAME': 'Walmart Item Export',
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ items: itemData }),
+            body: JSON.stringify({ items: itemData }), // Send the items as JSON
         });
 
         if (!response.ok) {
             const errorText = await response.text();
+            console.error('Walmart API Error:', errorText);
             return { success: false, message: errorText };
         }
 
         const result = await response.json();
         return { success: true, message: 'Items successfully sent to Walmart', feedId: result.feedId };
     } catch (error) {
+        console.error('Error sending items to Walmart:', error.message);
         return { success: false, message: error.message };
     }
 }
