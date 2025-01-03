@@ -24,8 +24,15 @@ const ProductList = ({ products }) => {
         );
     };
 
-    const truncateText = (text, maxLength) => {
-        return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
+    // Helper function to get the correct image URL
+    const getImageUrl = (product) => {
+        if (product.image_id) {
+            // Find the image that matches the image_id
+            const variantImage = product.images?.find((img) => img.id === product.image_id);
+            if (variantImage) return variantImage.src;
+        }
+        // If no specific variant image, return the first image in the product's images array
+        return product.images?.[0]?.src || 'https://via.placeholder.com/50';
     };
 
     return (
@@ -47,9 +54,7 @@ const ProductList = ({ products }) => {
                 <tbody>
                     {products.length > 0 ? (
                         currentProducts.map((product) => {
-                            const imageUrl = product.image || 'https://via.placeholder.com/50';
-                            
-                            console.log('Product Image URL:', imageUrl); // Debugging to ensure the image URL
+                            const imageUrl = getImageUrl(product); // Get the correct image URL
 
                             return (
                                 <tr key={product.id} className="product-row">
@@ -89,17 +94,17 @@ const ProductList = ({ products }) => {
                                                 className="product-title"
                                                 title={product.title || 'N/A'}
                                             >
-                                                {truncateText(product.title || 'N/A', 80)}
+                                                {product.title || 'N/A'}
                                             </strong>
                                             <div className="sku">SKU: {product.sku || 'N/A'}</div>
                                         </div>
                                     </td>
                                     <td className="category-column">
                                         <div className="source-category">
-                                            <strong>Source:</strong> {truncateText(product.sourceCategory || 'N/A', 40)}
+                                            <strong>Source:</strong> {product.sourceCategory || 'N/A'}
                                         </div>
                                         <div className="target-category">
-                                            <strong>Target:</strong> {truncateText(product.targetCategory || 'N/A', 40)}
+                                            <strong>Target:</strong> {product.targetCategory || 'N/A'}
                                         </div>
                                     </td>
                                     <td>${product.price || 'N/A'}</td>

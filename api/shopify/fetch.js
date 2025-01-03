@@ -60,6 +60,11 @@ export default async function handler(req, res) {
                 let variantImage = product.images.find((img) => img.id === variant.image_id) || 
                                    product.images.find((img) => img.variant_ids.includes(variant.id));
 
+                if (!variantImage && product.images.length > 0) {
+                    // If no variant-specific image, fallback to the first product image
+                    variantImage = product.images[0];
+                }
+
                 return {
                     id: variant.id,  // Unique variant ID
                     product_id: product.id,  // Product ID for reference
@@ -69,7 +74,7 @@ export default async function handler(req, res) {
                     inventory: variant.inventory_quantity,
                     created_at: product.created_at,
                     sourceCategory: product.product_type || 'N/A',  // Product type/category from Shopify
-                    image: variantImage ? variantImage.src : product.image ? product.image.src : '',  // Variant image or fallback
+                    image: variantImage ? variantImage.src : 'https://via.placeholder.com/50',  // Variant image or fallback
                 };
             });
         });
