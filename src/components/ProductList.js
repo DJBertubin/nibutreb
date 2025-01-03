@@ -47,7 +47,7 @@ const ProductList = ({ products }) => {
                 <tbody>
                     {products.length > 0 ? (
                         currentProducts.map((product) => (
-                            <tr key={product.id}>
+                            <tr key={product.id} className="product-row">
                                 <td>
                                     <input
                                         type="checkbox"
@@ -55,12 +55,12 @@ const ProductList = ({ products }) => {
                                         onChange={() => handleSelectProduct(product.id)}
                                     />
                                 </td>
-                                {/* Actions in horizontal format */}
                                 <td className="actions-column">
-                                    <button className="btn-export">Export</button>
-                                    <button className="btn-edit">Edit</button>
+                                    <div className="button-group">
+                                        <button className="btn-export">Export</button>
+                                        <button className="btn-edit">Edit</button>
+                                    </div>
                                 </td>
-                                {/* Status with icons */}
                                 <td className="status-column">
                                     {product.syncStatus?.toLowerCase() === 'synced' ? (
                                         <span className="status-synced">
@@ -72,7 +72,6 @@ const ProductList = ({ products }) => {
                                         </span>
                                     )}
                                 </td>
-                                {/* Product details */}
                                 <td className="product-details">
                                     <img
                                         src={product.image || '/placeholder.png'}
@@ -81,19 +80,21 @@ const ProductList = ({ products }) => {
                                         onError={(e) => (e.target.src = '/placeholder.png')}
                                     />
                                     <div className="product-info">
-                                        <strong title={product.title || 'N/A'}>
-                                            {truncateText(product.title || 'N/A', 40)}
+                                        <strong
+                                            className="product-title"
+                                            title={product.title || 'N/A'}
+                                        >
+                                            {truncateText(product.title || 'N/A', 80)}
                                         </strong>
                                         <div className="sku">SKU: {product.sku || 'N/A'}</div>
                                     </div>
                                 </td>
-                                {/* Category details */}
                                 <td className="category-column">
                                     <div className="source-category">
-                                        <strong>Source:</strong> {truncateText(product.sourceCategory || 'N/A', 30)}
+                                        <strong>Source:</strong> {truncateText(product.sourceCategory || 'N/A', 40)}
                                     </div>
                                     <div className="target-category">
-                                        <strong>Target:</strong> {truncateText(product.targetCategory || 'N/A', 30)}
+                                        <strong>Target:</strong> {truncateText(product.targetCategory || 'N/A', 40)}
                                     </div>
                                 </td>
                                 <td>${product.price || 'N/A'}</td>
