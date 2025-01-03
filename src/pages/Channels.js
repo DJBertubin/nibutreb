@@ -343,4 +343,28 @@ const Channels = () => {
                                             </>
                                         )}
                                     </>
-                                ) : modalType ===
+                                ) : modalType === 'settings' ? (
+                                    <>
+                                        <h2>Account Settings</h2>
+                                        <p>Store URL: {selectedSource?.url}</p>
+                                        <button
+                                            className="delete-button"
+                                            onClick={() => handleDeleteAccount(selectedSource)}
+                                        >
+                                            Delete Account
+                                        </button>
+                                    </>
+                                ) : null}
+                                <button className="close-modal" onClick={() => setShowModal(false)}>
+                                    Close
+                                </button>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+};
+
+export default Channels;
