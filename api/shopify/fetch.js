@@ -53,12 +53,27 @@ export default async function handler(req, res) {
 
         const shopifyData = await response.json();
 
-        // Save Shopify data to the `shopifydatas` collection
+        // Extract necessary data and structure it for the response
+        const formattedProducts = shopifyData.products.map((product) => {
+            const variant = product.variants[0]; // Using the first variant as default
+            return {
+                id: product.id,
+                title: product.title,
+                price: variant ? variant.price : 'N/A',
+                sku: variant ? variant.sku : 'N/A',
+                inventory: variant ? variant.inventory_quantity : 'N/A',
+                created_at: product.created_at,
+                sourceCategory: product.product_type || 'N/A', // Product type/category from Shopify
+                image: variant && variant.image ? variant.image.src : product.image ? product.image.src : '', // Variant image or fallback to main product image
+            };
+        });
+
+        // Save formatted Shopify data to the database
         const newShopifyData = new ShopifyData({
             clientId, // Link to logged-in user's clientId
             shopifyUrl: trimmedStoreUrl,
             shopifyToken: adminAccessToken,
-            shopifyData, // Store the fetched Shopify data
+            shopifyData: formattedProducts, // Store the formatted Shopify data
         });
 
         await newShopifyData.save();
@@ -67,7 +82,7 @@ export default async function handler(req, res) {
 
         res.status(201).json({
             message: 'Shopify data fetched and stored successfully.',
-            shopifyData: newShopifyData.shopifyData,
+            shopifyData: formattedProducts,
         });
     } catch (err) {
         console.error('Error saving Shopify data:', err.message);
