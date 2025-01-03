@@ -32,8 +32,10 @@ const ProductList = ({ products }) => {
                 <thead>
                     <tr>
                         <th>Select</th>
-                        <th>SKU</th>
-                        <th>Product Name</th>
+                        <th>Actions</th>
+                        <th>Status</th>
+                        <th>Product</th>
+                        <th>Category</th>
                         <th>Price</th>
                         <th>Inventory</th>
                         <th>Created Date</th>
@@ -50,8 +52,40 @@ const ProductList = ({ products }) => {
                                         onChange={() => handleSelectProduct(product.id)}
                                     />
                                 </td>
-                                <td>{product.sku || 'N/A'}</td>
-                                <td>{product.title || 'N/A'}</td>
+                                {/* Actions (Export and Edit) */}
+                                <td>
+                                    <button className="btn-export">Export</button>
+                                    <button className="btn-edit">Edit</button>
+                                </td>
+                                {/* Status */}
+                                <td>
+                                    <span
+                                        className={`status-badge status-${product.syncStatus ? product.syncStatus.toLowerCase() : 'not-synced'}`}
+                                    >
+                                        {product.syncStatus || 'Not Synced'}
+                                    </span>
+                                </td>
+                                {/* Product (Image, Name, SKU) */}
+                                <td className="product-details">
+                                    <img
+                                        src={product.image || 'placeholder.png'}
+                                        alt={product.title || 'Product Image'}
+                                        className="product-image"
+                                    />
+                                    <div className="product-info">
+                                        <strong>{product.title || 'N/A'}</strong>
+                                        <div className="sku">SKU: {product.sku || 'N/A'}</div>
+                                    </div>
+                                </td>
+                                {/* Category (Source and Target) */}
+                                <td className="category-column">
+                                    <div className="source-category">
+                                        <strong>Source:</strong> {product.sourceCategory || 'N/A'}
+                                    </div>
+                                    <div className="target-category">
+                                        <strong>Target:</strong> {product.targetCategory || 'N/A'}
+                                    </div>
+                                </td>
                                 <td>${product.price || 'N/A'}</td>
                                 <td>{product.inventory || 'N/A'}</td>
                                 <td>{new Date(product.created_at).toLocaleDateString()}</td>
@@ -59,7 +93,7 @@ const ProductList = ({ products }) => {
                         ))
                     ) : (
                         <tr>
-                            <td colSpan="6" style={{ textAlign: 'center' }}>
+                            <td colSpan="8" style={{ textAlign: 'center' }}>
                                 No products fetched yet. Please fetch from Shopify.
                             </td>
                         </tr>
