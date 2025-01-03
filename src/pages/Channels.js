@@ -12,29 +12,30 @@ const Channels = () => {
     const [showModal, setShowModal] = useState(false);
     const [modalType, setModalType] = useState(''); // 'addSource' or 'addTarget'
     const [selectedSource, setSelectedSource] = useState(null);
-    const [activeSource, setActiveSource] = useState(''); // For "Add Source" modal
-    const [targetMarketplace, setTargetMarketplace] = useState(''); // For "Add Target" modal
+    const [activeSource, setActiveSource] = useState('');
+    const [targetMarketplace, setTargetMarketplace] = useState('');
     const [statusMessage, setStatusMessage] = useState('');
 
+    // **Fetch sources and Walmart data**
     useEffect(() => {
         const fetchSources = async () => {
             try {
                 const token = localStorage.getItem('token');
                 if (!token) return;
 
-                // Fetch Shopify sources
-                const response = await fetch('/api/shopify/data', {
+                // Fetch Shopify data
+                const shopifyResponse = await fetch('/api/shopify/data', {
                     method: 'GET',
                     headers: { Authorization: `Bearer ${token}` },
                 });
 
-                if (!response.ok) {
+                if (!shopifyResponse.ok) {
                     setSources([]);
                     return;
                 }
 
-                const data = await response.json();
-                const formattedSources = data.shopifyData.map((entry) => ({
+                const shopifyData = await shopifyResponse.json();
+                const formattedSources = shopifyData.shopifyData.map((entry) => ({
                     id: entry._id,
                     clientId: entry.clientId,
                     name: entry.shopifyUrl.split('.myshopify.com')[0],
@@ -44,9 +45,26 @@ const Channels = () => {
                     targetMarketplaces: entry.targetMarketplaces || [],
                 }));
 
+                // Fetch Walmart credentials
+                const walmartResponse = await fetch('/api/walmart/credentials', {
+                    method: 'GET',
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+
+                if (walmartResponse.ok) {
+                    const walmartData = await walmartResponse.json();
+
+                    // Add Walmart to the target marketplaces if credentials exist
+                    formattedSources.forEach((source) => {
+                        if (!source.targetMarketplaces.includes('Walmart')) {
+                            source.targetMarketplaces.push('Walmart');
+                        }
+                    });
+                }
+
                 setSources(formattedSources);
             } catch (err) {
-                console.error('Error fetching Shopify sources:', err);
+                console.error('Error fetching sources or Walmart data:', err);
             }
         };
 
@@ -55,14 +73,14 @@ const Channels = () => {
 
     const handleAddSourceClick = () => {
         setModalType('addSource');
-        setActiveSource(''); // Reset source selection for add source
+        setActiveSource('');
         setShowModal(true);
     };
 
     const handleAddTargetClick = (source) => {
         setSelectedSource(source);
-        setModalType('addTarget'); // Open "Add Target" modal
-        setTargetMarketplace(''); // Reset target marketplace selection
+        setModalType('addTarget');
+        setTargetMarketplace('');
         setShowModal(true);
     };
 
@@ -73,11 +91,11 @@ const Channels = () => {
     };
 
     const handleSourceSelection = (source) => {
-        setActiveSource(source); // Track which source is selected (Shopify, Walmart, Amazon)
+        setActiveSource(source);
     };
 
     const handleTargetSelection = (marketplace) => {
-        setTargetMarketplace(marketplace); // Track the target marketplace selected (Walmart, eBay, Amazon)
+        setTargetMarketplace(marketplace);
     };
 
     const handleShopifyConnect = async () => {
@@ -287,16 +305,6 @@ const Channels = () => {
                                                 <p>{statusMessage}</p>
                                             </div>
                                         )}
-                                        {activeSource === 'Walmart' && (
-                                            <div className="walmart-integration">
-                                                <p>Walmart source integration coming soon!</p>
-                                            </div>
-                                        )}
-                                        {activeSource === 'Amazon' && (
-                                            <div className="amazon-integration">
-                                                <p>Amazon integration coming soon!</p>
-                                            </div>
-                                        )}
                                     </>
                                 ) : modalType === 'addTarget' ? (
                                     <>
@@ -335,12 +343,6 @@ const Channels = () => {
                                                 </button>
                                                 <p>{statusMessage}</p>
                                             </div>
-                                        )}
-                                        {targetMarketplace !== 'Walmart' && targetMarketplace && (
-                                            <>
-                                                <p>Target marketplace "{targetMarketplace}" added successfully!</p>
-                                                <button onClick={() => setShowModal(false)}>Close</button>
-                                            </>
                                         )}
                                     </>
                                 ) : modalType === 'settings' ? (
