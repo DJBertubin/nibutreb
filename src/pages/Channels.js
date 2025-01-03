@@ -22,6 +22,7 @@ const Channels = () => {
                 const token = localStorage.getItem('token');
                 if (!token) return;
 
+                // Fetch Shopify sources
                 const response = await fetch('/api/shopify/data', {
                     method: 'GET',
                     headers: { Authorization: `Bearer ${token}` },
@@ -35,7 +36,7 @@ const Channels = () => {
                 const data = await response.json();
                 const formattedSources = data.shopifyData.map((entry) => ({
                     id: entry._id,
-                    clientId: entry.clientId,  // Ensure clientId is available
+                    clientId: entry.clientId,
                     name: entry.shopifyUrl.split('.myshopify.com')[0],
                     marketplace: 'Shopify',
                     url: entry.shopifyUrl,
@@ -45,11 +46,37 @@ const Channels = () => {
 
                 setSources(formattedSources);
             } catch (err) {
-                console.error('Error fetching sources:', err);
+                console.error('Error fetching Shopify sources:', err);
+            }
+        };
+
+        const fetchLinkedSources = async () => {
+            try {
+                const token = localStorage.getItem('token');
+                if (!token) return;
+
+                const response = await fetch('/api/walmart/linked-sources', {
+                    method: 'GET',
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    setSources((prev) =>
+                        prev.map((source) =>
+                            source.marketplace === 'Shopify'
+                                ? { ...source, targetMarketplaces: data.targetMarketplaces }
+                                : source
+                        )
+                    );
+                }
+            } catch (err) {
+                console.error('Error fetching Walmart linked sources:', err);
             }
         };
 
         fetchSources();
+        fetchLinkedSources(); // Fetch linked Walmart sources to show after refresh
     }, []);
 
     const handleAddSourceClick = () => {
@@ -91,7 +118,6 @@ const Channels = () => {
                 body: JSON.stringify({
                     walmartClientID: walmartClientID.trim(),
                     walmartClientSecret: walmartClientSecret.trim(),
-                    clientId: selectedSource?.clientId, // Include clientId from selected source
                 }),
             });
 
@@ -100,14 +126,15 @@ const Channels = () => {
                 throw new Error(`Walmart API Error: ${errorText}`);
             }
 
-            const updatedSources = sources.map((source) =>
-                source.id === selectedSource.id
-                    ? { ...source, targetMarketplaces: [...source.targetMarketplaces, 'Walmart'] }
-                    : source
+            setSources((prev) =>
+                prev.map((source) =>
+                    source.id === selectedSource.id
+                        ? { ...source, targetMarketplaces: [...source.targetMarketplaces, 'Walmart'] }
+                        : source
+                )
             );
 
-            setSources(updatedSources);
-            setShowModal(false); // Close modal
+            setShowModal(false);
             setWalmartClientID('');
             setWalmartClientSecret('');
             setStatusMessage('Successfully connected to Walmart as a target marketplace!');
