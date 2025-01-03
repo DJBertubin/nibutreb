@@ -46,62 +46,68 @@ const ProductList = ({ products }) => {
                 </thead>
                 <tbody>
                     {products.length > 0 ? (
-                        currentProducts.map((product) => (
-                            <tr key={product.id} className="product-row">
-                                <td>
-                                    <input
-                                        type="checkbox"
-                                        checked={selectedProducts.includes(product.id)}
-                                        onChange={() => handleSelectProduct(product.id)}
-                                    />
-                                </td>
-                                <td className="actions-column">
-                                    <div className="button-group">
-                                        <button className="btn-export">Export</button>
-                                        <button className="btn-edit">Edit</button>
-                                    </div>
-                                </td>
-                                <td className="status-column">
-                                    {product.syncStatus?.toLowerCase() === 'synced' ? (
-                                        <span className="status-synced">
-                                            &#x2714; Synced
-                                        </span>
-                                    ) : (
-                                        <span className="status-not-synced">
-                                            &#x2716; Not Synced
-                                        </span>
-                                    )}
-                                </td>
-                                <td className="product-details">
-                                    <img
-                                        src={product.image || 'https://via.placeholder.com/50'}
-                                        alt={product.title || 'Product'}
-                                        className="product-image"
-                                        onError={(e) => (e.target.src = 'https://via.placeholder.com/50')}
-                                    />
-                                    <div className="product-info">
-                                        <strong
-                                            className="product-title"
-                                            title={product.title || 'N/A'}
-                                        >
-                                            {truncateText(product.title || 'N/A', 80)}
-                                        </strong>
-                                        <div className="sku">SKU: {product.sku || 'N/A'}</div>
-                                    </div>
-                                </td>
-                                <td className="category-column">
-                                    <div className="source-category">
-                                        <strong>Source:</strong> {truncateText(product.sourceCategory || 'N/A', 40)}
-                                    </div>
-                                    <div className="target-category">
-                                        <strong>Target:</strong> {truncateText(product.targetCategory || 'N/A', 40)}
-                                    </div>
-                                </td>
-                                <td>${product.price || 'N/A'}</td>
-                                <td>{product.inventory || 'N/A'}</td>
-                                <td>{new Date(product.created_at).toLocaleDateString()}</td>
-                            </tr>
-                        ))
+                        currentProducts.map((product) => {
+                            const imageUrl = product.image || 'https://via.placeholder.com/50';
+                            
+                            console.log('Product Image URL:', imageUrl); // Debugging to ensure the image URL
+
+                            return (
+                                <tr key={product.id} className="product-row">
+                                    <td>
+                                        <input
+                                            type="checkbox"
+                                            checked={selectedProducts.includes(product.id)}
+                                            onChange={() => handleSelectProduct(product.id)}
+                                        />
+                                    </td>
+                                    <td className="actions-column">
+                                        <div className="button-group">
+                                            <button className="btn-export">Export</button>
+                                            <button className="btn-edit">Edit</button>
+                                        </div>
+                                    </td>
+                                    <td className="status-column">
+                                        {product.syncStatus?.toLowerCase() === 'synced' ? (
+                                            <span className="status-synced">
+                                                &#x2714; Synced
+                                            </span>
+                                        ) : (
+                                            <span className="status-not-synced">
+                                                &#x2716; Not Synced
+                                            </span>
+                                        )}
+                                    </td>
+                                    <td className="product-details">
+                                        <img
+                                            src={imageUrl}
+                                            alt={product.title || 'Product'}
+                                            className="product-image"
+                                            onError={(e) => (e.target.src = 'https://via.placeholder.com/50')}
+                                        />
+                                        <div className="product-info">
+                                            <strong
+                                                className="product-title"
+                                                title={product.title || 'N/A'}
+                                            >
+                                                {truncateText(product.title || 'N/A', 80)}
+                                            </strong>
+                                            <div className="sku">SKU: {product.sku || 'N/A'}</div>
+                                        </div>
+                                    </td>
+                                    <td className="category-column">
+                                        <div className="source-category">
+                                            <strong>Source:</strong> {truncateText(product.sourceCategory || 'N/A', 40)}
+                                        </div>
+                                        <div className="target-category">
+                                            <strong>Target:</strong> {truncateText(product.targetCategory || 'N/A', 40)}
+                                        </div>
+                                    </td>
+                                    <td>${product.price || 'N/A'}</td>
+                                    <td>{product.inventory || 'N/A'}</td>
+                                    <td>{new Date(product.created_at).toLocaleDateString()}</td>
+                                </tr>
+                            );
+                        })
                     ) : (
                         <tr>
                             <td colSpan="8" style={{ textAlign: 'center' }}>
