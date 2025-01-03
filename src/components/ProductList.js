@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import './ProductList.css';
 
-const ProductList = ({ products }) => {
+const ProductList = ({ products, jwtToken }) => {
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
     const [selectedProducts, setSelectedProducts] = useState([]);
+    const [isExporting, setIsExporting] = useState(false);
 
     const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
@@ -27,17 +28,45 @@ const ProductList = ({ products }) => {
     // Helper function to get the correct image URL
     const getImageUrl = (product) => {
         if (product.image) {
-            return product.image; // If the image URL is already passed, return it
+            return product.image;
         }
 
         if (product.image_id) {
-            // Find the image that matches the image_id
             const variantImage = product.images?.find((img) => img.id === product.image_id);
             if (variantImage) return variantImage.src;
         }
 
-        // Fallback to the first image in the product's images array
         return product.images?.[0]?.src || 'https://via.placeholder.com/50';
+    };
+
+    const handleExportToWalmart = async (product) => {
+        setIsExporting(true);
+        try {
+            const response = await fetch('/api/walmart/send', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${jwtToken}`, // Pass JWT token for authorization
+                },
+                body: JSON.stringify({
+                    products: [product], // Export a single product for now
+                    feedType: 'MP_ITEM', // Feed type for new Walmart items
+                }),
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                alert(`Successfully exported product ${product.sku} to Walmart! Feed ID: ${result.feedId}`);
+            } else {
+                alert(`Failed to export product ${product.sku}. Error: ${result.error || 'Unknown error'}`);
+            }
+        } catch (error) {
+            console.error('Error exporting to Walmart:', error);
+            alert(`Error exporting product ${product.sku}: ${error.message}`);
+        } finally {
+            setIsExporting(false);
+        }
     };
 
     return (
@@ -59,7 +88,7 @@ const ProductList = ({ products }) => {
                 <tbody>
                     {products.length > 0 ? (
                         currentProducts.map((product) => {
-                            const imageUrl = getImageUrl(product); // Get the correct image URL
+                            const imageUrl = getImageUrl(product);
 
                             return (
                                 <tr key={product.id} className="product-row">
@@ -72,7 +101,13 @@ const ProductList = ({ products }) => {
                                     </td>
                                     <td className="actions-column">
                                         <div className="button-group">
-                                            <button className="btn-export">Export</button>
+                                            <button
+                                                className="btn-export"
+                                                onClick={() => handleExportToWalmart(product)}
+                                                disabled={isExporting}
+                                            >
+                                                {isExporting ? 'Exporting...' : 'Export'}
+                                            </button>
                                             <button className="btn-edit">Edit</button>
                                         </div>
                                     </td>

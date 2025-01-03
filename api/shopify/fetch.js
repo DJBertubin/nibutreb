@@ -2,6 +2,7 @@ import mongoose from 'mongoose';
 import fetch from 'node-fetch';
 import jwt from 'jsonwebtoken';
 import ShopifyData from '../../models/ShopifyData';
+import { sendItemToWalmart } from '../utils/sendToWalmart'; // Import sendToWalmart function
 
 mongoose.connect(process.env.MONGO_URI, {
     useNewUrlParser: true,
@@ -14,7 +15,7 @@ export default async function handler(req, res) {
     }
 
     const { authorization } = req.headers;
-    const { storeUrl, adminAccessToken } = req.body;
+    const { storeUrl, adminAccessToken, exportToWalmart } = req.body; // Add exportToWalmart flag
 
     if (!authorization || !authorization.startsWith('Bearer ')) {
         return res.status(401).json({ error: 'Unauthorized. Token missing.' });
@@ -75,6 +76,7 @@ export default async function handler(req, res) {
                     created_at: product.created_at,
                     sourceCategory: product.product_type || 'N/A',  // Product type/category
                     image: variantImage ? variantImage.src : 'https://via.placeholder.com/50',  // Variant image or fallback
+                    description: product.body_html || '',  // Adding description for Walmart
                 };
             });
         });
@@ -92,6 +94,21 @@ export default async function handler(req, res) {
         );
 
         console.log('Shopify Data Saved:', updatedShopifyData);
+
+        // Export to Walmart if the flag is set
+        if (exportToWalmart) {
+            const walmartResponse = await sendItemToWalmart(formattedProducts);
+            if (!walmartResponse.success) {
+                return res.status(500).json({ error: `Walmart export failed: ${walmartResponse.message}` });
+            }
+
+            console.log('Items sent to Walmart successfully:', walmartResponse);
+            return res.status(201).json({
+                message: 'Shopify data fetched, stored, and sent to Walmart successfully.',
+                shopifyData: formattedProducts,
+                walmartFeedId: walmartResponse.feedId,
+            });
+        }
 
         res.status(201).json({
             message: 'Shopify data fetched and stored successfully.',
