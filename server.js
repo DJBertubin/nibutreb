@@ -27,7 +27,47 @@ mongoose
     .then(() => console.log('Connected to MongoDB Atlas'))
     .catch((err) => console.error('MongoDB connection error:', err));
 
-// Login Route
+// **Walmart Schema and Model**
+const walmartSchema = new mongoose.Schema({
+    walmartClientID: { type: String, required: true },  // Using "Walmart Client ID"
+    walmartClientSecret: { type: String, required: true },  // Using "Walmart Client Secret"
+    createdAt: { type: Date, default: Date.now },
+});
+const WalmartData = mongoose.model('WalmartData', walmartSchema, 'walmartdatas');
+
+// **Walmart API Route**: Store Walmart Client ID and Client Secret
+app.post('/api/walmart/credentials', async (req, res) => {
+    const { authorization } = req.headers;
+    const { walmartClientID, walmartClientSecret } = req.body;
+
+    if (!authorization || !authorization.startsWith('Bearer ')) {
+        return res.status(401).json({ error: 'Authorization token required.' });
+    }
+
+    if (!walmartClientID || !walmartClientSecret) {
+        return res.status(400).json({ error: 'Walmart Client ID and Walmart Client Secret are required.' });
+    }
+
+    try {
+        const token = authorization.split(' ')[1];
+        const decoded = jwt.verify(token, JWT_SECRET);
+        const clientId = decoded.clientId;
+
+        if (!clientId) {
+            return res.status(401).json({ error: 'Invalid or missing clientId in token.' });
+        }
+
+        const newWalmartData = new WalmartData({ walmartClientID, walmartClientSecret });
+        await newWalmartData.save(); // Save Walmart credentials to the database
+
+        res.status(201).json({ message: 'Walmart credentials saved successfully!' });
+    } catch (error) {
+        console.error('Error saving Walmart credentials:', error.message);
+        res.status(500).json({ error: 'Failed to save Walmart credentials', details: error.message });
+    }
+});
+
+// **Login Route**
 app.post('/api/login', async (req, res) => {
     const { username, password } = req.body;
 
@@ -59,7 +99,7 @@ app.post('/api/login', async (req, res) => {
     }
 });
 
-// Signup Route
+// **Signup Route**
 app.post('/api/signup', async (req, res) => {
     const { name, username, password, role } = req.body;
 
@@ -94,7 +134,7 @@ app.post('/api/signup', async (req, res) => {
     }
 });
 
-// Fetch Client Info Route
+// **Fetch Client Info Route**
 app.get('/api/client/info', async (req, res) => {
     const { authorization } = req.headers;
 
@@ -129,7 +169,7 @@ app.get('/api/client/info', async (req, res) => {
     }
 });
 
-// Shopify Fetch API Route
+// **Shopify Fetch API Route**
 app.post('/api/shopify/fetch', async (req, res) => {
     const { authorization } = req.headers;
     const { storeUrl, adminAccessToken } = req.body;
@@ -184,7 +224,7 @@ app.post('/api/shopify/fetch', async (req, res) => {
     }
 });
 
-// Periodic Shopify Data Fetch
+// **Periodic Shopify Data Fetch**
 const fetchShopifyDataPeriodically = async () => {
     try {
         const allEntries = await ShopifyData.find();
@@ -226,10 +266,10 @@ const fetchShopifyDataPeriodically = async () => {
     }
 };
 
-// Schedule periodic fetching every 10 minutes
+// **Schedule periodic fetching every 10 minutes**
 cron.schedule('*/10 * * * *', fetchShopifyDataPeriodically);
 
-// Fetch Shopify Data for Logged-In User
+// **Fetch Shopify Data for Logged-In User**
 app.get('/api/shopify/data', async (req, res) => {
     const { authorization } = req.headers;
 
@@ -262,10 +302,11 @@ app.get('/api/shopify/data', async (req, res) => {
     }
 });
 
-// Error Handling Middleware
+// **Error Handling Middleware**
 app.use((err, req, res, next) => {
     console.error('Server Error:', err.message);
     res.status(500).json({ error: 'Internal Server Error', details: err.message });
 });
 
+// **Export app**
 module.exports = app;
