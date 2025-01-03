@@ -6,7 +6,6 @@ const ProductList = ({ products }) => {
     const itemsPerPage = 10;
     const [selectedProducts, setSelectedProducts] = useState([]);
 
-    // Calculate pagination
     const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
     const currentProducts = products.slice(indexOfFirstItem, indexOfLastItem);
@@ -23,6 +22,10 @@ const ProductList = ({ products }) => {
                 ? prevSelected.filter((id) => id !== productId)
                 : [...prevSelected, productId]
         );
+    };
+
+    const truncateText = (text, maxLength) => {
+        return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
     };
 
     return (
@@ -52,38 +55,45 @@ const ProductList = ({ products }) => {
                                         onChange={() => handleSelectProduct(product.id)}
                                     />
                                 </td>
-                                {/* Actions (Export and Edit) */}
-                                <td>
+                                {/* Actions in horizontal format */}
+                                <td className="actions-column">
                                     <button className="btn-export">Export</button>
                                     <button className="btn-edit">Edit</button>
                                 </td>
-                                {/* Status */}
-                                <td>
-                                    <span
-                                        className={`status-badge status-${product.syncStatus ? product.syncStatus.toLowerCase() : 'not-synced'}`}
-                                    >
-                                        {product.syncStatus || 'Not Synced'}
-                                    </span>
+                                {/* Status with icons */}
+                                <td className="status-column">
+                                    {product.syncStatus?.toLowerCase() === 'synced' ? (
+                                        <span className="status-synced">
+                                            &#x2714; Synced
+                                        </span>
+                                    ) : (
+                                        <span className="status-not-synced">
+                                            &#x2716; Not Synced
+                                        </span>
+                                    )}
                                 </td>
-                                {/* Product (Image, Name, SKU) */}
+                                {/* Product details */}
                                 <td className="product-details">
                                     <img
-                                        src={product.image || 'placeholder.png'}
-                                        alt={product.title || 'Product Image'}
+                                        src={product.image || '/placeholder.png'}
+                                        alt={product.title || 'Product'}
                                         className="product-image"
+                                        onError={(e) => (e.target.src = '/placeholder.png')}
                                     />
                                     <div className="product-info">
-                                        <strong>{product.title || 'N/A'}</strong>
+                                        <strong title={product.title || 'N/A'}>
+                                            {truncateText(product.title || 'N/A', 40)}
+                                        </strong>
                                         <div className="sku">SKU: {product.sku || 'N/A'}</div>
                                     </div>
                                 </td>
-                                {/* Category (Source and Target) */}
+                                {/* Category details */}
                                 <td className="category-column">
                                     <div className="source-category">
-                                        <strong>Source:</strong> {product.sourceCategory || 'N/A'}
+                                        <strong>Source:</strong> {truncateText(product.sourceCategory || 'N/A', 30)}
                                     </div>
                                     <div className="target-category">
-                                        <strong>Target:</strong> {product.targetCategory || 'N/A'}
+                                        <strong>Target:</strong> {truncateText(product.targetCategory || 'N/A', 30)}
                                     </div>
                                 </td>
                                 <td>${product.price || 'N/A'}</td>
