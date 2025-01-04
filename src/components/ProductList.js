@@ -39,15 +39,16 @@ const ProductList = ({ products }) => {
         setShowBulkMappingModal(false);
     };
 
-    // Fetch mapped statuses from MongoDB when the component mounts
+    // Fetch mapping statuses
     const fetchMappingStatuses = async () => {
         try {
-            const response = await fetch('/api/mappings/fetch');
+            const clientId = localStorage.getItem('clientId'); // Make sure the clientId is stored after login
+            const response = await fetch(`/api/mappings/get/${clientId}`);
             const data = await response.json();
             if (response.ok) {
                 const statuses = {};
                 data.mappings.forEach((map) => {
-                    statuses[map.productId] = Object.values(map.mapping).every(
+                    statuses[map.productId] = Object.values(map.mappings).every(
                         (attr) => attr.value && attr.value !== 'N/A'
                     )
                         ? 'Yes'
@@ -70,10 +71,7 @@ const ProductList = ({ products }) => {
         <div className="product-list-container">
             <h3>Fetched Products</h3>
             <div className="button-group-top">
-                <button
-                    className="btn-bulk-map"
-                    onClick={handleOpenBulkMappingModal}
-                >
+                <button className="btn-bulk-map" onClick={handleOpenBulkMappingModal}>
                     Bulk Map
                 </button>
             </div>
@@ -88,7 +86,11 @@ const ProductList = ({ products }) => {
                             const response = await fetch('/api/mappings/save', {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify(mappingData),
+                                body: JSON.stringify({
+                                    clientId: localStorage.getItem('clientId'),
+                                    productId: 'bulk',
+                                    mappings: mappingData.mapping,
+                                }),
                             });
 
                             const result = await response.json();
@@ -189,7 +191,11 @@ const ProductList = ({ products }) => {
                             const response = await fetch('/api/mappings/save', {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify(mappingData),
+                                body: JSON.stringify({
+                                    clientId: localStorage.getItem('clientId'),
+                                    productId: selectedProduct.id,
+                                    mappings: mappingData.mapping,
+                                }),
                             });
 
                             const result = await response.json();

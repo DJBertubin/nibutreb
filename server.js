@@ -204,11 +204,7 @@ app.post('/api/mappings/save', async (req, res) => {
     }
 
     try {
-        const requiredFields = ['SKU', 'Product ID Type', 'Product ID (UPC)', 'Product Name', 'Brand Name'];
-        const missingFields = requiredFields.filter(
-            (field) => !mappings[field] || mappings[field].type === 'Ignore' || !mappings[field].value?.trim()
-        );
-
+        // Allow saving even if required fields are missing
         const cleanedMappings = {};
         for (const key in mappings) {
             cleanedMappings[key] = mappings[key].type === 'Ignore' ? '' : mappings[key];
@@ -226,10 +222,7 @@ app.post('/api/mappings/save', async (req, res) => {
         }
 
         res.status(200).json({
-            message: 'Mappings saved successfully.',
-            warning: missingFields.length > 0
-                ? `Warning: The following required fields were left blank or ignored: ${missingFields.join(', ')}`
-                : null,
+            message: 'Mappings saved successfully, even if required fields are missing.',
         });
     } catch (err) {
         console.error('Error saving mappings:', err.message);
