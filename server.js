@@ -8,6 +8,7 @@ const mongoose = require('mongoose');
 const cron = require('node-cron');
 const User = require('./api/models/User'); // Import User model
 const ShopifyData = require('./api/models/ShopifyData'); // Import ShopifyData model
+const Mapping = require('./api/models/Mapping'); // Import Mapping model
 const walmartRoutes = require('./api/walmart/walmart'); // Import Walmart routes (e.g., /send)
 const { sendItemToWalmart } = require('./api/utils/sendToWalmart'); // Import sendToWalmart function
 
@@ -194,6 +195,53 @@ app.post('/api/shopify/fetch', async (req, res) => {
     }
 });
 
+// **POST /api/mappings/save - Save Mappings**
+app.post('/api/mappings/save', async (req, res) => {
+    const { clientId, productId, mappings } = req.body;
+
+    if (!clientId || !productId || !mappings) {
+        return res.status(400).json({ error: 'Missing required fields.' });
+    }
+
+    try {
+        const existingMapping = await Mapping.findOne({ clientId, productId });
+
+        if (existingMapping) {
+            // Update existing mapping
+            existingMapping.mappings = mappings;
+            existingMapping.updatedAt = new Date();
+            await existingMapping.save();
+        } else {
+            // Create new mapping
+            const newMapping = new Mapping({ clientId, productId, mappings });
+            await newMapping.save();
+        }
+
+        res.status(200).json({ message: 'Mappings saved successfully.' });
+    } catch (err) {
+        console.error('Error saving mappings:', err.message);
+        res.status(500).json({ error: 'Failed to save mappings.', details: err.message });
+    }
+});
+
+// **GET /api/mappings/get/:clientId - Get Mappings**
+app.get('/api/mappings/get/:clientId', async (req, res) => {
+    const { clientId } = req.params;
+
+    try {
+        const mappings = await Mapping.find({ clientId });
+
+        if (!mappings || mappings.length === 0) {
+            return res.status(200).json({ mappings: [] });
+        }
+
+        res.status(200).json({ mappings });
+    } catch (err) {
+        console.error('Error fetching mappings:', err.message);
+        res.status(500).json({ error: 'Failed to fetch mappings.', details: err.message });
+    }
+});
+
 // **Walmart Send API Route**
 app.post('/api/walmart/send', async (req, res) => {
     try {
@@ -213,51 +261,6 @@ app.post('/api/walmart/send', async (req, res) => {
         res.status(500).json({ error: 'Internal Server Error', details: error.message });
     }
 });
-
-// **Periodic Shopify Data Fetch**
-const fetchShopifyDataPeriodically = async () => {
-    try {
-        const allEntries = await ShopifyData.find();
-        for (const entry of allEntries) {
-            const { shopifyUrl, shopifyToken, clientId } = entry;
-
-            try {
-                const shopifyApiUrl = `https://${shopifyUrl.trim()}/admin/api/2024-01/products.json`;
-                const response = await fetch(shopifyApiUrl, {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-Shopify-Access-Token': shopifyToken,
-                    },
-                });
-
-                if (response.ok) {
-                    const shopifyData = await response.json();
-                    await ShopifyData.findOneAndUpdate(
-                        { clientId, shopifyUrl },
-                        { shopifyData, lastUpdated: new Date() },
-                        { upsert: true }
-                    );
-
-                    console.log(`Shopify data updated for clientId: ${clientId}`);
-                } else {
-                    console.error(
-                        `Error fetching Shopify data for clientId ${clientId}: ${response.statusText}`
-                    );
-                }
-            } catch (error) {
-                console.error(
-                    `Failed to fetch Shopify data for clientId ${clientId}: ${error.message}`
-                );
-            }
-        }
-    } catch (error) {
-        console.error('Periodic fetch encountered an error:', error.message);
-    }
-};
-
-// **Schedule periodic fetching every 10 minutes**
-cron.schedule('*/10 * * * *', fetchShopifyDataPeriodically);
 
 // **Fetch Shopify Data for Logged-In User**
 app.get('/api/shopify/data', async (req, res) => {
