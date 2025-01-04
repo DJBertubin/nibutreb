@@ -94,12 +94,12 @@
 }
 
 .btn-map-values {
-  background-color: #ff7f00;
+  background-color: #ff9900;
   color: white;
 }
 
 .btn-map-values:hover {
-  background-color: #cc6600;
+  background-color: #e68a00;
 }
 
 .status-column {
@@ -190,41 +190,69 @@
   color: white;
 }
 
-/* Modal for Attribute Mapping */
+/* Mapping modal styles */
 .mapping-popup {
   position: fixed;
-  top: 50%;
+  top: 20%;
   left: 50%;
-  transform: translate(-50%, -50%);
+  transform: translate(-50%, -20%);
   background-color: white;
-  padding: 20px;
   border-radius: 8px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-  z-index: 1000;
-  width: 80%;
-  max-width: 600px;
+  padding: 20px;
+  width: 500px;
+  max-width: 90%;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  z-index: 2000;
 }
 
-.popup-content {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
+.popup-content h4 {
+  margin-bottom: 20px;
+  font-size: 18px;
+  font-weight: bold;
 }
 
 .attribute-item {
-  display: flex;
-  flex-direction: column;
+  margin-bottom: 15px;
+}
+
+.attribute-item label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: 500;
+}
+
+.mapping-select {
+  width: 100%;
+  padding: 8px;
+  font-size: 14px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  margin-bottom: 10px;
 }
 
 .required-badge {
   color: red;
-  margin-left: 8px;
+  margin-left: 5px;
+  font-size: 12px;
+}
+
+input[type='text'] {
+  width: calc(100% - 16px);
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.button-group {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
 }
 
 .btn-save-mapping,
 .btn-close-mapping {
-  padding: 8px 12px;
-  margin-top: 15px;
+  padding: 10px 16px;
+  font-size: 14px;
   border: none;
   cursor: pointer;
   border-radius: 4px;
@@ -235,9 +263,17 @@
   color: white;
 }
 
+.btn-save-mapping:hover {
+  background-color: #218838;
+}
+
 .btn-close-mapping {
   background-color: #dc3545;
   color: white;
+}
+
+.btn-close-mapping:hover {
+  background-color: #c82333;
 }
 
 /* Responsive layout for mobile screens */
@@ -274,6 +310,11 @@
   }
 
   .mapping-popup {
-    width: 90%;
+    width: 100%;
+    padding: 15px;
+  }
+
+  .popup-content h4 {
+    font-size: 16px;
   }
 }

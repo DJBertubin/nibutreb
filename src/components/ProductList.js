@@ -6,11 +6,18 @@ const ProductList = ({ products }) => {
     const itemsPerPage = 10;
     const [statuses, setStatuses] = useState({});
     const [showMappingModal, setShowMappingModal] = useState(false);
-    const [mappingFields, setMappingFields] = useState({
-        brand: '',
-        shortDescription: '',
-        productIdType: 'GTIN',
-    });
+    const [selectedAttribute, setSelectedAttribute] = useState('');
+    const [mappingFields, setMappingFields] = useState({});
+
+    const requiredAttributes = [
+        { name: "SKU", required: true },
+        { name: "Product ID Type", required: true },
+        { name: "Product ID (GTIN/UPC)", required: true },
+        { name: "Product Name", required: true },
+        { name: "Brand", required: true },
+        { name: "Short Description", required: false },
+        { name: "Main Image URL", required: true },
+    ];
 
     const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
@@ -18,15 +25,9 @@ const ProductList = ({ products }) => {
 
     const totalPages = Math.ceil(products.length / itemsPerPage);
 
-    // Handle pagination change
+    // Pagination change
     const handlePageChange = (pageNumber) => {
         setCurrentPage(pageNumber);
-    };
-
-    // Handle field mapping modal input changes
-    const handleMappingChange = (e) => {
-        const { name, value } = e.target;
-        setMappingFields((prev) => ({ ...prev, [name]: value }));
     };
 
     // Export function for sending data to Walmart
@@ -34,7 +35,7 @@ const ProductList = ({ products }) => {
         const itemData = {
             sku: product.sku,
             title: product.title,
-            productId: "123456789012", // Example placeholder, replace dynamically as needed
+            productId: mappingFields.productId || "123456789012",
             productIdType: mappingFields.productIdType || "GTIN",
             shortDescription: mappingFields.shortDescription || "Default description",
             brand: mappingFields.brand || "Default Brand",
@@ -86,6 +87,15 @@ const ProductList = ({ products }) => {
         }
     };
 
+    // Handle mapping selection in modal
+    const handleMappingSelection = (e, attributeName) => {
+        setSelectedAttribute(attributeName);
+        setMappingFields((prev) => ({
+            ...prev,
+            [attributeName]: e.target.value,
+        }));
+    };
+
     return (
         <div className="product-list-container">
             <h3>Fetched Products</h3>
@@ -98,44 +108,48 @@ const ProductList = ({ products }) => {
 
             {/* Mapping Modal */}
             {showMappingModal && (
-                <div className="mapping-modal">
-                    <div className="modal-content">
+                <div className="mapping-popup">
+                    <div className="popup-content">
                         <h4>Map Fields to Walmart Attributes</h4>
-                        <label>
-                            Brand:
-                            <input
-                                type="text"
-                                name="brand"
-                                value={mappingFields.brand}
-                                onChange={handleMappingChange}
-                            />
-                        </label>
-                        <label>
-                            Short Description:
-                            <textarea
-                                name="shortDescription"
-                                value={mappingFields.shortDescription}
-                                onChange={handleMappingChange}
-                            />
-                        </label>
-                        <label>
-                            Product ID Type:
-                            <select
-                                name="productIdType"
-                                value={mappingFields.productIdType}
-                                onChange={handleMappingChange}
+                        {requiredAttributes.map((attr) => (
+                            <div className="attribute-item" key={attr.name}>
+                                <label>
+                                    {attr.name} {attr.required && <span className="required-badge">*</span>}
+                                </label>
+                                <select
+                                    className="mapping-select"
+                                    value={mappingFields[attr.name] || ""}
+                                    onChange={(e) => handleMappingSelection(e, attr.name)}
+                                >
+                                    <option value="">-- Select Option --</option>
+                                    <option value="IGNORE">Ignore</option>
+                                    <option value="FIELD">Map to Field</option>
+                                    <option value="TEXT">Set Free Text</option>
+                                    <option value="ADVANCED">Advanced Rule</option>
+                                </select>
+                                {selectedAttribute === attr.name && mappingFields[attr.name] === "TEXT" && (
+                                    <input
+                                        type="text"
+                                        placeholder={`Enter static value for ${attr.name}`}
+                                        onChange={(e) => handleMappingSelection(e, attr.name)}
+                                    />
+                                )}
+                            </div>
+                        ))}
+                        <div className="button-group">
+                            <button
+                                className="btn-save-mapping"
+                                onClick={() => setShowMappingModal(false)}
                             >
-                                <option value="GTIN">GTIN</option>
-                                <option value="UPC">UPC</option>
-                                <option value="ISBN">ISBN</option>
-                            </select>
-                        </label>
-                        <button
-                            className="btn-save-mapping"
-                            onClick={() => setShowMappingModal(false)}
-                        >
-                            Save & Close
-                        </button>
+                                Save & Close
+                            </button>
+                            <button
+                                className="btn-close-mapping"
+                                onClick={() => setShowMappingModal(false)}
+                            >
+                                Cancel
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}
@@ -154,69 +168,54 @@ const ProductList = ({ products }) => {
                 </thead>
                 <tbody>
                     {products.length > 0 ? (
-                        currentProducts.map((product) => {
-                            return (
-                                <tr key={product.id} className="product-row">
-                                    <td className="actions-column">
-                                        <div className="button-group">
-                                            <button
-                                                className="btn-export"
-                                                onClick={() =>
-                                                    handleExport(product.id, product)
-                                                }
-                                            >
-                                                Export
-                                            </button>
-                                            <button className="btn-edit">Edit</button>
-                                        </div>
-                                    </td>
-                                    <td className="status-column">
-                                        <div
-                                            className="full-status-tooltip"
-                                            data-status={statuses[product.id] || 'No status'}
+                        currentProducts.map((product) => (
+                            <tr key={product.id} className="product-row">
+                                <td className="actions-column">
+                                    <div className="button-group">
+                                        <button
+                                            className="btn-export"
+                                            onClick={() => handleExport(product.id, product)}
                                         >
-                                            {statuses[product.id]?.length > 50
-                                                ? `${statuses[product.id].substring(0, 50)}...`
-                                                : statuses[product.id] || 'No status'}
-                                        </div>
-                                    </td>
-                                    <td className="product-details">
-                                        <img
-                                            src={product.image || 'https://via.placeholder.com/50'}
-                                            alt={product.title || 'Product'}
-                                            className="product-image"
-                                            onError={(e) =>
-                                                (e.target.src = 'https://via.placeholder.com/50')
-                                            }
-                                        />
-                                        <div className="product-info">
-                                            <strong
-                                                className="product-title"
-                                                title={product.title || 'N/A'}
-                                            >
-                                                {product.title || 'N/A'}
-                                            </strong>
-                                            <div className="sku">SKU: {product.sku || 'N/A'}</div>
-                                        </div>
-                                    </td>
-                                    <td className="category-column">
-                                        <div className="source-category">
-                                            <strong>Source:</strong> {product.sourceCategory || 'N/A'}
-                                        </div>
-                                        <div className="target-category">
-                                            <strong>Target:</strong> {product.targetCategory || 'N/A'}
-                                        </div>
-                                    </td>
-                                    <td>${product.price || 'N/A'}</td>
-                                    <td>{product.inventory || 'N/A'}</td>
-                                    <td>{new Date(product.created_at).toLocaleDateString()}</td>
-                                </tr>
-                            );
-                        })
+                                            Export
+                                        </button>
+                                        <button className="btn-edit">Edit</button>
+                                    </div>
+                                </td>
+                                <td className="status-column">
+                                    <div
+                                        className="full-status-tooltip"
+                                        data-status={statuses[product.id] || 'No status'}
+                                    >
+                                        {statuses[product.id]?.length > 50
+                                            ? `${statuses[product.id].substring(0, 50)}...`
+                                            : statuses[product.id] || 'No status'}
+                                    </div>
+                                </td>
+                                <td className="product-details">
+                                    <img
+                                        src={product.image || 'https://via.placeholder.com/50'}
+                                        alt={product.title || 'Product'}
+                                        className="product-image"
+                                    />
+                                    <div className="product-info">
+                                        <strong className="product-title">
+                                            {product.title || 'N/A'}
+                                        </strong>
+                                        <div className="sku">SKU: {product.sku || 'N/A'}</div>
+                                    </div>
+                                </td>
+                                <td className="category-column">
+                                    <strong>{product.sourceCategory || 'N/A'}</strong>
+                                </td>
+                                <td>${product.price || 'N/A'}</td>
+                                <td>{product.inventory || 'N/A'}</td>
+                                <td>{new Date(product.created_at).toLocaleDateString()}</td>
+                            </tr>
+                        ))
                     ) : (
                         <tr>
                             <td colSpan="7" style={{ textAlign: 'center' }}>
-                                No products fetched yet. Please fetch from Shopify.
+                                No products fetched yet.
                             </td>
                         </tr>
                     )}
