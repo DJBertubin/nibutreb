@@ -1,42 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import './MappingModal.css';
 
 const MappingModal = ({ products, onClose, onSave }) => {
     const [mapping, setMapping] = useState({});
     const [selectedProducts, setSelectedProducts] = useState([]);
     const [searchQuery, setSearchQuery] = useState('');
-    const [sourceAttributes, setSourceAttributes] = useState([]);
-    const [loadingAttributes, setLoadingAttributes] = useState(true);
-
-    // Fetch source attributes from MongoDB
-    useEffect(() => {
-        const fetchSourceAttributes = async () => {
-            try {
-                const token = localStorage.getItem('token');
-                const response = await fetch('http://localhost:5001/api/source-attributes', {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json',
-                    },
-                });
-
-                if (!response.ok) {
-                    throw new Error('Failed to fetch source attributes');
-                }
-
-                const data = await response.json();
-                setSourceAttributes(data.attributes || []); // Set source attributes
-            } catch (error) {
-                console.error('Error fetching source attributes:', error.message);
-                setSourceAttributes([]); // Ensure it's an empty array if an error occurs
-            } finally {
-                setLoadingAttributes(false);
-            }
-        };
-
-        fetchSourceAttributes();
-    }, []);
 
     const handleMappingChange = (attributeName, type) => {
         setMapping((prev) => ({
@@ -82,7 +50,36 @@ const MappingModal = ({ products, onClose, onSave }) => {
         { name: 'Color Category', required: false },
     ];
 
-    const fieldOptions = ['Ignore', 'Map to Field', 'Set Free Text', 'Advanced Rule'];
+    const fieldOptions = [
+        { label: 'Ignore', value: 'Ignore' },
+        { label: 'Map to Field', value: 'Map to Field' },
+        { label: 'Set Free Text', value: 'Set Free Text' },
+        { label: 'Advanced Rule', value: 'Advanced Rule' },
+    ];
+
+    // Extract source attributes from Shopify product data
+    const shopifyAttributes = [
+        'id',
+        'title',
+        'body_html',
+        'vendor',
+        'product_type',
+        'tags',
+        'status',
+        'created_at',
+        'updated_at',
+        'published_at',
+        'variants[].title',
+        'variants[].sku',
+        'variants[].price',
+        'variants[].inventory_quantity',
+        'variants[].weight',
+        'variants[].weight_unit',
+        'variants[].barcode',
+        'variants[].grams',
+        'images[].src',
+        'options[].name',
+    ];
 
     const filteredProducts = products.filter((product) =>
         product.title.toLowerCase().includes(searchQuery.toLowerCase())
@@ -147,8 +144,8 @@ const MappingModal = ({ products, onClose, onSave }) => {
                                 onChange={(e) => handleMappingChange(attribute.name, e.target.value)}
                             >
                                 {fieldOptions.map((option) => (
-                                    <option key={option} value={option}>
-                                        {option}
+                                    <option key={option.value} value={option.value}>
+                                        {option.label}
                                     </option>
                                 ))}
                             </select>
@@ -161,15 +158,11 @@ const MappingModal = ({ products, onClose, onSave }) => {
                                     onChange={(e) => handleValueChange(attribute.name, e.target.value)}
                                 >
                                     <option value="">Select Source Attribute</option>
-                                    {!loadingAttributes && sourceAttributes.length > 0 ? (
-                                        sourceAttributes.map((attr) => (
-                                            <option key={attr} value={attr}>
-                                                {attr}
-                                            </option>
-                                        ))
-                                    ) : (
-                                        <option disabled>{loadingAttributes ? 'Loading...' : 'No attributes available'}</option>
-                                    )}
+                                    {shopifyAttributes.map((attr) => (
+                                        <option key={attr} value={attr}>
+                                            {attr}
+                                        </option>
+                                    ))}
                                 </select>
                             ) : (
                                 <input
