@@ -90,11 +90,12 @@
   color: #dc3545; /* Red for "No" */
 }
 
-.button-group {
+.button-group-horizontal {
   display: flex;
   gap: 10px;
   justify-content: center;
   align-items: center;
+  flex-wrap: wrap; /* Ensures buttons wrap on smaller screens */
 }
 
 .btn-export,
@@ -219,7 +220,7 @@
     align-items: flex-start;
   }
 
-  .button-group {
+  .button-group-horizontal {
     flex-direction: column;
     gap: 5px;
   }
