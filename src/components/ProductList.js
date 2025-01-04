@@ -4,64 +4,47 @@ import './ProductList.css';
 const ProductList = ({ products }) => {
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
-
-    const [exportStatusMap, setExportStatusMap] = useState({}); // Status for each product row
+    const [statuses, setStatuses] = useState({});
 
     const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
     const currentProducts = products.slice(indexOfFirstItem, indexOfLastItem);
+
     const totalPages = Math.ceil(products.length / itemsPerPage);
 
     const handlePageChange = (pageNumber) => {
         setCurrentPage(pageNumber);
     };
 
-    // Helper function to get the correct image URL
-    const getImageUrl = (product) => {
-        return product.image || 'https://via.placeholder.com/50';
-    };
-
-    // **Handle Export for a single product**
-    const handleExport = async (product) => {
-        setExportStatusMap((prev) => ({ ...prev, [product.id]: 'Exporting...' }));
-
+    const handleExport = async (productId, productData) => {
         try {
+            setStatuses((prev) => ({ ...prev, [productId]: 'Exporting...' }));
+
             const response = await fetch('/api/walmart/send', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ itemData: [product] }), // Sending a single product
+                body: JSON.stringify({ items: [productData] }),
             });
 
-            let result;
-            try {
-                result = await response.json();
-            } catch (error) {
-                console.error('Non-JSON response:', error);
-                setExportStatusMap((prev) => ({
-                    ...prev,
-                    [product.id]: 'Failed: Received invalid response from Walmart API.',
-                }));
-                return;
-            }
+            const result = await response.json();
 
-            if (response.ok) {
-                setExportStatusMap((prev) => ({
+            if (result.success) {
+                setStatuses((prev) => ({
                     ...prev,
-                    [product.id]: `Success: ${result.message}. Feed ID: ${result.feedId}`,
+                    [productId]: 'Success: Items successfully sent to Walmart',
                 }));
             } else {
-                setExportStatusMap((prev) => ({
+                setStatuses((prev) => ({
                     ...prev,
-                    [product.id]: `Failed: ${result.error}`,
+                    [productId]: `Failed: ${result.message}`,
                 }));
             }
         } catch (error) {
-            console.error('Error sending to Walmart:', error);
-            setExportStatusMap((prev) => ({
+            setStatuses((prev) => ({
                 ...prev,
-                [product.id]: 'An error occurred during export. Please try again.',
+                [productId]: `Error: ${error.message}`,
             }));
         }
     };
@@ -84,15 +67,15 @@ const ProductList = ({ products }) => {
                 <tbody>
                     {products.length > 0 ? (
                         currentProducts.map((product) => {
-                            const imageUrl = getImageUrl(product);
-
                             return (
                                 <tr key={product.id} className="product-row">
                                     <td className="actions-column">
                                         <div className="button-group">
                                             <button
                                                 className="btn-export"
-                                                onClick={() => handleExport(product)}
+                                                onClick={() =>
+                                                    handleExport(product.id, product)
+                                                }
                                             >
                                                 Export
                                             </button>
@@ -100,20 +83,31 @@ const ProductList = ({ products }) => {
                                         </div>
                                     </td>
                                     <td className="status-column">
-                                        {exportStatusMap[product.id] || 'Not Exported'}
+                                        <div
+                                            className="full-status-tooltip"
+                                            data-status={statuses[product.id] || 'No status'}
+                                        >
+                                            {statuses[product.id]?.length > 50
+                                                ? `${statuses[product.id].substring(0, 50)}...`
+                                                : statuses[product.id] || 'No status'}
+                                        </div>
                                     </td>
                                     <td className="product-details">
                                         <img
-                                            src={imageUrl}
+                                            src={product.image || 'https://via.placeholder.com/50'}
                                             alt={product.title || 'Product'}
                                             className="product-image"
-                                            onError={(e) => (e.target.src = 'https://via.placeholder.com/50')}
+                                            onError={(e) =>
+                                                (e.target.src =
+                                                    'https://via.placeholder.com/50')
+                                            }
                                         />
                                         <div className="product-info">
-                                            <strong className="product-title" title={product.title || 'N/A'}>
-                                                {product.title?.length > 80
-                                                    ? `${product.title.substring(0, 77)}...`
-                                                    : product.title || 'N/A'}
+                                            <strong
+                                                className="product-title"
+                                                title={product.title || 'N/A'}
+                                            >
+                                                {product.title || 'N/A'}
                                             </strong>
                                             <div className="sku">SKU: {product.sku || 'N/A'}</div>
                                         </div>
@@ -134,7 +128,7 @@ const ProductList = ({ products }) => {
                         })
                     ) : (
                         <tr>
-                            <td colSpan="7" style={{ textAlign: 'center' }}>
+                            <td colSpan="8" style={{ textAlign: 'center' }}>
                                 No products fetched yet. Please fetch from Shopify.
                             </td>
                         </tr>

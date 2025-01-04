@@ -96,6 +96,33 @@
   text-align: center;
   font-size: 14px;
   font-weight: bold;
+  max-width: 300px; /* Ensure consistent layout for long text */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  position: relative;
+}
+
+/* Tooltip to show full status text */
+.full-status-tooltip {
+  position: relative;
+  cursor: pointer;
+  display: inline-block;
+}
+
+.full-status-tooltip:hover::after {
+  content: attr(data-status);
+  position: absolute;
+  left: 0;
+  bottom: -40px;
+  background-color: rgba(0, 0, 0, 0.8);
+  color: #fff;
+  padding: 8px 10px;
+  border-radius: 4px;
+  width: 300px;
+  white-space: normal;
+  z-index: 100;
+  font-size: 12px;
 }
 
 .status-synced,
@@ -151,6 +178,7 @@
   color: white;
 }
 
+/* Responsive layout for mobile screens */
 @media (max-width: 768px) {
   .product-title {
     max-width: 200px;
@@ -168,5 +196,9 @@
   .button-group {
     flex-direction: column;
     gap: 5px;
+  }
+
+  .status-column {
+    max-width: 100%;
   }
 }
