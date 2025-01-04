@@ -3,9 +3,9 @@ import './ProductList.css';
 
 const ProductList = ({ products }) => {
     const [currentPage, setCurrentPage] = useState(1);
-    const [selectedProducts, setSelectedProducts] = useState([]);
-    const [exportStatus, setExportStatus] = useState(''); // To display the export status
     const itemsPerPage = 10;
+
+    const [exportStatusMap, setExportStatusMap] = useState({}); // Status for each product row
 
     const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
@@ -16,51 +16,54 @@ const ProductList = ({ products }) => {
         setCurrentPage(pageNumber);
     };
 
-    const handleSelectProduct = (productId) => {
-        setSelectedProducts((prevSelected) =>
-            prevSelected.includes(productId)
-                ? prevSelected.filter((id) => id !== productId)
-                : [...prevSelected, productId]
-        );
+    // Helper function to get the correct image URL
+    const getImageUrl = (product) => {
+        return product.image || 'https://via.placeholder.com/50';
     };
 
-    // Handle export to Walmart
-    const handleExport = async () => {
-        if (selectedProducts.length === 0) {
-            setExportStatus('Please select at least one product to export.');
-            return;
-        }
+    // **Handle Export for a single product**
+    const handleExport = async (product) => {
+        setExportStatusMap((prev) => ({ ...prev, [product.id]: 'Exporting...' }));
 
         try {
-            setExportStatus('Exporting selected products...');
-
-            // Prepare the selected products' data
-            const itemData = products.filter((product) => selectedProducts.includes(product.id));
-
             const response = await fetch('/api/walmart/send', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ itemData }),
+                body: JSON.stringify({ itemData: [product] }), // Sending a single product
             });
 
-            const result = await response.json();
+            let result;
+            try {
+                result = await response.json();
+            } catch (error) {
+                console.error('Non-JSON response:', error);
+                setExportStatusMap((prev) => ({
+                    ...prev,
+                    [product.id]: 'Failed: Received invalid response from Walmart API.',
+                }));
+                return;
+            }
 
             if (response.ok) {
-                setExportStatus(`Success: ${result.message}. Feed ID: ${result.feedId}`);
+                setExportStatusMap((prev) => ({
+                    ...prev,
+                    [product.id]: `Success: ${result.message}. Feed ID: ${result.feedId}`,
+                }));
             } else {
-                setExportStatus(`Failed: ${result.error}`);
+                setExportStatusMap((prev) => ({
+                    ...prev,
+                    [product.id]: `Failed: ${result.error}`,
+                }));
             }
         } catch (error) {
             console.error('Error sending to Walmart:', error);
-            setExportStatus('An error occurred while exporting. Please try again.');
+            setExportStatusMap((prev) => ({
+                ...prev,
+                [product.id]: 'An error occurred during export. Please try again.',
+            }));
         }
-    };
-
-    // Helper function to get the correct image URL
-    const getImageUrl = (product) => {
-        return product.image || 'https://via.placeholder.com/50'; // Default image if none provided
     };
 
     return (
@@ -69,7 +72,6 @@ const ProductList = ({ products }) => {
             <table className="modern-table">
                 <thead>
                     <tr>
-                        <th>Select</th>
                         <th>Actions</th>
                         <th>Status</th>
                         <th>Product</th>
@@ -86,27 +88,19 @@ const ProductList = ({ products }) => {
 
                             return (
                                 <tr key={product.id} className="product-row">
-                                    <td>
-                                        <input
-                                            type="checkbox"
-                                            checked={selectedProducts.includes(product.id)}
-                                            onChange={() => handleSelectProduct(product.id)}
-                                        />
-                                    </td>
                                     <td className="actions-column">
                                         <div className="button-group">
-                                            <button className="btn-export" onClick={handleExport}>
+                                            <button
+                                                className="btn-export"
+                                                onClick={() => handleExport(product)}
+                                            >
                                                 Export
                                             </button>
                                             <button className="btn-edit">Edit</button>
                                         </div>
                                     </td>
                                     <td className="status-column">
-                                        {product.syncStatus?.toLowerCase() === 'synced' ? (
-                                            <span className="status-synced">&#x2714; Synced</span>
-                                        ) : (
-                                            <span className="status-not-synced">&#x2716; Not Synced</span>
-                                        )}
+                                        {exportStatusMap[product.id] || 'Not Exported'}
                                     </td>
                                     <td className="product-details">
                                         <img
@@ -140,7 +134,7 @@ const ProductList = ({ products }) => {
                         })
                     ) : (
                         <tr>
-                            <td colSpan="8" style={{ textAlign: 'center' }}>
+                            <td colSpan="7" style={{ textAlign: 'center' }}>
                                 No products fetched yet. Please fetch from Shopify.
                             </td>
                         </tr>
@@ -161,11 +155,6 @@ const ProductList = ({ products }) => {
                     ))}
                 </div>
             )}
-
-            {/* Status section for displaying export feedback */}
-            <div className="export-status">
-                <strong>Status:</strong> {exportStatus || 'No actions performed yet.'}
-            </div>
         </div>
     );
 };
