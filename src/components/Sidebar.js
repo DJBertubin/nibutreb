@@ -16,17 +16,15 @@ const Sidebar = () => {
                     throw new Error('Unauthorized');
                 }
 
-                const response = await fetch('http://localhost:5001/api/client/info', {
+                const response = await fetch('/api/client/info', {
                     method: 'GET',
                     headers: {
-                        'Content-Type': 'application/json',
                         Authorization: `Bearer ${token}`,
                     },
                 });
 
                 if (!response.ok) {
-                    const errorText = await response.text();
-                    throw new Error(`Failed to fetch client info: ${errorText}`);
+                    throw new Error('Failed to fetch client info');
                 }
 
                 const data = await response.json();
