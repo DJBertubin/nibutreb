@@ -12,11 +12,11 @@
   padding: 12px 15px;
   border-bottom: 1px solid #ddd;
   text-align: left;
-  vertical-align: middle;  /* Ensure all cells are vertically centered */
+  vertical-align: middle;
 }
 
 .product-row {
-  height: auto;  /* Allow row height to adjust with content */
+  height: auto;
   min-height: 80px;
 }
 
@@ -190,92 +190,6 @@
   color: white;
 }
 
-/* Mapping modal styles */
-.mapping-popup {
-  position: fixed;
-  top: 20%;
-  left: 50%;
-  transform: translate(-50%, -20%);
-  background-color: white;
-  border-radius: 8px;
-  padding: 20px;
-  width: 500px;
-  max-width: 90%;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  z-index: 2000;
-}
-
-.popup-content h4 {
-  margin-bottom: 20px;
-  font-size: 18px;
-  font-weight: bold;
-}
-
-.attribute-item {
-  margin-bottom: 15px;
-}
-
-.attribute-item label {
-  display: block;
-  margin-bottom: 5px;
-  font-weight: 500;
-}
-
-.mapping-select {
-  width: 100%;
-  padding: 8px;
-  font-size: 14px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  margin-bottom: 10px;
-}
-
-.required-badge {
-  color: red;
-  margin-left: 5px;
-  font-size: 12px;
-}
-
-input[type='text'] {
-  width: calc(100% - 16px);
-  padding: 8px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-}
-
-.button-group {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-}
-
-.btn-save-mapping,
-.btn-close-mapping {
-  padding: 10px 16px;
-  font-size: 14px;
-  border: none;
-  cursor: pointer;
-  border-radius: 4px;
-}
-
-.btn-save-mapping {
-  background-color: #28a745;
-  color: white;
-}
-
-.btn-save-mapping:hover {
-  background-color: #218838;
-}
-
-.btn-close-mapping {
-  background-color: #dc3545;
-  color: white;
-}
-
-.btn-close-mapping:hover {
-  background-color: #c82333;
-}
-
 /* Responsive layout for mobile screens */
 @media (max-width: 768px) {
   .product-title {
@@ -307,14 +221,5 @@ input[type='text'] {
   .full-status-tooltip:hover::after {
     width: 100%;
     max-width: none;
-  }
-
-  .mapping-popup {
-    width: 100%;
-    padding: 15px;
-  }
-
-  .popup-content h4 {
-    font-size: 16px;
   }
 }
