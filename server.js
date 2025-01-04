@@ -199,7 +199,7 @@ app.post('/api/shopify/fetch', async (req, res) => {
 app.post('/api/mappings/save', async (req, res) => {
     const { clientId, productId, mappings } = req.body;
 
-    console.log('Incoming Request Payload:', JSON.stringify(req.body, null, 2)); // Debugging log
+    console.log('Incoming Request Payload:', JSON.stringify(req.body, null, 2));
 
     if (!clientId || !productId || !mappings) {
         console.error('Missing required fields:', { clientId, productId, mappings });
@@ -208,14 +208,24 @@ app.post('/api/mappings/save', async (req, res) => {
 
     try {
         const cleanedMappings = {};
-        for (const key in mappings) {
-            const mappingEntry = mappings[key] || {};  // Ensure the entry is an object
-            const { type = 'Ignore', value = '' } = mappingEntry;  // Default values
 
-            cleanedMappings[key] = type === 'Ignore' ? '' : value;  // Save even if value is empty
+        // Iterate over mappings to ensure proper structure
+        for (const key in mappings) {
+            const mappingEntry = mappings[key];
+
+            if (typeof mappingEntry === 'string') {
+                cleanedMappings[key] = { type: 'Set Free Text', value: mappingEntry }; // Convert string to object
+            } else if (typeof mappingEntry === 'object' && mappingEntry !== null) {
+                cleanedMappings[key] = {
+                    type: mappingEntry.type || 'Ignore',
+                    value: mappingEntry.value || '',
+                };
+            } else {
+                cleanedMappings[key] = { type: 'Ignore', value: '' }; // Default to "Ignore"
+            }
         }
 
-        console.log('Cleaned Mappings (to be saved):', cleanedMappings); // Debug log
+        console.log('Cleaned Mappings (to be saved):', cleanedMappings);
 
         const existingMapping = await Mapping.findOne({ clientId, productId });
 
