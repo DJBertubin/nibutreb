@@ -32,36 +32,49 @@ async function getWalmartAccessToken() {
     return data.access_token;
 }
 
+// **Transform the payload to Walmart MP_ITEM Spec 4.8 format**
+function formatPayloadForWalmart(product) {
+    return {
+        MPItem: {
+            sku: product.sku || "N/A",
+            productName: product.title || "Untitled Product",
+            productId: "0123456789012", // Replace with a valid GTIN/UPC/EAN
+            productIdType: "GTIN", // Change to "UPC" or "EAN" as required
+            price: {
+                currency: "USD",
+                amount: parseFloat(product.price) || 0.0,
+            },
+            shortDescription:
+                "A dietary supplement to support gut health with 120 capsules.",
+            mainImageUrl: "https://via.placeholder.com/300", // Replace with product image URL
+            productSecondaryImageURL: [],
+            brand: "HealthX", // Replace with the actual brand name
+            condition: "New",
+            shippingWeight: 0.5, // Add actual weight in pounds
+            fulfillmentLagTime: 2, // Default: 2-day lag
+            category: "Supplements",
+            inventory: {
+                quantity: product.inventory || 0,
+                fulfillmentLagTime: 2,
+            },
+        },
+    };
+}
+
 // Function to send MP_ITEM feed to Walmart
-export async function sendItemToWalmart(product) {
-    if (!product) {
+export async function sendItemToWalmart(itemData) {
+    if (!itemData || !itemData.items || itemData.items.length === 0) {
         throw new Error('Item data is required.');
     }
 
-    // Format the product according to the Walmart MP_ITEM spec
-    const mpItemPayload = {
-        MPItem: {
-            sku: product.sku || 'N/A',
-            productName: product.title || 'Untitled Product',
-            productId: product.productId || '0000000000000',  // Use GTIN/UPC/EAN as required
-            productIdType: 'GTIN',  // Update if you are using UPC or EAN
-            price: {
-                currency: 'USD',
-                amount: parseFloat(product.price) || 0,
-            },
-            shortDescription: product.shortDescription || 'No description available',
-            mainImageUrl: product.image || 'https://via.placeholder.com/300',
-            productSecondaryImageURL: product.secondaryImages || [],
-            brand: product.brand || 'Unknown Brand',
-            condition: product.condition || 'New',
-            shippingWeight: product.shippingWeight || 1.0,  // Example default weight
-            fulfillmentLagTime: product.fulfillmentLagTime || 1,
-            category: product.sourceCategory || 'General Merchandise',
-            inventory: {
-                quantity: product.inventory || 0,
-                fulfillmentLagTime: product.fulfillmentLagTime || 1
-            }
-        }
+    const formattedItems = itemData.items.map(formatPayloadForWalmart);
+
+    const payload = {
+        MPItemFeedHeader: {
+            version: "4.8",
+            requestBatchId: `BATCH-${crypto.randomUUID()}`,
+        },
+        MPItem: formattedItems,
     };
 
     try {
@@ -77,7 +90,7 @@ export async function sendItemToWalmart(product) {
                 'WM_SVC.NAME': 'Walmart Item Export',
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify(mpItemPayload), // Send the payload according to the spec
+            body: JSON.stringify(payload), // Send the formatted payload
         });
 
         if (!response.ok) {

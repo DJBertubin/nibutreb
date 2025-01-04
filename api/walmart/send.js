@@ -1,5 +1,3 @@
-// /api/walmart/send.js
-
 import { sendItemToWalmart } from '../../utils/sendToWalmart';
 
 export default async function handler(req, res) {
@@ -8,13 +6,22 @@ export default async function handler(req, res) {
     }
 
     try {
-        const { itemData } = req.body;
+        const { items } = req.body; // Expecting "items" array from request body
 
-        if (!itemData || itemData.length === 0) {
+        if (!items || items.length === 0) {
             return res.status(400).json({ error: 'No item data provided.' });
         }
 
-        const result = await sendItemToWalmart(itemData); // Call the utility function
+        // Prepare item data as required for Walmart
+        const formattedData = {
+            MPItemFeedHeader: {
+                version: "4.8",
+                requestBatchId: `BATCH-${Date.now()}`,
+            },
+            MPItem: items,
+        };
+
+        const result = await sendItemToWalmart(formattedData); // Call the utility function
 
         if (result.success) {
             res.status(200).json({
@@ -28,6 +35,6 @@ export default async function handler(req, res) {
         }
     } catch (error) {
         console.error('Error in API /api/walmart/send:', error.message);
-        res.status(500).json({ error: error.message });
+        res.status(500).json({ error: `Server Error: ${error.message}` });
     }
 }

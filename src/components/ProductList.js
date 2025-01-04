@@ -33,18 +33,18 @@ const ProductList = ({ products }) => {
             if (result.success) {
                 setStatuses((prev) => ({
                     ...prev,
-                    [productId]: 'Success: Items successfully sent to Walmart',
+                    [productId]: '✅ Successfully sent to Walmart',
                 }));
             } else {
                 setStatuses((prev) => ({
                     ...prev,
-                    [productId]: `Failed: ${result.message}`,
+                    [productId]: `❌ Failed: ${result.message}`,
                 }));
             }
         } catch (error) {
             setStatuses((prev) => ({
                 ...prev,
-                [productId]: `Error: ${error.message}`,
+                [productId]: `❌ Error: ${error.message}`,
             }));
         }
     };
@@ -66,69 +66,61 @@ const ProductList = ({ products }) => {
                 </thead>
                 <tbody>
                     {products.length > 0 ? (
-                        currentProducts.map((product) => {
-                            return (
-                                <tr key={product.id} className="product-row">
-                                    <td className="actions-column">
-                                        <div className="button-group">
-                                            <button
-                                                className="btn-export"
-                                                onClick={() =>
-                                                    handleExport(product.id, product)
-                                                }
-                                            >
-                                                Export
-                                            </button>
-                                            <button className="btn-edit">Edit</button>
-                                        </div>
-                                    </td>
-                                    <td className="status-column">
-                                        <div
-                                            className="full-status-tooltip"
-                                            data-status={statuses[product.id] || 'No status'}
+                        currentProducts.map((product) => (
+                            <tr key={product.id} className="product-row">
+                                <td className="actions-column">
+                                    <div className="button-group">
+                                        <button
+                                            className="btn-export"
+                                            onClick={() => handleExport(product.id, product)}
+                                        >
+                                            Export
+                                        </button>
+                                        <button className="btn-edit">Edit</button>
+                                    </div>
+                                </td>
+                                <td className="status-column">
+                                    <div className="status-wrapper">
+                                        <span
+                                            className="status-text"
+                                            title={statuses[product.id] || 'No status'}
                                         >
                                             {statuses[product.id]?.length > 50
                                                 ? `${statuses[product.id].substring(0, 50)}...`
                                                 : statuses[product.id] || 'No status'}
-                                        </div>
-                                    </td>
-                                    <td className="product-details">
-                                        <img
-                                            src={product.image || 'https://via.placeholder.com/50'}
-                                            alt={product.title || 'Product'}
-                                            className="product-image"
-                                            onError={(e) =>
-                                                (e.target.src =
-                                                    'https://via.placeholder.com/50')
-                                            }
-                                        />
-                                        <div className="product-info">
-                                            <strong
-                                                className="product-title"
-                                                title={product.title || 'N/A'}
-                                            >
-                                                {product.title || 'N/A'}
-                                            </strong>
-                                            <div className="sku">SKU: {product.sku || 'N/A'}</div>
-                                        </div>
-                                    </td>
-                                    <td className="category-column">
-                                        <div className="source-category">
-                                            <strong>Source:</strong> {product.sourceCategory || 'N/A'}
-                                        </div>
-                                        <div className="target-category">
-                                            <strong>Target:</strong> {product.targetCategory || 'N/A'}
-                                        </div>
-                                    </td>
-                                    <td>${product.price || 'N/A'}</td>
-                                    <td>{product.inventory || 'N/A'}</td>
-                                    <td>{new Date(product.created_at).toLocaleDateString()}</td>
-                                </tr>
-                            );
-                        })
+                                        </span>
+                                    </div>
+                                </td>
+                                <td className="product-details">
+                                    <img
+                                        src={product.image || 'https://via.placeholder.com/50'}
+                                        alt={product.title || 'Product'}
+                                        className="product-image"
+                                        onError={(e) => (e.target.src = 'https://via.placeholder.com/50')}
+                                    />
+                                    <div className="product-info">
+                                        <strong className="product-title" title={product.title || 'N/A'}>
+                                            {product.title || 'N/A'}
+                                        </strong>
+                                        <div className="sku">SKU: {product.sku || 'N/A'}</div>
+                                    </div>
+                                </td>
+                                <td className="category-column">
+                                    <div className="source-category">
+                                        <strong>Source:</strong> {product.sourceCategory || 'N/A'}
+                                    </div>
+                                    <div className="target-category">
+                                        <strong>Target:</strong> {product.targetCategory || 'N/A'}
+                                    </div>
+                                </td>
+                                <td>${product.price || 'N/A'}</td>
+                                <td>{product.inventory || 'N/A'}</td>
+                                <td>{new Date(product.created_at).toLocaleDateString()}</td>
+                            </tr>
+                        ))
                     ) : (
                         <tr>
-                            <td colSpan="8" style={{ textAlign: 'center' }}>
+                            <td colSpan="7" style={{ textAlign: 'center' }}>
                                 No products fetched yet. Please fetch from Shopify.
                             </td>
                         </tr>
