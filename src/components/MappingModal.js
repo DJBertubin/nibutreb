@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import './MappingModal.css';
 
 const MappingModal = ({ products, onClose, onSave }) => {
     const [mapping, setMapping] = useState({});
@@ -25,7 +26,7 @@ const MappingModal = ({ products, onClose, onSave }) => {
         onClose();
     };
 
-    // Walmart attributes as per MP_ITEM_SPEC_4.8
+    // Walmart attributes based on MP_ITEM_SPEC_4.8
     const walmartAttributes = [
         { name: 'SKU', required: true, description: 'Alphanumeric, 50 characters max' },
         { name: 'Product ID Type', required: true, description: 'Closed list - UPC, GTIN, etc.' },
@@ -65,7 +66,7 @@ const MappingModal = ({ products, onClose, onSave }) => {
                         <span>{showDropdown ? '▲' : '▼'}</span>
                     </div>
                     {showDropdown && (
-                        <div className="product-dropdown open">
+                        <div className="product-dropdown open scrollable-dropdown">
                             <label>
                                 <input
                                     type="checkbox"
@@ -82,42 +83,41 @@ const MappingModal = ({ products, onClose, onSave }) => {
                                 />
                                 Select All
                             </label>
-                            {products.map((product) => (
-                                <div className="product-item" key={product.id}>
-                                    <label className="product-checkbox-label">
-                                        <input
-                                            className="product-checkbox"
-                                            type="checkbox"
-                                            checked={selectedProducts.includes(product.id)}
-                                            onChange={() => handleProductSelect(product.id)}
-                                        />
-                                        {product.title}
-                                    </label>
-                                </div>
-                            ))}
+                            <div className="scrollable-product-list">
+                                {products.map((product) => (
+                                    <div className="product-item" key={product.id}>
+                                        <label className="product-checkbox-label">
+                                            <input
+                                                className="product-checkbox"
+                                                type="checkbox"
+                                                checked={selectedProducts.includes(product.id)}
+                                                onChange={() => handleProductSelect(product.id)}
+                                            />
+                                            {product.title}
+                                        </label>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
                     )}
                 </div>
+
                 <h4 className="section-title">Mapping Attributes</h4>
-                {walmartAttributes.map((attribute) => (
-                    <div className="attribute-item" key={attribute.name}>
-                        <label className="attribute-name">
-                            {attribute.name}{' '}
-                            {attribute.required && (
-                                <span className="required-badge">(Required)</span>
-                            )}
-                        </label>
-                        <p className="attribute-description">{attribute.description}</p>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div className="attribute-list scrollable-attributes">
+                    {walmartAttributes.map((attribute) => (
+                        <div className="attribute-item horizontal-line" key={attribute.name}>
+                            <label className="attribute-name">
+                                {attribute.name}{' '}
+                                {attribute.required && (
+                                    <span className="required-badge">(Required)</span>
+                                )}
+                            </label>
                             <select
                                 className="mapping-select"
                                 value={mapping[attribute.name] || ''}
                                 onChange={(e) =>
                                     handleMappingChange(attribute.name, e.target.value)
                                 }
-                                style={{
-                                    width: '60%',
-                                }}
                             >
                                 <option value="">Select Option</option>
                                 {fieldOptions.map((option) => (
@@ -131,15 +131,14 @@ const MappingModal = ({ products, onClose, onSave }) => {
                                     type="text"
                                     placeholder={`Enter static value for ${attribute.name}`}
                                     className="free-text-input"
-                                    style={{ flexGrow: 1 }}
                                     onChange={(e) =>
                                         handleMappingChange(attribute.name, e.target.value)
                                     }
                                 />
                             )}
                         </div>
-                    </div>
-                ))}
+                    ))}
+                </div>
             </div>
             <div className="button-group">
                 <button className="btn-save-mapping" onClick={handleSave}>
