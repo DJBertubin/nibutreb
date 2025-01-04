@@ -43,13 +43,18 @@ const ProductList = ({ products }) => {
     const fetchMappingStatuses = async () => {
         try {
             const clientId = localStorage.getItem('clientId'); // Make sure the clientId is stored after login
+            if (!clientId) {
+                console.error('Client ID is missing. Please log in again.');
+                return;
+            }
+
             const response = await fetch(`/api/mappings/get/${clientId}`);
             const data = await response.json();
             if (response.ok) {
                 const statuses = {};
                 data.mappings.forEach((map) => {
                     statuses[map.productId] = Object.values(map.mappings).every(
-                        (attr) => attr.value && attr.value !== 'N/A'
+                        (value) => value && value !== ''
                     )
                         ? 'Yes'
                         : 'No';
@@ -83,13 +88,15 @@ const ProductList = ({ products }) => {
                     onClose={handleCloseBulkMappingModal}
                     onSave={async (mappingData) => {
                         try {
+                            const clientId = localStorage.getItem('clientId');
                             const response = await fetch('/api/mappings/save', {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
                                 body: JSON.stringify({
-                                    clientId: localStorage.getItem('clientId'),
+                                    clientId,
                                     productId: 'bulk',
-                                    mappings: mappingData.mapping,
+                                    mappings: mappingData.mappings,
+                                    selectedProducts: mappingData.selectedProducts,
                                 }),
                             });
 
@@ -136,7 +143,9 @@ const ProductList = ({ products }) => {
                                         </button>
                                     </div>
                                 </td>
-                                <td className="status-column">No Status</td>
+                                <td className="status-column">
+                                    {mappedStatuses[product.id] ? 'Synced' : 'No Status'}
+                                </td>
                                 <td className={`mapped-column ${mappedStatuses[product.id] === 'Yes' ? 'yes' : 'no'}`}>
                                     {mappedStatuses[product.id] || 'No'}
                                 </td>
@@ -182,19 +191,21 @@ const ProductList = ({ products }) => {
             )}
 
             {/* Individual Mapping Modal */}
-            {showMappingModal && (
+            {showMappingModal && selectedProduct && (
                 <MappingModal
                     products={[selectedProduct]}
                     onClose={handleCloseMappingModal}
                     onSave={async (mappingData) => {
                         try {
+                            const clientId = localStorage.getItem('clientId');
                             const response = await fetch('/api/mappings/save', {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
                                 body: JSON.stringify({
-                                    clientId: localStorage.getItem('clientId'),
+                                    clientId,
                                     productId: selectedProduct.id,
-                                    mappings: mappingData.mapping,
+                                    mappings: mappingData.mappings,
+                                    selectedProducts: [selectedProduct.id],
                                 }),
                             });
 

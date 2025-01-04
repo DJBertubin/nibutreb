@@ -36,31 +36,24 @@ const MappingModal = ({ products, onClose, onSave }) => {
     };
 
     const handleSave = () => {
-        // Validate required fields
-        const missingFields = walmartAttributes.some((attribute) => {
-            const field = mapping[attribute.name];
-            return (
-                attribute.required &&
-                (!field || !field.value || field.value.trim() === '')
-            );
-        });
-
-        if (missingFields || selectedProducts.length === 0) {
-            setErrorMessage('Please fill in all required fields and select at least one product.');
+        if (selectedProducts.length === 0) {
+            setErrorMessage('Please select at least one product.');
             return;
         }
 
         setErrorMessage('');
         const sanitizedMappings = {};
-        for (const key in mapping) {
-            if (mapping[key].type === 'Ignore') {
-                sanitizedMappings[key] = ''; // Store as empty string if "Ignore"
-            } else {
-                sanitizedMappings[key] = mapping[key].value;
-            }
-        }
+        walmartAttributes.forEach((attribute) => {
+            const field = mapping[attribute.name];
+            sanitizedMappings[attribute.name] = field?.type === 'Ignore' ? '' : field?.value || '';
+        });
 
-        onSave({ mappings: sanitizedMappings, selectedProducts });
+        const payload = {
+            mappings: sanitizedMappings,
+            selectedProducts,
+        };
+
+        onSave(payload); // Send the mappings and selected product IDs to the parent component
         onClose();
     };
 
