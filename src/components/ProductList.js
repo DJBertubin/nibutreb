@@ -6,9 +6,9 @@ const ProductList = ({ products }) => {
     const itemsPerPage = 10;
     const [statuses, setStatuses] = useState({});
     const [showMappingModal, setShowMappingModal] = useState(false);
-    const [selectedAttribute, setSelectedAttribute] = useState('');
     const [mappingFields, setMappingFields] = useState({});
     const [selectedProducts, setSelectedProducts] = useState([]);
+    const [showProductDropdown, setShowProductDropdown] = useState(false);
 
     const requiredAttributes = [
         { name: "SKU", required: true },
@@ -26,12 +26,10 @@ const ProductList = ({ products }) => {
 
     const totalPages = Math.ceil(products.length / itemsPerPage);
 
-    // Pagination change
     const handlePageChange = (pageNumber) => {
         setCurrentPage(pageNumber);
     };
 
-    // Export function for sending data to Walmart
     const handleExport = async (productId, product) => {
         const itemData = {
             sku: product.sku,
@@ -88,18 +86,13 @@ const ProductList = ({ products }) => {
         }
     };
 
-    // Handle mapping selection in modal
-    const handleMappingSelection = (e, attributeName) => {
-        setSelectedAttribute(attributeName);
-        setMappingFields((prev) => ({
-            ...prev,
-            [attributeName]: e.target.value,
-        }));
+    const handleSelectAllProducts = (isChecked) => {
+        setSelectedProducts(isChecked ? products.map((p) => p.id) : []);
     };
 
-    const handleSelectProduct = (id) => {
+    const handleSelectProduct = (productId) => {
         setSelectedProducts((prev) =>
-            prev.includes(id) ? prev.filter((productId) => productId !== id) : [...prev, id]
+            prev.includes(productId) ? prev.filter((id) => id !== productId) : [...prev, productId]
         );
     };
 
@@ -116,41 +109,70 @@ const ProductList = ({ products }) => {
             {/* Mapping Modal */}
             {showMappingModal && (
                 <div className="mapping-popup">
-                    <div className="popup-content">
+                    <div className="popup-header">
                         <h4>Map Fields to Walmart Attributes</h4>
-                        <div className="checkbox-group">
-                            <label>
-                                <input
-                                    type="checkbox"
-                                    onChange={(e) =>
-                                        setSelectedProducts(
-                                            e.target.checked ? products.map((p) => p.id) : []
-                                        )
-                                    }
-                                    checked={selectedProducts.length === products.length}
-                                />
-                                Select All
-                            </label>
-                            {products.map((product) => (
-                                <label key={product.id}>
-                                    <input
-                                        type="checkbox"
-                                        checked={selectedProducts.includes(product.id)}
-                                        onChange={() => handleSelectProduct(product.id)}
-                                    />
-                                    {product.title}
-                                </label>
-                            ))}
+                        <button
+                            className="btn-close-mapping"
+                            onClick={() => setShowMappingModal(false)}
+                        >
+                            Close
+                        </button>
+                    </div>
+                    <div className="popup-content">
+                        <div className="product-dropdown">
+                            <div
+                                className="product-dropdown-header"
+                                onClick={() => setShowProductDropdown(!showProductDropdown)}
+                            >
+                                Select Products ▼
+                            </div>
+                            {showProductDropdown && (
+                                <div className="product-dropdown-body">
+                                    <label>
+                                        <input
+                                            type="checkbox"
+                                            checked={
+                                                selectedProducts.length === products.length
+                                            }
+                                            onChange={(e) =>
+                                                handleSelectAllProducts(e.target.checked)
+                                            }
+                                        />
+                                        Select All
+                                    </label>
+                                    {products.map((product) => (
+                                        <div key={product.id}>
+                                            <label>
+                                                <input
+                                                    type="checkbox"
+                                                    checked={selectedProducts.includes(product.id)}
+                                                    onChange={() => handleSelectProduct(product.id)}
+                                                />
+                                                {product.title}
+                                            </label>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
                         </div>
+                        <h4 className="section-title">Mapping Attributes</h4>
                         {requiredAttributes.map((attr) => (
                             <div className="attribute-item" key={attr.name}>
-                                <label>
-                                    {attr.name} {attr.required && <span className="required-badge">*</span>}
+                                <label className="attribute-name">
+                                    {attr.name}{' '}
+                                    {attr.required && (
+                                        <span className="required-badge">*</span>
+                                    )}
                                 </label>
                                 <select
                                     className="mapping-select"
-                                    value={mappingFields[attr.name] || ""}
-                                    onChange={(e) => handleMappingSelection(e, attr.name)}
+                                    value={mappingFields[attr.name] || ''}
+                                    onChange={(e) =>
+                                        setMappingFields((prev) => ({
+                                            ...prev,
+                                            [attr.name]: e.target.value,
+                                        }))
+                                    }
                                 >
                                     <option value="">-- Select Option --</option>
                                     <option value="IGNORE">Ignore</option>
@@ -158,11 +180,17 @@ const ProductList = ({ products }) => {
                                     <option value="TEXT">Set Free Text</option>
                                     <option value="ADVANCED">Advanced Rule</option>
                                 </select>
-                                {selectedAttribute === attr.name && mappingFields[attr.name] === "TEXT" && (
+                                {mappingFields[attr.name] === 'TEXT' && (
                                     <input
+                                        className="free-text-input"
                                         type="text"
-                                        placeholder={`Enter static value for ${attr.name}`}
-                                        onChange={(e) => handleMappingSelection(e, attr.name)}
+                                        placeholder={`Enter value for ${attr.name}`}
+                                        onChange={(e) =>
+                                            setMappingFields((prev) => ({
+                                                ...prev,
+                                                [`${attr.name}_value`]: e.target.value,
+                                            }))
+                                        }
                                     />
                                 )}
                             </div>
@@ -170,7 +198,10 @@ const ProductList = ({ products }) => {
                         <div className="button-group">
                             <button
                                 className="btn-save-mapping"
-                                onClick={() => setShowMappingModal(false)}
+                                onClick={() => {
+                                    console.log('Saved Mapping:', { selectedProducts, mappingFields });
+                                    setShowMappingModal(false);
+                                }}
                             >
                                 Save & Close
                             </button>
@@ -230,21 +261,9 @@ const ProductList = ({ products }) => {
                                     </div>
                                 </td>
                                 <td className="product-details">
-                                    <img
-                                        src={product.image || 'https://via.placeholder.com/50'}
-                                        alt={product.title || 'Product'}
-                                        className="product-image"
-                                    />
-                                    <div className="product-info">
-                                        <strong className="product-title">
-                                            {product.title || 'N/A'}
-                                        </strong>
-                                        <div className="sku">SKU: {product.sku || 'N/A'}</div>
-                                    </div>
+                                    <strong className="product-title">{product.title || 'N/A'}</strong>
                                 </td>
-                                <td className="category-column">
-                                    <strong>{product.sourceCategory || 'N/A'}</strong>
-                                </td>
+                                <td className="category-column">{product.sourceCategory || 'N/A'}</td>
                                 <td>${product.price || 'N/A'}</td>
                                 <td>{product.inventory || 'N/A'}</td>
                                 <td>{new Date(product.created_at).toLocaleDateString()}</td>

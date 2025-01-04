@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 
-const MappingModal = ({ productData, marketplaceAttributes, onClose, onSave }) => {
+const MappingModal = ({ products, marketplaceAttributes, onClose, onSave }) => {
     const [mapping, setMapping] = useState({});
     const [selectedProducts, setSelectedProducts] = useState([]);
+    const [showDropdown, setShowDropdown] = useState(false);
 
-    const handleMappingChange = (attributeName, option, value) => {
+    const handleMappingChange = (attributeName, value) => {
         setMapping((prev) => ({
             ...prev,
-            [attributeName]: { option, value },
+            [attributeName]: value,
         }));
     };
 
@@ -19,102 +20,84 @@ const MappingModal = ({ productData, marketplaceAttributes, onClose, onSave }) =
         );
     };
 
-    const handleSelectAllProducts = (e) => {
-        if (e.target.checked) {
-            setSelectedProducts(productData.map((product) => product.id));
-        } else {
-            setSelectedProducts([]);
-        }
-    };
-
     const handleSave = () => {
-        const filteredProducts = productData.filter((product) => selectedProducts.includes(product.id));
-        onSave(mapping, filteredProducts);
+        onSave({ mapping, selectedProducts });
         onClose();
     };
 
     return (
         <div className="mapping-popup">
             <div className="popup-header">
-                <span className="popup-title">Map Product Attributes</span>
+                <h4>Map Fields to Walmart Attributes</h4>
                 <button className="btn-close-mapping" onClick={onClose}>
                     Close
                 </button>
             </div>
-
             <div className="popup-content">
-                <h4>Select Products to Update</h4>
-                <div className="product-dropdown">
-                    <label>
-                        <input
-                            type="checkbox"
-                            onChange={handleSelectAllProducts}
-                            checked={selectedProducts.length === productData.length}
-                        />
-                        Select All
-                    </label>
-                    <div className="dropdown-wrapper">
-                        <select multiple className="product-multi-select">
-                            {productData.map((product) => (
-                                <option key={product.id}>
-                                    <label>
+                <div className="product-dropdown-wrapper">
+                    <div
+                        className="product-dropdown-header"
+                        onClick={() => setShowDropdown((prev) => !prev)}
+                    >
+                        <span>Select Products</span>
+                        <span>{showDropdown ? '▲' : '▼'}</span>
+                    </div>
+                    {showDropdown && (
+                        <div className="product-dropdown open">
+                            <label>
+                                <input
+                                    type="checkbox"
+                                    checked={
+                                        selectedProducts.length === products.length
+                                    }
+                                    onChange={(e) => {
+                                        if (e.target.checked) {
+                                            setSelectedProducts(products.map((p) => p.id));
+                                        } else {
+                                            setSelectedProducts([]);
+                                        }
+                                    }}
+                                />
+                                Select All
+                            </label>
+                            {products.map((product) => (
+                                <div className="product-item" key={product.id}>
+                                    <label className="product-checkbox-label">
                                         <input
+                                            className="product-checkbox"
                                             type="checkbox"
                                             checked={selectedProducts.includes(product.id)}
                                             onChange={() => handleProductSelect(product.id)}
                                         />
                                         {product.title}
                                     </label>
-                                </option>
+                                </div>
                             ))}
-                        </select>
-                    </div>
+                        </div>
+                    )}
                 </div>
-
-                <h4>Map Attributes</h4>
+                <h4 className="section-title">Mapping Attributes</h4>
                 {marketplaceAttributes.map((attribute) => (
                     <div className="attribute-item" key={attribute.name}>
                         <label className="attribute-name">
-                            {attribute.name} {attribute.required && <span className="required-badge">(Required)</span>}
+                            {attribute.name}{' '}
+                            {attribute.required && (
+                                <span className="required-badge">(Required)</span>
+                            )}
                         </label>
-                        <div className="mapping-select">
-                            <select
-                                className="dropdown"
-                                value={mapping[attribute.name]?.option || ''}
-                                onChange={(e) => handleMappingChange(attribute.name, e.target.value, '')}
-                            >
-                                <option value="">Select Option</option>
-                                <option value="ignore">Ignore</option>
-                                <option value="mapToField">Map to Field</option>
-                                <option value="setFreeText">Set Free Text</option>
-                                <option value="advancedRule">Advanced Rule</option>
-                            </select>
-                            {mapping[attribute.name]?.option === 'mapToField' && (
-                                <select
-                                    className="field-select"
-                                    onChange={(e) =>
-                                        handleMappingChange(attribute.name, 'mapToField', e.target.value)
-                                    }
-                                >
-                                    <option value="">Select Field</option>
-                                    {Object.keys(productData[0] || {}).map((field) => (
-                                        <option key={field} value={field}>
-                                            {field}
-                                        </option>
-                                    ))}
-                                </select>
-                            )}
-                            {mapping[attribute.name]?.option === 'setFreeText' && (
-                                <input
-                                    type="text"
-                                    className="free-text-input"
-                                    placeholder="Enter value"
-                                    onChange={(e) =>
-                                        handleMappingChange(attribute.name, 'setFreeText', e.target.value)
-                                    }
-                                />
-                            )}
-                        </div>
+                        <select
+                            className="mapping-select"
+                            value={mapping[attribute.name] || ''}
+                            onChange={(e) =>
+                                handleMappingChange(attribute.name, e.target.value)
+                            }
+                        >
+                            <option value="">Select Option</option>
+                            <option value="ignore">Ignore</option>
+                            <option value="mapToField">Map to Field</option>
+                            <option value="setFreeText">Set Free Text</option>
+                            <option value="advancedRule">Advanced Rule</option>
+                        </select>
                     </div>
                 ))}
             </div>
