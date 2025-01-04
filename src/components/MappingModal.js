@@ -7,14 +7,21 @@ const MappingModal = ({ products, onClose, onSave }) => {
     const [searchQuery, setSearchQuery] = useState('');
     const [errorMessage, setErrorMessage] = useState('');
 
-    // Pre-fill mapping if the product already has mapping data
+    // Pre-fill mapping data for single product
     useEffect(() => {
         if (products.length > 0 && products[0]?.mapping) {
-            setMapping(products[0].mapping); // Pre-fill the existing mapping for single product
+            const preFilledMapping = {};
+            walmartAttributes.forEach((attribute) => {
+                preFilledMapping[attribute.name] = products[0].mapping[attribute.name] || {
+                    type: 'Ignore',
+                    value: '',
+                };
+            });
+            setMapping(preFilledMapping);
         } else {
             setMapping({});
         }
-        setSelectedProducts(products.map((p) => p.id)); // Automatically select the current product
+        setSelectedProducts(products.map((p) => p.id)); // Select all products by default
     }, [products]);
 
     const handleMappingChange = (attributeName, type) => {
@@ -32,7 +39,7 @@ const MappingModal = ({ products, onClose, onSave }) => {
             ...prev,
             [attributeName]: {
                 ...prev[attributeName],
-                value,
+                value: value || '',
             },
         }));
     };
@@ -62,6 +69,8 @@ const MappingModal = ({ products, onClose, onSave }) => {
             mappings: sanitizedMappings,
             selectedProducts,
         };
+
+        console.log('Final Payload:', JSON.stringify(payload, null, 2)); // Debugging
 
         onSave(payload); // Send the mappings and selected product IDs to the parent component
         onClose();
@@ -108,7 +117,7 @@ const MappingModal = ({ products, onClose, onSave }) => {
     ];
 
     const filteredProducts = products.filter((product) =>
-        product.title.toLowerCase().includes(searchQuery.toLowerCase())
+        product.title?.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
     return (
