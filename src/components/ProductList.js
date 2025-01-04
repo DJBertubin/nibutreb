@@ -5,6 +5,12 @@ const ProductList = ({ products }) => {
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
     const [statuses, setStatuses] = useState({});
+    const [showMappingModal, setShowMappingModal] = useState(false);
+    const [mappingFields, setMappingFields] = useState({
+        brand: '',
+        shortDescription: '',
+        productIdType: 'GTIN',
+    });
 
     const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
@@ -16,15 +22,19 @@ const ProductList = ({ products }) => {
         setCurrentPage(pageNumber);
     };
 
+    const handleMappingChange = (e) => {
+        const { name, value } = e.target;
+        setMappingFields((prev) => ({ ...prev, [name]: value }));
+    };
+
     const handleExport = async (productId, product) => {
-        // Prepare the Walmart `MP_ITEM_SPEC` payload
         const itemData = {
             sku: product.sku,
             title: product.title,
-            productId: "123456789012", // Replace with actual GTIN or unique identifier
-            productIdType: "GTIN",
-            shortDescription: "A dietary supplement for gut health.",
-            brand: "HealthX", // Replace with actual brand
+            productId: "123456789012", // Replace with dynamic value if needed
+            productIdType: mappingFields.productIdType || "GTIN",
+            shortDescription: mappingFields.shortDescription || "Default description",
+            brand: mappingFields.brand || "Default Brand",
             mainImageUrl: product.image || 'https://via.placeholder.com/150',
             price: {
                 currency: "USD",
@@ -32,12 +42,12 @@ const ProductList = ({ products }) => {
             },
             condition: "New",
             shippingWeight: {
-                value: 1.0, // Example weight, replace with actual data
+                value: 1.0,
                 unit: "LB",
             },
             inventory: {
                 quantity: product.inventory,
-                fulfillmentLagTime: 2, // Example fulfillment lag time
+                fulfillmentLagTime: 2,
             },
         };
 
@@ -49,7 +59,7 @@ const ProductList = ({ products }) => {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ items: [itemData] }), // Send formatted data
+                body: JSON.stringify({ items: [itemData] }),
             });
 
             const result = await response.json();
@@ -76,6 +86,56 @@ const ProductList = ({ products }) => {
     return (
         <div className="product-list-container">
             <h3>Fetched Products</h3>
+            <button
+                className="btn-map-values"
+                onClick={() => setShowMappingModal(true)}
+            >
+                Map Values
+            </button>
+
+            {showMappingModal && (
+                <div className="mapping-modal">
+                    <div className="modal-content">
+                        <h4>Map Fields to Walmart Attributes</h4>
+                        <label>
+                            Brand:
+                            <input
+                                type="text"
+                                name="brand"
+                                value={mappingFields.brand}
+                                onChange={handleMappingChange}
+                            />
+                        </label>
+                        <label>
+                            Short Description:
+                            <textarea
+                                name="shortDescription"
+                                value={mappingFields.shortDescription}
+                                onChange={handleMappingChange}
+                            />
+                        </label>
+                        <label>
+                            Product ID Type:
+                            <select
+                                name="productIdType"
+                                value={mappingFields.productIdType}
+                                onChange={handleMappingChange}
+                            >
+                                <option value="GTIN">GTIN</option>
+                                <option value="UPC">UPC</option>
+                                <option value="ISBN">ISBN</option>
+                            </select>
+                        </label>
+                        <button
+                            className="btn-close"
+                            onClick={() => setShowMappingModal(false)}
+                        >
+                            Save & Close
+                        </button>
+                    </div>
+                </div>
+            )}
+
             <table className="modern-table">
                 <thead>
                     <tr>
@@ -97,7 +157,9 @@ const ProductList = ({ products }) => {
                                         <div className="button-group">
                                             <button
                                                 className="btn-export"
-                                                onClick={() => handleExport(product.id, product)}
+                                                onClick={() =>
+                                                    handleExport(product.id, product)
+                                                }
                                             >
                                                 Export
                                             </button>

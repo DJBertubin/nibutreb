@@ -16,7 +16,8 @@
 }
 
 .product-row {
-  height: 80px;  /* Ensure consistent row height */
+  height: auto;  /* Allow row height to adjust with content */
+  min-height: 80px;
 }
 
 .product-details {
@@ -70,12 +71,12 @@
   border-radius: 4px;
   font-size: 12px;
   font-weight: bold;
+  transition: background-color 0.3s ease;
 }
 
 .btn-export {
   background-color: #007bff;
   color: white;
-  transition: background-color 0.3s ease;
 }
 
 .btn-export:hover {
@@ -85,7 +86,6 @@
 .btn-edit {
   background-color: #28a745;
   color: white;
-  transition: background-color 0.3s ease;
 }
 
 .btn-edit:hover {
@@ -96,7 +96,7 @@
   text-align: center;
   font-size: 14px;
   font-weight: bold;
-  max-width: 300px; /* Ensure consistent layout for long text */
+  max-width: 300px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -114,15 +114,17 @@
   content: attr(data-status);
   position: absolute;
   left: 0;
-  bottom: -40px;
+  bottom: -50px;
   background-color: rgba(0, 0, 0, 0.8);
   color: #fff;
   padding: 8px 10px;
   border-radius: 4px;
-  width: 300px;
+  width: 320px;
   white-space: normal;
   z-index: 100;
   font-size: 12px;
+  text-align: left;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
 .status-synced,
@@ -178,7 +180,7 @@
   color: white;
 }
 
-/* Responsive layout for mobile screens */
+/* New mobile styling for better layout on smaller screens */
 @media (max-width: 768px) {
   .product-title {
     max-width: 200px;
@@ -200,5 +202,14 @@
 
   .status-column {
     max-width: 100%;
+  }
+
+  .full-status-tooltip {
+    width: 100%;
+  }
+
+  .full-status-tooltip:hover::after {
+    width: 100%;
+    max-width: none;
   }
 }
