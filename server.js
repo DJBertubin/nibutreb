@@ -6,11 +6,11 @@ const fetch = require('node-fetch');
 const dotenv = require('dotenv');
 const mongoose = require('mongoose');
 const cron = require('node-cron');
-const User = require('./api/models/User'); // Import User model
-const ShopifyData = require('./api/models/ShopifyData'); // Import ShopifyData model
+const User = require('./api/models/User');
+const ShopifyData = require('./api/models/ShopifyData');
 const Mapping = require('./api/models/Mapping'); // Import Mapping model
-const walmartRoutes = require('./api/walmart/walmart'); // Import Walmart routes (e.g., /send)
-const { sendItemToWalmart } = require('./api/utils/sendToWalmart'); // Import sendToWalmart function
+const walmartRoutes = require('./api/walmart/walmart');
+const { sendItemToWalmart } = require('./api/utils/sendToWalmart');
 
 dotenv.config();
 
@@ -207,12 +207,10 @@ app.post('/api/mappings/save', async (req, res) => {
         const existingMapping = await Mapping.findOne({ clientId, productId });
 
         if (existingMapping) {
-            // Update existing mapping
             existingMapping.mappings = mappings;
             existingMapping.updatedAt = new Date();
             await existingMapping.save();
         } else {
-            // Create new mapping
             const newMapping = new Mapping({ clientId, productId, mappings });
             await newMapping.save();
         }

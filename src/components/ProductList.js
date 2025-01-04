@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './ProductList.css';
 import MappingModal from './MappingModal'; // Import the MappingModal component
 
@@ -6,7 +6,7 @@ const ProductList = ({ products }) => {
     const [currentPage, setCurrentPage] = useState(1);
     const [showMappingModal, setShowMappingModal] = useState(false);
     const [selectedProducts, setSelectedProducts] = useState([]);
-    const [statuses, setStatuses] = useState({});
+    const [mappedStatuses, setMappedStatuses] = useState({});
     const itemsPerPage = 10;
 
     const indexOfLastItem = currentPage * itemsPerPage;
@@ -14,47 +14,79 @@ const ProductList = ({ products }) => {
     const currentProducts = products.slice(indexOfFirstItem, indexOfLastItem);
     const totalPages = Math.ceil(products.length / itemsPerPage);
 
+    useEffect(() => {
+        // Fetch mapped statuses from the backend to show if products are mapped
+        const fetchMappings = async () => {
+            const clientId = localStorage.getItem('clientId');
+            try {
+                const response = await fetch(`http://localhost:5001/api/mappings/get/${clientId}`);
+                const data = await response.json();
+                const mappingStatuses = {};
+                data.mappings.forEach((mapping) => {
+                    const allRequiredMapped = Object.values(mapping.mappings).every(
+                        (attr) => attr && attr !== 'IGNORE'
+                    );
+                    mappingStatuses[mapping.productId] = allRequiredMapped ? 'Yes' : 'No';
+                });
+                setMappedStatuses(mappingStatuses);
+            } catch (error) {
+                console.error('Error fetching mapping statuses:', error.message);
+            }
+        };
+
+        fetchMappings();
+    }, [products]);
+
     const handlePageChange = (pageNumber) => {
         setCurrentPage(pageNumber);
     };
 
     // Open and close the mapping modal
-    const handleOpenMappingModal = () => setShowMappingModal(true);
+    const handleOpenMappingModal = (productId) => {
+        setSelectedProducts([productId]);
+        setShowMappingModal(true);
+    };
     const handleCloseMappingModal = () => setShowMappingModal(false);
 
-    // Handle product selection for mapping
-    const handleSelectProduct = (productId) => {
-        setSelectedProducts((prevSelected) =>
-            prevSelected.includes(productId)
-                ? prevSelected.filter((id) => id !== productId)
-                : [...prevSelected, productId]
-        );
+    // Handle save mappings
+    const handleSaveMappings = async (mappingData) => {
+        const clientId = localStorage.getItem('clientId');
+        const productId = selectedProducts[0]; // Single product for simplicity
+        try {
+            const response = await fetch('http://localhost:5001/api/mappings/save', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ clientId, productId, mappings: mappingData }),
+            });
+
+            if (response.ok) {
+                console.log('Mappings saved successfully');
+                setMappedStatuses((prev) => ({ ...prev, [productId]: 'Yes' }));
+            }
+        } catch (error) {
+            console.error('Error saving mappings:', error.message);
+        }
+
+        setShowMappingModal(false);
+    };
+
+    const handleExport = (product) => {
+        console.log('Exporting product:', product);
+        // TODO: Implement export logic
     };
 
     return (
         <div className="product-list-container">
             <h3>Fetched Products</h3>
-            <button className="btn-map-values" onClick={handleOpenMappingModal}>
-                Map Values
-            </button>
-
-            {/* Mapping Modal Popup */}
-            {showMappingModal && (
-                <MappingModal
-                    products={products}
-                    onClose={handleCloseMappingModal}
-                    onSave={(mappingData) => {
-                        console.log('Saved Mapping:', mappingData);
-                        setShowMappingModal(false); // Close modal after save
-                    }}
-                />
-            )}
 
             <table className="modern-table">
                 <thead>
                     <tr>
                         <th>Actions</th>
                         <th>Status</th>
+                        <th>Mapped</th>
                         <th>Product</th>
                         <th>Category</th>
                         <th>Price</th>
@@ -70,16 +102,22 @@ const ProductList = ({ products }) => {
                                     <div className="button-group">
                                         <button
                                             className="btn-export"
-                                            onClick={() => handleSelectProduct(product.id)}
+                                            onClick={() => handleExport(product)}
                                         >
-                                            {selectedProducts.includes(product.id)
-                                                ? 'Deselect'
-                                                : 'Select'}
+                                            Export
                                         </button>
-                                        <button className="btn-edit">Edit</button>
+                                        <button
+                                            className="btn-map"
+                                            onClick={() => handleOpenMappingModal(product.id)}
+                                        >
+                                            Map
+                                        </button>
                                     </div>
                                 </td>
-                                <td className="status-column">{statuses[product.id] || 'No status'}</td>
+                                <td className="status-column">No status</td>
+                                <td className="mapped-column">
+                                    {mappedStatuses[product.id] || 'No'}
+                                </td>
                                 <td className="product-details">
                                     <img
                                         src={product.image || 'https://via.placeholder.com/50'}
@@ -99,7 +137,7 @@ const ProductList = ({ products }) => {
                         ))
                     ) : (
                         <tr>
-                            <td colSpan="7" style={{ textAlign: 'center' }}>
+                            <td colSpan="8" style={{ textAlign: 'center' }}>
                                 No products fetched yet.
                             </td>
                         </tr>
@@ -119,6 +157,15 @@ const ProductList = ({ products }) => {
                         </button>
                     ))}
                 </div>
+            )}
+
+            {/* Mapping Modal */}
+            {showMappingModal && (
+                <MappingModal
+                    products={products.filter((product) => selectedProducts.includes(product.id))}
+                    onClose={handleCloseMappingModal}
+                    onSave={handleSaveMappings}
+                />
             )}
         </div>
     );

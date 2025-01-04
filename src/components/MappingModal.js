@@ -6,6 +6,7 @@ const MappingModal = ({ products, onClose, onSave }) => {
     const [selectedProducts, setSelectedProducts] = useState([]);
     const [searchQuery, setSearchQuery] = useState('');
 
+    // Handle dropdown and values for mapping
     const handleMappingChange = (attributeName, type) => {
         setMapping((prev) => ({
             ...prev,
@@ -35,11 +36,14 @@ const MappingModal = ({ products, onClose, onSave }) => {
         );
     };
 
-    const handleSave = () => {
-        onSave({ mapping, selectedProducts });
+    const handleSave = async () => {
+        // Saving mapping data and sending to API
+        const payload = { mapping, selectedProducts };
+        await onSave(payload);  // Calls the API and persists to MongoDB
         onClose();
     };
 
+    // Walmart attributes and shopify attributes
     const walmartAttributes = [
         { name: 'SKU', required: true },
         { name: 'Product ID Type', required: true },
@@ -57,7 +61,6 @@ const MappingModal = ({ products, onClose, onSave }) => {
         { label: 'Advanced Rule', value: 'Advanced Rule' },
     ];
 
-    // Extract source attributes from Shopify product data
     const shopifyAttributes = [
         'id',
         'title',
@@ -88,9 +91,7 @@ const MappingModal = ({ products, onClose, onSave }) => {
     return (
         <div className="mapping-popup">
             <div className="popup-content">
-                <div className="popup-header">
-                    <h4>Map Fields to Walmart Attributes</h4>
-                </div>
+                <h4 className="popup-title">Map Fields to Walmart Attributes</h4>
 
                 {/* Product Selection */}
                 <div className="product-dropdown-wrapper">

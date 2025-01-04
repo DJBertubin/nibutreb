@@ -52,8 +52,18 @@
   color: #666;
 }
 
-.actions-column {
+.actions-column,
+.mapped-column {
   text-align: center;
+}
+
+.mapped-column {
+  font-weight: bold;
+  color: #28a745; /* Green for "Yes" */
+}
+
+.mapped-column.no {
+  color: #dc3545; /* Red for "No" */
 }
 
 .button-group {
@@ -65,7 +75,7 @@
 
 .btn-export,
 .btn-edit,
-.btn-map-values {
+.btn-map {
   padding: 8px 12px;
   border: none;
   cursor: pointer;
@@ -84,6 +94,15 @@
   background-color: #0056b3;
 }
 
+.btn-map {
+  background-color: #ff9900;
+  color: white;
+}
+
+.btn-map:hover {
+  background-color: #e68a00;
+}
+
 .btn-edit {
   background-color: #28a745;
   color: white;
@@ -91,15 +110,6 @@
 
 .btn-edit:hover {
   background-color: #218838;
-}
-
-.btn-map-values {
-  background-color: #ff9900;
-  color: white;
-}
-
-.btn-map-values:hover {
-  background-color: #e68a00;
 }
 
 .status-column {
