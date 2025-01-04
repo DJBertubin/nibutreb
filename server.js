@@ -209,14 +209,16 @@ app.post('/api/mappings/save', async (req, res) => {
     try {
         const cleanedMappings = {};
         for (const key in mappings) {
-            if (mappings[key] && mappings[key].type !== 'Ignore') {
-                cleanedMappings[key] = mappings[key].value || ''; // Store actual value or empty string
-            } else {
-                cleanedMappings[key] = ''; // If "Ignore", set as empty string
+            if (mappings[key]?.type === 'Ignore') {
+                cleanedMappings[key] = ''; // Store empty string for "Ignore"
+            } else if (mappings[key]?.type === 'Map to Field') {
+                cleanedMappings[key] = mappings[key]?.value || ''; // Store selected value from dropdown
+            } else if (mappings[key]?.type === 'Set Free Text') {
+                cleanedMappings[key] = mappings[key]?.value || ''; // Store entered text
             }
         }
 
-        console.log('Cleaned Mappings:', JSON.stringify(cleanedMappings, null, 2)); // Log cleaned mappings
+        console.log('Cleaned Mappings:', JSON.stringify(cleanedMappings, null, 2)); // Debug log
 
         const existingMapping = await Mapping.findOne({ clientId, productId });
 
