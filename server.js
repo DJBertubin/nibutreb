@@ -205,22 +205,16 @@ app.post('/api/mappings/save', async (req, res) => {
 
     try {
         const requiredFields = ['SKU', 'Product ID Type', 'Product ID (UPC)', 'Product Name', 'Brand Name'];
-        const missingOrIgnoredFields = requiredFields.filter(
+        const missingFields = requiredFields.filter(
             (field) => !mappings[field] || mappings[field].type === 'Ignore' || !mappings[field].value?.trim()
         );
-
-        if (missingOrIgnoredFields.length > 0) {
-            return res.status(400).json({
-                error: `The following required fields cannot be ignored or empty: ${missingOrIgnoredFields.join(', ')}`,
-            });
-        }
-
-        const existingMapping = await Mapping.findOne({ clientId, productId });
 
         const cleanedMappings = {};
         for (const key in mappings) {
             cleanedMappings[key] = mappings[key].type === 'Ignore' ? '' : mappings[key];
         }
+
+        const existingMapping = await Mapping.findOne({ clientId, productId });
 
         if (existingMapping) {
             existingMapping.mappings = cleanedMappings;
@@ -231,7 +225,12 @@ app.post('/api/mappings/save', async (req, res) => {
             await newMapping.save();
         }
 
-        res.status(200).json({ message: 'Mappings saved successfully.' });
+        res.status(200).json({
+            message: 'Mappings saved successfully.',
+            warning: missingFields.length > 0
+                ? `Warning: The following required fields were left blank or ignored: ${missingFields.join(', ')}`
+                : null,
+        });
     } catch (err) {
         console.error('Error saving mappings:', err.message);
         res.status(500).json({ error: 'Failed to save mappings.', details: err.message });
