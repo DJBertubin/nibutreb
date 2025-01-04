@@ -5,15 +5,14 @@ const MappingModal = ({ products, onClose, onSave }) => {
     const [mapping, setMapping] = useState({});
     const [selectedProducts, setSelectedProducts] = useState([]);
     const [searchQuery, setSearchQuery] = useState('');
+    const [errorMessage, setErrorMessage] = useState('');
 
-    // Handle dropdown and values for mapping
     const handleMappingChange = (attributeName, type) => {
         setMapping((prev) => ({
             ...prev,
             [attributeName]: {
-                ...prev[attributeName],
                 type,
-                value: type === 'Ignore' ? 'N/A' : '',
+                value: type === 'Ignore' ? '' : '',
             },
         }));
     };
@@ -36,31 +35,31 @@ const MappingModal = ({ products, onClose, onSave }) => {
         );
     };
 
-    const handleSave = async () => {
-        const payload = { mapping, selectedProducts };
+    const handleSave = () => {
+        // Check for missing required fields
+        const missingFields = walmartAttributes.some(
+            (attribute) =>
+                attribute.required &&
+                (mapping[attribute.name]?.type === 'Ignore' || !mapping[attribute.name]?.value)
+        );
 
-        try {
-            const response = await fetch('/api/mappings/save', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(payload),
-            });
-
-            const result = await response.json();
-            if (response.ok) {
-                console.log('Mapping saved successfully:', result.message);
-                onSave(payload); // Update the status in the parent component
-                onClose(); // Close the modal after save
-            } else {
-                console.error('Error saving mapping:', result.error);
-                alert(`Error: ${result.error}`);
-            }
-        } catch (error) {
-            console.error('Error:', error);
-            alert(`An unexpected error occurred: ${error.message}`);
+        if (missingFields || selectedProducts.length === 0) {
+            setErrorMessage('Please fill in all required fields and select at least one product.');
+            return;
         }
+
+        setErrorMessage('');
+        const sanitizedMappings = {};
+        for (const key in mapping) {
+            if (mapping[key].type === 'Ignore') {
+                sanitizedMappings[key] = ''; // Store as empty string if "Ignore"
+            } else {
+                sanitizedMappings[key] = mapping[key].value;
+            }
+        }
+
+        onSave({ mappings: sanitizedMappings, selectedProducts });
+        onClose();
     };
 
     const walmartAttributes = [
@@ -110,9 +109,11 @@ const MappingModal = ({ products, onClose, onSave }) => {
     return (
         <div className="mapping-popup">
             <div className="popup-content">
-                <h4 className="popup-title">Map Fields to Walmart Attributes</h4>
+                <div className="popup-header">
+                    <h4>Map Fields to Walmart Attributes</h4>
+                </div>
 
-                {/* Bulk Product Selection */}
+                {/* Product Selection */}
                 <div className="product-dropdown-wrapper">
                     <input
                         type="text"
@@ -149,7 +150,7 @@ const MappingModal = ({ products, onClose, onSave }) => {
                     </div>
                 </div>
 
-                {/* Attribute Mapping Section */}
+                {/* Attribute Mapping */}
                 <div className="attribute-list-container">
                     <h4 className="section-title">Mapping Attributes</h4>
                     {walmartAttributes.map((attribute) => (
@@ -160,17 +161,21 @@ const MappingModal = ({ products, onClose, onSave }) => {
                             </label>
                             <select
                                 className="mapping-select"
-                                value={mapping[attribute.name]?.type || ''}
+                                value={mapping[attribute.name]?.type || 'Ignore'}
                                 onChange={(e) => handleMappingChange(attribute.name, e.target.value)}
                             >
                                 {fieldOptions.map((option) => (
-                                    <option key={option.value} value={option.value}>
+                                    <option
+                                        key={option.value}
+                                        value={option.value}
+                                        disabled={attribute.required && option.value === 'Ignore'}
+                                    >
                                         {option.label}
                                     </option>
                                 ))}
                             </select>
 
-                            {/* Input field that is always visible */}
+                            {/* Input field */}
                             {mapping[attribute.name]?.type === 'Map to Field' ? (
                                 <select
                                     className="free-text-input"
@@ -206,6 +211,9 @@ const MappingModal = ({ products, onClose, onSave }) => {
                         </div>
                     ))}
                 </div>
+
+                {/* Error Message */}
+                {errorMessage && <p className="error-message">{errorMessage}</p>}
 
                 {/* Save and Cancel Buttons */}
                 <div className="button-group">
