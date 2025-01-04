@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-const MappingModal = ({ products, marketplaceAttributes, onClose, onSave }) => {
+const MappingModal = ({ products, onClose, onSave }) => {
     const [mapping, setMapping] = useState({});
     const [selectedProducts, setSelectedProducts] = useState([]);
     const [showDropdown, setShowDropdown] = useState(false);
@@ -24,6 +24,28 @@ const MappingModal = ({ products, marketplaceAttributes, onClose, onSave }) => {
         onSave({ mapping, selectedProducts });
         onClose();
     };
+
+    // Walmart attributes as per MP_ITEM_SPEC_4.8
+    const walmartAttributes = [
+        { name: 'SKU', required: true, description: 'Alphanumeric, 50 characters max' },
+        { name: 'Product ID Type', required: true, description: 'Closed list - UPC, GTIN, etc.' },
+        { name: 'Product ID (UPC)', required: true, description: '14-character numeric value' },
+        { name: 'Product Name', required: true, description: 'Max length: 199 characters' },
+        { name: 'Brand Name', required: true, description: 'Max length: 60 characters' },
+        { name: 'Color', required: false, description: 'Max length: 600 characters' },
+        { name: 'Color Category', required: false, description: 'Closed list: Color categories' },
+    ];
+
+    const fieldOptions = [
+        'SKU',
+        'UPC',
+        'Title',
+        'Brand',
+        'COLOR',
+        'CASE COLOR',
+        'Ignore',
+        'Set Free Text',
+    ];
 
     return (
         <div className="mapping-popup">
@@ -77,7 +99,7 @@ const MappingModal = ({ products, marketplaceAttributes, onClose, onSave }) => {
                     )}
                 </div>
                 <h4 className="section-title">Mapping Attributes</h4>
-                {marketplaceAttributes.map((attribute) => (
+                {walmartAttributes.map((attribute) => (
                     <div className="attribute-item" key={attribute.name}>
                         <label className="attribute-name">
                             {attribute.name}{' '}
@@ -85,19 +107,37 @@ const MappingModal = ({ products, marketplaceAttributes, onClose, onSave }) => {
                                 <span className="required-badge">(Required)</span>
                             )}
                         </label>
-                        <select
-                            className="mapping-select"
-                            value={mapping[attribute.name] || ''}
-                            onChange={(e) =>
-                                handleMappingChange(attribute.name, e.target.value)
-                            }
-                        >
-                            <option value="">Select Option</option>
-                            <option value="ignore">Ignore</option>
-                            <option value="mapToField">Map to Field</option>
-                            <option value="setFreeText">Set Free Text</option>
-                            <option value="advancedRule">Advanced Rule</option>
-                        </select>
+                        <p className="attribute-description">{attribute.description}</p>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <select
+                                className="mapping-select"
+                                value={mapping[attribute.name] || ''}
+                                onChange={(e) =>
+                                    handleMappingChange(attribute.name, e.target.value)
+                                }
+                                style={{
+                                    width: '60%',
+                                }}
+                            >
+                                <option value="">Select Option</option>
+                                {fieldOptions.map((option) => (
+                                    <option key={option} value={option}>
+                                        {option}
+                                    </option>
+                                ))}
+                            </select>
+                            {mapping[attribute.name] === 'Set Free Text' && (
+                                <input
+                                    type="text"
+                                    placeholder={`Enter static value for ${attribute.name}`}
+                                    className="free-text-input"
+                                    style={{ flexGrow: 1 }}
+                                    onChange={(e) =>
+                                        handleMappingChange(attribute.name, e.target.value)
+                                    }
+                                />
+                            )}
+                        </div>
                     </div>
                 ))}
             </div>
