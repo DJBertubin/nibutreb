@@ -1,36 +1,61 @@
 .mapping-popup {
     position: fixed;
     inset: 0;
-    background-color: rgba(0, 0, 0, 0.6); /* Dark overlay */
+    background-color: rgba(0, 0, 0, 0.6);
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 2000; /* Ensure it’s above other UI elements */
+    z-index: 2000;
 }
 
 .popup-content {
     background-color: white;
     padding: 20px;
     border-radius: 8px;
-    width: 80%;
-    max-width: 700px; /* Slightly wider for better layout */
+    width: 70%;
+    max-width: 650px;
     max-height: 85vh;
     overflow-y: auto;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3); /* Focus shadow */
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
 }
 
-.product-selection {
+.popup-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     margin-bottom: 20px;
 }
 
-.mapping-select {
-    width: 60%; /* Adjusted for consistent alignment */
-    padding: 8px;
+.popup-header h4 {
+    font-size: 16px;
+    font-weight: bold;
 }
 
-.scrollable-attributes {
-    max-height: 300px;
+.product-dropdown-wrapper {
+    margin-bottom: 20px;
+}
+
+.search-input {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    margin-bottom: 10px;
+}
+
+.scrollable-product-list {
+    max-height: 200px;
     overflow-y: auto;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 10px;
+}
+
+.product-item {
+    display: flex;
+    align-items: center;
+    padding: 5px 0;
+    gap: 10px;
 }
 
 .attribute-item {
@@ -43,28 +68,34 @@
 
 .attribute-name {
     width: 25%;
+    font-size: 14px;
     font-weight: 500;
 }
 
 .mapping-select,
 .free-text-input {
-    width: 70%;
+    width: 35%;
+    padding: 6px;
+    font-size: 12px;
+}
+
+.free-text-input {
+    border: 1px solid #ddd;
+    border-radius: 4px;
 }
 
 button.btn-save-mapping,
 button.btn-close-mapping {
-    padding: 10px 16px;
+    padding: 8px 12px;
     margin-top: 20px;
     border: none;
     border-radius: 4px;
-    font-size: 14px;
-    cursor: pointer;
+    font-size: 12px;
 }
 
 .btn-save-mapping {
     background-color: #28a745;
     color: white;
-    transition: background-color 0.3s ease;
 }
 
 .btn-save-mapping:hover {
@@ -74,49 +105,14 @@ button.btn-close-mapping {
 .btn-close-mapping {
     background-color: #dc3545;
     color: white;
-    transition: background-color 0.3s ease;
 }
 
 .btn-close-mapping:hover {
     background-color: #c82333;
 }
 
-.scrollable-product-list {
-    max-height: 200px;
-    overflow-y: auto;
-    padding-right: 10px;
-}
-
-.product-dropdown-wrapper {
-    margin-bottom: 15px;
-}
-
-.product-dropdown-header {
-    cursor: pointer;
-    background-color: #f1f1f1;
-    padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.product-item {
-    display: flex;
-    align-items: center;
-    padding: 8px 0;
-}
-
-.product-checkbox-label {
-    display: flex;
-    gap: 10px;
-    cursor: pointer;
-}
-
 .section-title {
-    font-size: 18px;
-    margin-top: 20px;
+    font-size: 14px;
     margin-bottom: 10px;
     font-weight: bold;
     color: #333;
