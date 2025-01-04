@@ -2,20 +2,10 @@ import mongoose from 'mongoose';
 import jwt from 'jsonwebtoken';
 import ShopifyData from '../../models/ShopifyData';
 
-async function connectDB() {
-    if (mongoose.connection.readyState === 0) {
-        try {
-            await mongoose.connect(process.env.MONGO_URI, {
-                useNewUrlParser: true,
-                useUnifiedTopology: true,
-            });
-            console.log('Connected to MongoDB.');
-        } catch (err) {
-            console.error('Failed to connect to MongoDB:', err.message);
-            throw new Error('Database connection failed');
-        }
-    }
-}
+mongoose.connect(process.env.MONGO_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+});
 
 export default async function handler(req, res) {
     if (req.method !== 'GET') {
@@ -29,10 +19,10 @@ export default async function handler(req, res) {
     }
 
     try {
-        await connectDB();
-
+        // Extract the token and decode it
         const token = authorization.split(' ')[1];
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
         const clientId = decoded.clientId;
 
         if (!clientId) {
@@ -40,17 +30,18 @@ export default async function handler(req, res) {
             return res.status(401).json({ error: 'Invalid or missing clientId in token.' });
         }
 
-        console.log(`Fetching Shopify data for clientId: ${clientId}`);
+        // Fetch all Shopify data linked to the user's clientId
         const shopifyData = await ShopifyData.find({ clientId });
 
         if (!shopifyData.length) {
             console.log(`No Shopify data found for clientId: ${clientId}`);
             return res.status(200).json({
                 message: 'No Shopify data found for this user.',
-                shopifyData: [],
+                shopifyData: [], // Return an empty array for consistency
             });
         }
 
+        console.log(`Shopify data fetched successfully for clientId: ${clientId}`);
         res.status(200).json({
             message: 'Shopify data fetched successfully.',
             shopifyData,

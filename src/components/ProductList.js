@@ -8,7 +8,6 @@ const ProductList = ({ products }) => {
     const [showMappingModal, setShowMappingModal] = useState(false);
     const [selectedAttribute, setSelectedAttribute] = useState('');
     const [mappingFields, setMappingFields] = useState({});
-    const [selectedProducts, setSelectedProducts] = useState([]); // To allow multiple product selections
 
     const requiredAttributes = [
         { name: "SKU", required: true },
@@ -23,13 +22,15 @@ const ProductList = ({ products }) => {
     const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
     const currentProducts = products.slice(indexOfFirstItem, indexOfLastItem);
+
     const totalPages = Math.ceil(products.length / itemsPerPage);
 
+    // Pagination change
     const handlePageChange = (pageNumber) => {
         setCurrentPage(pageNumber);
     };
 
-    // Handle exporting data
+    // Export function for sending data to Walmart
     const handleExport = async (productId, product) => {
         const itemData = {
             sku: product.sku,
@@ -86,22 +87,13 @@ const ProductList = ({ products }) => {
         }
     };
 
-    // Handle mapping selection in the modal
+    // Handle mapping selection in modal
     const handleMappingSelection = (e, attributeName) => {
         setSelectedAttribute(attributeName);
         setMappingFields((prev) => ({
             ...prev,
             [attributeName]: e.target.value,
         }));
-    };
-
-    // Toggle selection for a product
-    const handleProductSelection = (productId) => {
-        setSelectedProducts((prevSelected) =>
-            prevSelected.includes(productId)
-                ? prevSelected.filter((id) => id !== productId)
-                : [...prevSelected, productId]
-        );
     };
 
     return (
@@ -119,30 +111,6 @@ const ProductList = ({ products }) => {
                 <div className="mapping-popup">
                     <div className="popup-content">
                         <h4>Map Fields to Walmart Attributes</h4>
-                        <div className="checkbox-group">
-                            <label>
-                                <input
-                                    type="checkbox"
-                                    onChange={(e) =>
-                                        setSelectedProducts(
-                                            e.target.checked ? products.map((p) => p.id) : []
-                                        )
-                                    }
-                                    checked={selectedProducts.length === products.length}
-                                />
-                                Select All
-                            </label>
-                            {products.map((product) => (
-                                <label key={product.id}>
-                                    <input
-                                        type="checkbox"
-                                        checked={selectedProducts.includes(product.id)}
-                                        onChange={() => handleProductSelection(product.id)}
-                                    />
-                                    {product.title}
-                                </label>
-                            ))}
-                        </div>
                         {requiredAttributes.map((attr) => (
                             <div className="attribute-item" key={attr.name}>
                                 <label>
@@ -189,7 +157,6 @@ const ProductList = ({ products }) => {
             <table className="modern-table">
                 <thead>
                     <tr>
-                        <th>Select</th>
                         <th>Actions</th>
                         <th>Status</th>
                         <th>Product</th>
@@ -203,13 +170,6 @@ const ProductList = ({ products }) => {
                     {products.length > 0 ? (
                         currentProducts.map((product) => (
                             <tr key={product.id} className="product-row">
-                                <td>
-                                    <input
-                                        type="checkbox"
-                                        checked={selectedProducts.includes(product.id)}
-                                        onChange={() => handleProductSelection(product.id)}
-                                    />
-                                </td>
                                 <td className="actions-column">
                                     <div className="button-group">
                                         <button
@@ -218,6 +178,7 @@ const ProductList = ({ products }) => {
                                         >
                                             Export
                                         </button>
+                                        <button className="btn-edit">Edit</button>
                                     </div>
                                 </td>
                                 <td className="status-column">
@@ -253,7 +214,7 @@ const ProductList = ({ products }) => {
                         ))
                     ) : (
                         <tr>
-                            <td colSpan="8" style={{ textAlign: 'center' }}>
+                            <td colSpan="7" style={{ textAlign: 'center' }}>
                                 No products fetched yet.
                             </td>
                         </tr>

@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
+import './ClientProfile.css';
 
 const ClientProfile = () => {
-    const [clientInfo, setClientInfo] = useState(null);
-    const [loading, setLoading] = useState(true);
+    const [clientInfo, setClientInfo] = useState({ name: '', clientId: '' });
     const [error, setError] = useState('');
 
     useEffect(() => {
@@ -10,50 +10,50 @@ const ClientProfile = () => {
             try {
                 const token = localStorage.getItem('token');
                 if (!token) {
-                    throw new Error('User is not authenticated. Please log in.');
+                    throw new Error('User is not authenticated. Please log in again.');
                 }
 
-                const response = await fetch('http://localhost:5001/api/client/info', {
+                const response = await fetch('/api/client/info', {
                     method: 'GET',
                     headers: {
-                        'Content-Type': 'application/json',
                         Authorization: `Bearer ${token}`,
                     },
                 });
 
                 if (!response.ok) {
-                    const errorText = await response.text();
-                    throw new Error(`Failed to fetch client information: ${errorText}`);
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Failed to fetch client information.');
                 }
 
                 const data = await response.json();
-                setClientInfo(data);
+                setClientInfo({
+                    name: data.name,
+                    clientId: data.clientId,
+                });
             } catch (err) {
                 console.error('Error fetching client information:', err.message);
-                setError(err.message || 'Failed to load client information.');
-            } finally {
-                setLoading(false);
+                setError(err.message || 'Error fetching client information.');
             }
         };
 
         fetchClientInfo();
     }, []);
 
-    if (loading) {
-        return <p>Loading client information...</p>;
-    }
-
     if (error) {
-        return <p style={{ color: 'red' }}>{error}</p>;
+        return <div className="error-message">Error: {error}</div>;
     }
 
     return (
-        <div>
-            <h2>Client Profile</h2>
-            <p>Name: {clientInfo?.name || 'N/A'}</p>
-            <p>Username: {clientInfo?.username || 'N/A'}</p>
-            <p>Client ID: {clientInfo?.clientId || 'N/A'}</p>
-            <p>Role: {clientInfo?.role || 'N/A'}</p>
+        <div className="client-profile">
+            <img
+                src="https://via.placeholder.com/40" // Temporary placeholder image
+                alt="Client"
+                className="client-image"
+            />
+            <div className="client-info">
+                <p className="client-name">{clientInfo.name || 'N/A'}</p>
+                <p className="client-id">Client ID: {clientInfo.clientId || 'N/A'}</p>
+            </div>
         </div>
     );
 };
