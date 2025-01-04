@@ -33,7 +33,33 @@ async function getWalmartAccessToken() {
 }
 
 // Function to send MP_ITEM feed to Walmart
-export async function sendItemToWalmart(itemData) {
+export async function sendItemToWalmart(product) {
+    if (!product) {
+        throw new Error('Item data is required.');
+    }
+
+    // Ensure all required fields are included in the payload
+    const mpItemPayload = {
+        MPItem: {
+            sku: product.sku || 'N/A',
+            productName: product.title || 'Untitled Product',
+            price: {
+                currency: 'USD',
+                amount: parseFloat(product.price) || 0,
+            },
+            productId: product.productId || '0000000000000',  // Ensure you have a valid GTIN or UPC
+            productIdType: 'GTIN',
+            shortDescription: product.shortDescription || 'No description available',
+            mainImageUrl: product.image || 'https://via.placeholder.com/300',
+            productSecondaryImageURL: product.secondaryImages || [],
+            fulfillmentLagTime: product.fulfillmentLagTime || 1,  // Default lag time
+            condition: product.condition || 'New',
+            brand: product.brand || 'Unknown Brand',
+            shippingWeight: product.shippingWeight || 1.0,  // Example default weight
+            category: product.sourceCategory || 'General Merchandise',
+        },
+    };
+
     try {
         const accessToken = await getWalmartAccessToken();
         const requestId = crypto.randomUUID();
@@ -47,7 +73,7 @@ export async function sendItemToWalmart(itemData) {
                 'WM_SVC.NAME': 'Walmart Item Export',
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ items: itemData }),
+            body: JSON.stringify(mpItemPayload), // Send the payload according to the spec
         });
 
         if (!response.ok) {
