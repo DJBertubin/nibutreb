@@ -220,6 +220,14 @@
   margin-bottom: 20px;
 }
 
+.product-multi-select {
+  width: 100%;
+  max-height: 200px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
 .popup-content {
   display: flex;
   flex-direction: column;
@@ -266,6 +274,13 @@ input[type='text'] {
   padding: 8px;
   border: 1px solid #ddd;
   border-radius: 4px;
+}
+
+.checkbox-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 15px;
 }
 
 .button-group {

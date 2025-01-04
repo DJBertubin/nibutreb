@@ -1,93 +1,120 @@
 import React, { useState } from 'react';
 
-const MappingModal = ({ productData, marketplaceAttributes, products, onClose, onSave }) => {
+const MappingModal = ({ productData, marketplaceAttributes, onClose, onSave }) => {
     const [mapping, setMapping] = useState({});
-    const [selectedProduct, setSelectedProduct] = useState(products.length ? products[0].id : '');
+    const [selectedProducts, setSelectedProducts] = useState([]);
 
-    const handleProductSelect = (event) => {
-        setSelectedProduct(event.target.value);
-    };
-
-    const handleMappingChange = (attributeName, option, value = '') => {
+    const handleMappingChange = (attributeName, option, value) => {
         setMapping((prev) => ({
             ...prev,
             [attributeName]: { option, value },
         }));
     };
 
+    const handleProductSelect = (productId) => {
+        setSelectedProducts((prev) =>
+            prev.includes(productId)
+                ? prev.filter((id) => id !== productId)
+                : [...prev, productId]
+        );
+    };
+
+    const handleSelectAllProducts = (e) => {
+        if (e.target.checked) {
+            setSelectedProducts(productData.map((product) => product.id));
+        } else {
+            setSelectedProducts([]);
+        }
+    };
+
     const handleSave = () => {
-        if (!selectedProduct) {
-            alert('Please select a product.');
-            return;
-        }
-        if (Object.keys(mapping).length === 0) {
-            alert('Please map at least one attribute.');
-            return;
-        }
-        const selectedProductData = products.find((p) => p.id === selectedProduct);
-        onSave({ mapping, selectedProductData });
+        const filteredProducts = productData.filter((product) => selectedProducts.includes(product.id));
+        onSave(mapping, filteredProducts);
         onClose();
     };
 
     return (
         <div className="mapping-popup">
             <div className="popup-header">
-                <h4>Map Product Attributes</h4>
-                <button onClick={onClose} className="btn-close-mapping">Close</button>
+                <span className="popup-title">Map Product Attributes</span>
+                <button className="btn-close-mapping" onClick={onClose}>
+                    Close
+                </button>
             </div>
+
             <div className="popup-content">
+                <h4>Select Products to Update</h4>
                 <div className="product-dropdown">
-                    <label>Select Product</label>
-                    <select value={selectedProduct} onChange={handleProductSelect} className="dropdown">
-                        {products.map((product) => (
-                            <option key={product.id} value={product.id}>
-                                {product.title}
-                            </option>
-                        ))}
-                    </select>
+                    <label>
+                        <input
+                            type="checkbox"
+                            onChange={handleSelectAllProducts}
+                            checked={selectedProducts.length === productData.length}
+                        />
+                        Select All
+                    </label>
+                    <div className="dropdown-wrapper">
+                        <select multiple className="product-multi-select">
+                            {productData.map((product) => (
+                                <option key={product.id}>
+                                    <label>
+                                        <input
+                                            type="checkbox"
+                                            checked={selectedProducts.includes(product.id)}
+                                            onChange={() => handleProductSelect(product.id)}
+                                        />
+                                        {product.title}
+                                    </label>
+                                </option>
+                            ))}
+                        </select>
+                    </div>
                 </div>
 
-                <h5 className="section-title">Attribute Mapping</h5>
+                <h4>Map Attributes</h4>
                 {marketplaceAttributes.map((attribute) => (
                     <div className="attribute-item" key={attribute.name}>
-                        <span className="attribute-name">
+                        <label className="attribute-name">
                             {attribute.name} {attribute.required && <span className="required-badge">(Required)</span>}
-                        </span>
-                        <select
-                            className="mapping-select"
-                            value={mapping[attribute.name]?.option || ''}
-                            onChange={(e) =>
-                                handleMappingChange(attribute.name, e.target.value)
-                            }
-                        >
-                            <option value="">Select Option</option>
-                            <option value="ignore">Ignore</option>
-                            <option value="mapToField">Map to Field</option>
-                            <option value="setFreeText">Set Free Text</option>
-                        </select>
-                        {mapping[attribute.name]?.option === 'mapToField' && (
+                        </label>
+                        <div className="mapping-select">
                             <select
-                                className="field-select"
-                                value={mapping[attribute.name]?.value || ''}
-                                onChange={(e) => handleMappingChange(attribute.name, 'mapToField', e.target.value)}
+                                className="dropdown"
+                                value={mapping[attribute.name]?.option || ''}
+                                onChange={(e) => handleMappingChange(attribute.name, e.target.value, '')}
                             >
-                                <option value="">Select Product Field</option>
-                                {Object.keys(productData).map((key) => (
-                                    <option key={key} value={productData[key]}>
-                                        {key}
-                                    </option>
-                                ))}
+                                <option value="">Select Option</option>
+                                <option value="ignore">Ignore</option>
+                                <option value="mapToField">Map to Field</option>
+                                <option value="setFreeText">Set Free Text</option>
+                                <option value="advancedRule">Advanced Rule</option>
                             </select>
-                        )}
-                        {mapping[attribute.name]?.option === 'setFreeText' && (
-                            <input
-                                type="text"
-                                className="free-text-input"
-                                placeholder={`Enter value for ${attribute.name}`}
-                                value={mapping[attribute.name]?.value || ''}
-                                onChange={(e) => handleMappingChange(attribute.name, 'setFreeText', e.target.value)}
-                            />
-                        )}
+                            {mapping[attribute.name]?.option === 'mapToField' && (
+                                <select
+                                    className="field-select"
+                                    onChange={(e) =>
+                                        handleMappingChange(attribute.name, 'mapToField', e.target.value)
+                                    }
+                                >
+                                    <option value="">Select Field</option>
+                                    {Object.keys(productData[0] || {}).map((field) => (
+                                        <option key={field} value={field}>
+                                            {field}
+                                        </option>
+                                    ))}
+                                </select>
+                            )}
+                            {mapping[attribute.name]?.option === 'setFreeText' && (
+                                <input
+                                    type="text"
+                                    className="free-text-input"
+                                    placeholder="Enter value"
+                                    onChange={(e) =>
+                                        handleMappingChange(attribute.name, 'setFreeText', e.target.value)
+                                    }
+                                />
+                            )}
+                        </div>
                     </div>
                 ))}
             </div>
