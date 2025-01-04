@@ -209,7 +209,7 @@ app.post('/api/mappings/save', async (req, res) => {
     try {
         const cleanedMappings = {};
         for (const key in mappings) {
-            cleanedMappings[key] = mappings[key].type === 'Ignore' ? '' : mappings[key];
+            cleanedMappings[key] = mappings[key].type === 'Ignore' ? '' : mappings[key].value || '';
         }
 
         const existingMapping = await Mapping.findOne({ clientId, productId });

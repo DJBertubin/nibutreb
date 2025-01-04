@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './MappingModal.css';
 
 const MappingModal = ({ products, onClose, onSave }) => {
@@ -7,12 +7,22 @@ const MappingModal = ({ products, onClose, onSave }) => {
     const [searchQuery, setSearchQuery] = useState('');
     const [errorMessage, setErrorMessage] = useState('');
 
+    // Pre-fill mapping if the product already has mapping data
+    useEffect(() => {
+        if (products.length > 0 && products[0]?.mapping) {
+            setMapping(products[0].mapping); // Pre-fill the existing mapping for single product
+        } else {
+            setMapping({});
+        }
+        setSelectedProducts(products.map((p) => p.id)); // Automatically select the current product
+    }, [products]);
+
     const handleMappingChange = (attributeName, type) => {
         setMapping((prev) => ({
             ...prev,
             [attributeName]: {
                 type,
-                value: type === 'Ignore' ? '' : '',
+                value: type === 'Ignore' ? '' : prev[attributeName]?.value || '',
             },
         }));
     };

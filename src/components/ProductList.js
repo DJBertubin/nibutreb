@@ -8,6 +8,7 @@ const ProductList = ({ products }) => {
     const [selectedProduct, setSelectedProduct] = useState(null);
     const [showBulkMappingModal, setShowBulkMappingModal] = useState(false);
     const [mappedStatuses, setMappedStatuses] = useState({}); // Track mapped status for each product
+    const [productMapping, setProductMapping] = useState(null); // Store current product mapping
     const itemsPerPage = 10;
 
     const indexOfLastItem = currentPage * itemsPerPage;
@@ -20,9 +21,27 @@ const ProductList = ({ products }) => {
     };
 
     // Open individual mapping modal
-    const handleOpenMappingModal = (product) => {
-        setSelectedProduct(product);
-        setShowMappingModal(true);
+    const handleOpenMappingModal = async (product) => {
+        try {
+            const clientId = localStorage.getItem('clientId');
+            const response = await fetch(`/api/mappings/get/${clientId}`);
+            const data = await response.json();
+
+            if (response.ok) {
+                const existingMapping = data.mappings.find(
+                    (map) => map.productId === product.id
+                );
+                setProductMapping(existingMapping?.mappings || {}); // Pre-fill the mapping data if available
+            } else {
+                console.error('Error fetching existing mapping:', data.error);
+                setProductMapping(null);
+            }
+
+            setSelectedProduct(product);
+            setShowMappingModal(true);
+        } catch (error) {
+            console.error('Error fetching product mapping:', error);
+        }
     };
 
     const handleCloseMappingModal = () => {
@@ -42,7 +61,7 @@ const ProductList = ({ products }) => {
     // Fetch mapping statuses
     const fetchMappingStatuses = async () => {
         try {
-            const clientId = localStorage.getItem('clientId'); // Make sure the clientId is stored after login
+            const clientId = localStorage.getItem('clientId');
             if (!clientId) {
                 console.error('Client ID is missing. Please log in again.');
                 return;
@@ -193,7 +212,7 @@ const ProductList = ({ products }) => {
             {/* Individual Mapping Modal */}
             {showMappingModal && selectedProduct && (
                 <MappingModal
-                    products={[selectedProduct]}
+                    products={[{ ...selectedProduct, mapping: productMapping }]} // Pass existing mapping data
                     onClose={handleCloseMappingModal}
                     onSave={async (mappingData) => {
                         try {
