@@ -9,7 +9,6 @@ const ProductList = ({ products }) => {
     const [showBulkMappingModal, setShowBulkMappingModal] = useState(false);
     const [mappedStatuses, setMappedStatuses] = useState({});
     const [bulkSelectedProducts, setBulkSelectedProducts] = useState([]);
-    const [productMapping, setProductMapping] = useState(null); // Store current product mapping for individual mapping
     const itemsPerPage = 10;
 
     const indexOfLastItem = currentPage * itemsPerPage;
@@ -30,13 +29,14 @@ const ProductList = ({ products }) => {
 
             if (response.ok) {
                 const existingMapping = data.mappings.find((map) => map.productId === product.id);
-                setProductMapping(existingMapping?.mappings || {}); // Pre-fill the mapping data if available
+                setSelectedProduct({
+                    ...product,
+                    mapping: existingMapping?.mappings || {},
+                });
             } else {
-                console.error('Error fetching existing mapping:', data.error);
-                setProductMapping({});
+                setSelectedProduct({ ...product, mapping: {} });
             }
 
-            setSelectedProduct(product);
             setShowMappingModal(true);
         } catch (error) {
             console.error('Error fetching product mapping:', error);
@@ -50,7 +50,7 @@ const ProductList = ({ products }) => {
 
     // Open bulk mapping modal
     const handleOpenBulkMappingModal = () => {
-        setBulkSelectedProducts(products.map((p) => p.id)); // Select all products for bulk update
+        setBulkSelectedProducts(products.map((p) => p.id));
         setShowBulkMappingModal(true);
     };
 
@@ -104,7 +104,7 @@ const ProductList = ({ products }) => {
             {/* Bulk Mapping Modal */}
             {showBulkMappingModal && (
                 <MappingModal
-                    products={products} // Pass the full product list for bulk selection
+                    products={products}
                     onClose={handleCloseBulkMappingModal}
                     onSave={async (mappingData) => {
                         try {
@@ -120,7 +120,7 @@ const ProductList = ({ products }) => {
                             const response = await fetch('/api/mappings/save-bulk', {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify(bulkPayload),
+                                body: JSON.stringify({ clientId, mappings: bulkPayload }),
                             });
 
                             const result = await response.json();
@@ -216,7 +216,7 @@ const ProductList = ({ products }) => {
             {/* Individual Mapping Modal */}
             {showMappingModal && selectedProduct && (
                 <MappingModal
-                    products={[selectedProduct]} // Pass the selected product only
+                    products={[selectedProduct]}
                     onClose={handleCloseMappingModal}
                     onSave={async (mappingData) => {
                         try {

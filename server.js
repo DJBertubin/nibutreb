@@ -195,7 +195,7 @@ app.post('/api/shopify/fetch', async (req, res) => {
     }
 });
 
-// **POST /api/mappings/save - Save Mappings**
+// **POST /api/mappings/save - Save Individual Mapping**
 app.post('/api/mappings/save', async (req, res) => {
     const { clientId, productId, mappings } = req.body;
 
@@ -209,20 +209,12 @@ app.post('/api/mappings/save', async (req, res) => {
     try {
         const cleanedMappings = {};
 
-        // Iterate over mappings to ensure proper structure
         for (const key in mappings) {
             const mappingEntry = mappings[key];
-
-            if (typeof mappingEntry === 'string') {
-                cleanedMappings[key] = { type: 'Set Free Text', value: mappingEntry }; // Convert string to object
-            } else if (typeof mappingEntry === 'object' && mappingEntry !== null) {
-                cleanedMappings[key] = {
-                    type: mappingEntry.type || 'Ignore',
-                    value: mappingEntry.value || '',
-                };
-            } else {
-                cleanedMappings[key] = { type: 'Ignore', value: '' }; // Default to "Ignore"
-            }
+            cleanedMappings[key] = {
+                type: mappingEntry?.type || 'Ignore',
+                value: mappingEntry?.value || '',
+            };
         }
 
         console.log('Cleaned Mappings (to be saved):', cleanedMappings);
@@ -246,6 +238,34 @@ app.post('/api/mappings/save', async (req, res) => {
     } catch (err) {
         console.error('Error saving mappings:', err.message);
         res.status(500).json({ error: 'Failed to save mappings.', details: err.message });
+    }
+});
+
+// **POST /api/mappings/save-bulk - Save Bulk Mappings**
+app.post('/api/mappings/save-bulk', async (req, res) => {
+    const { clientId, selectedProducts, mappings } = req.body;
+
+    console.log('Incoming Bulk Payload:', JSON.stringify(req.body, null, 2));
+
+    if (!clientId || !selectedProducts || selectedProducts.length === 0 || !mappings) {
+        return res.status(400).json({ error: 'Missing required bulk mapping data.' });
+    }
+
+    try {
+        const bulkOperations = selectedProducts.map((productId) => ({
+            updateOne: {
+                filter: { clientId, productId },
+                update: { mappings, updatedAt: new Date() },
+                upsert: true,
+            },
+        }));
+
+        await Mapping.bulkWrite(bulkOperations);
+
+        res.status(200).json({ message: 'Bulk mappings saved successfully.' });
+    } catch (err) {
+        console.error('Error saving bulk mappings:', err.message);
+        res.status(500).json({ error: 'Failed to save bulk mappings.', details: err.message });
     }
 });
 
