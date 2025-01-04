@@ -11,16 +11,26 @@ const ShopifyData = require('./api/models/ShopifyData'); // Import ShopifyData m
 const walmartRoutes = require('./api/walmart/walmart'); // Import Walmart routes (e.g., /send)
 const { sendItemToWalmart } = require('./api/utils/sendToWalmart'); // Import sendToWalmart function
 
-dotenv.config();
+dotenv.config(); // Load environment variables
 
 const app = express();
-const JWT_SECRET = process.env.JWT_SECRET;
+const JWT_SECRET = process.env.JWT_SECRET || 'default-secret';
 
-// Middleware
-app.use(cors());
-app.use(express.json());
+// **CORS Middleware Configuration**
+app.use(cors({
+    origin: ['http://localhost:3000', 'https://your-vercel-app-url.vercel.app'], // Frontend URLs
+    credentials: true, // Allow credentials (cookies, authorization headers)
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], // Allowed HTTP methods
+    allowedHeaders: ['Content-Type', 'Authorization'], // Allowed headers
+}));
 
-// MongoDB Connection
+// Handle preflight OPTIONS requests for all routes
+app.options('*', cors());
+
+// Middleware to parse JSON requests
+app.use(express.json()); // Middleware to parse incoming JSON requests
+
+// **MongoDB Connection**
 mongoose
     .connect(process.env.MONGO_URI, {
         useNewUrlParser: true,
@@ -28,6 +38,11 @@ mongoose
     })
     .then(() => console.log('Connected to MongoDB Atlas'))
     .catch((err) => console.error('MongoDB connection error:', err));
+
+// **Root Route to check server status**
+app.get('/', (req, res) => {
+    res.send('API is running...');
+});
 
 // **Use Walmart API routes**
 app.use('/api/walmart', walmartRoutes);
@@ -194,72 +209,7 @@ app.post('/api/shopify/fetch', async (req, res) => {
     }
 });
 
-// **Walmart Send API Route**
-app.post('/api/walmart/send', async (req, res) => {
-    try {
-        const { itemData } = req.body;
-        if (!itemData || itemData.length === 0) {
-            return res.status(400).json({ error: 'Item data is required.' });
-        }
-
-        const result = await sendItemToWalmart(itemData);
-        if (result.success) {
-            res.status(200).json({ message: result.message, feedId: result.feedId });
-        } else {
-            res.status(500).json({ error: result.message });
-        }
-    } catch (error) {
-        console.error('Error sending to Walmart:', error.message);
-        res.status(500).json({ error: 'Internal Server Error', details: error.message });
-    }
-});
-
-// **Periodic Shopify Data Fetch**
-const fetchShopifyDataPeriodically = async () => {
-    try {
-        const allEntries = await ShopifyData.find();
-        for (const entry of allEntries) {
-            const { shopifyUrl, shopifyToken, clientId } = entry;
-
-            try {
-                const shopifyApiUrl = `https://${shopifyUrl.trim()}/admin/api/2024-01/products.json`;
-                const response = await fetch(shopifyApiUrl, {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-Shopify-Access-Token': shopifyToken,
-                    },
-                });
-
-                if (response.ok) {
-                    const shopifyData = await response.json();
-                    await ShopifyData.findOneAndUpdate(
-                        { clientId, shopifyUrl },
-                        { shopifyData, lastUpdated: new Date() },
-                        { upsert: true }
-                    );
-
-                    console.log(`Shopify data updated for clientId: ${clientId}`);
-                } else {
-                    console.error(
-                        `Error fetching Shopify data for clientId ${clientId}: ${response.statusText}`
-                    );
-                }
-            } catch (error) {
-                console.error(
-                    `Failed to fetch Shopify data for clientId ${clientId}: ${error.message}`
-                );
-            }
-        }
-    } catch (error) {
-        console.error('Periodic fetch encountered an error:', error.message);
-    }
-};
-
-// **Schedule periodic fetching every 10 minutes**
-cron.schedule('*/10 * * * *', fetchShopifyDataPeriodically);
-
-// **Fetch Shopify Data for Logged-In User**
+// **GET Shopify Data Route (Fix for /api/shopify/data 404)**
 app.get('/api/shopify/data', async (req, res) => {
     const { authorization } = req.headers;
 
@@ -292,11 +242,34 @@ app.get('/api/shopify/data', async (req, res) => {
     }
 });
 
+// **Walmart Send API Route**
+app.post('/api/walmart/send', async (req, res) => {
+    try {
+        const { itemData } = req.body;
+        if (!itemData || itemData.length === 0) {
+            return res.status(400).json({ error: 'Item data is required.' });
+        }
+
+        const result = await sendItemToWalmart(itemData);
+        if (result.success) {
+            res.status(200).json({ message: result.message, feedId: result.feedId });
+        } else {
+            res.status(500).json({ error: result.message });
+        }
+    } catch (error) {
+        console.error('Error sending to Walmart:', error.message);
+        res.status(500).json({ error: 'Internal Server Error', details: error.message });
+    }
+});
+
 // **Error Handling Middleware**
 app.use((err, req, res, next) => {
     console.error('Server Error:', err.message);
     res.status(500).json({ error: 'Internal Server Error', details: err.message });
 });
 
-// **Export app**
-module.exports = app;
+// **Start Server**
+const PORT = process.env.PORT || 5001;
+app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+});

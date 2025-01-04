@@ -12,52 +12,66 @@ const Products = () => {
     const [productData, setProductData] = useState([]);
     const [stores, setStores] = useState(['Walmart', 'Shopify']);
     const [error, setError] = useState('');
+    const [loading, setLoading] = useState(true);
     const navigate = useNavigate();
 
     useEffect(() => {
         const fetchShopifyData = async () => {
             const token = localStorage.getItem('token');
-
             if (!token) {
+                console.warn('No token found. Redirecting to login.');
                 navigate('/login');
                 return;
             }
 
             try {
-                const response = await fetch('/api/shopify/data', {
+                setLoading(true); // Show loading indicator during fetch
+                const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:5001'; // Default local URL
+                const response = await fetch(`${apiUrl}/api/shopify/data`, {
                     method: 'GET',
                     headers: {
+                        'Content-Type': 'application/json',
                         Authorization: `Bearer ${token}`,
                     },
                 });
 
+                if (response.status === 403) {
+                    setError('Unauthorized access. Please log in again.');
+                    console.error('403 Error: Redirecting to login');
+                    navigate('/login');
+                    return;
+                }
+
+                if (response.status === 404) {
+                    console.warn('No products found for this client.');
+                    setProductData([]); // Set empty data when no products are found
+                    return;
+                }
+
                 if (!response.ok) {
-                    const errorData = await response.json();
-                    if (response.status === 404) {
-                        // No Shopify data found for this user
-                        setProductData([]); // Set an empty array to display the table with headers
-                        return;
-                    }
-                    throw new Error(errorData.error || 'Failed to fetch Shopify data.');
+                    throw new Error(`Failed to fetch Shopify data: ${await response.text()}`);
                 }
 
                 const data = await response.json();
+                console.log('Fetched Shopify Data:', data);
 
-                // Flatten and format products
-                const products = data.shopifyData.flatMap((entry) =>
-                    entry.shopifyData?.products.map((product) => ({
+                const formattedProducts = data.shopifyData.flatMap((entry) =>
+                    entry.products.map((product) => ({
                         id: product.id,
                         title: product.title,
-                        sku: product.variants?.[0]?.sku || '',
+                        sku: product.variants?.[0]?.sku || 'N/A',
                         price: product.variants?.[0]?.price || 'N/A',
                         inventory: product.variants?.[0]?.inventory_quantity || 0,
                         created_at: product.created_at || '',
                     }))
                 );
 
-                setProductData(products);
+                setProductData(formattedProducts);
             } catch (err) {
-                setError(err.message);
+                console.error('Error fetching Shopify data:', err.message);
+                setError(err.message || 'An error occurred while fetching data.');
+            } finally {
+                setLoading(false); // Hide loading indicator after fetch
             }
         };
 
@@ -92,10 +106,6 @@ const Products = () => {
         }
     };
 
-    if (error) {
-        return <div>Error: {error}</div>;
-    }
-
     return (
         <div style={{ display: 'flex', height: '100vh' }}>
             <Sidebar userType="Admin" />
@@ -112,9 +122,16 @@ const Products = () => {
                     <MarketplaceDropdowns onAddNewSource={handleShowModal} storeList={stores} />
                     <div className="content">
                         <h2 className="section-title">Products Overview</h2>
-                        <div className="products-table">
-                            <ProductList products={productData} />
-                        </div>
+
+                        {loading ? (
+                            <p>Loading Shopify data...</p>
+                        ) : error ? (
+                            <p style={{ color: 'red' }}>{error}</p>
+                        ) : (
+                            <div className="products-table">
+                                <ProductList products={productData} />
+                            </div>
+                        )}
                     </div>
                     {showIntegrationModal && (
                         <IntegrationModal

@@ -11,23 +11,29 @@ const ClientDashboard = ({ username }) => {
             try {
                 const token = localStorage.getItem('token');
                 if (!token) {
-                    throw new Error('User not authenticated. Please log in.');
+                    setError('User is not authenticated. Please log in.');
+                    return;
                 }
 
-                const response = await fetch('/api/user/data', {
+                const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:5001'}/api/shopify/data`, {
                     method: 'GET',
-                    headers: { Authorization: `Bearer ${token}` },
+                    headers: {
+                        'Content-Type': 'application/json',
+                        Authorization: `Bearer ${token}`,
+                    },
                 });
 
                 if (!response.ok) {
                     const errorText = await response.text();
-                    throw new Error(`Failed to fetch Shopify data: ${errorText}`);
+                    setError(`Failed to fetch Shopify data: ${errorText}`);
+                    return;
                 }
 
                 const data = await response.json();
-                setShopifyData(data.shopifyData.products || []);
+                setShopifyData(data.shopifyData?.[0]?.shopifyData?.products || []);
             } catch (err) {
-                setError(err.message || 'Failed to load data.');
+                setError('An unexpected error occurred while loading Shopify data.');
+                console.error('Error fetching Shopify data:', err.message);
             } finally {
                 setLoading(false);
             }
