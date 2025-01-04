@@ -195,14 +195,11 @@ app.post('/api/shopify/fetch', async (req, res) => {
     }
 });
 
-// **POST /api/mappings/save - Save Individual Mapping**
+// **POST /api/mappings/save - Individual Mapping Save**
 app.post('/api/mappings/save', async (req, res) => {
     const { clientId, productId, mappings } = req.body;
 
-    console.log('Incoming Request Payload:', JSON.stringify(req.body, null, 2));
-
     if (!clientId || !productId || !mappings) {
-        console.error('Missing required fields:', { clientId, productId, mappings });
         return res.status(400).json({ error: 'Missing required fields.' });
     }
 
@@ -217,48 +214,53 @@ app.post('/api/mappings/save', async (req, res) => {
             };
         }
 
-        console.log('Cleaned Mappings (to be saved):', cleanedMappings);
-
         const existingMapping = await Mapping.findOne({ clientId, productId });
 
         if (existingMapping) {
             existingMapping.mappings = cleanedMappings;
             existingMapping.updatedAt = new Date();
             await existingMapping.save();
-            console.log(`Updated mapping for productId: ${productId}`);
         } else {
             const newMapping = new Mapping({ clientId, productId, mappings: cleanedMappings });
             await newMapping.save();
-            console.log(`Saved new mapping for productId: ${productId}`);
         }
 
         res.status(200).json({
-            message: 'Mappings saved successfully.',
+            message: 'Individual mapping saved successfully.',
         });
     } catch (err) {
-        console.error('Error saving mappings:', err.message);
-        res.status(500).json({ error: 'Failed to save mappings.', details: err.message });
+        console.error('Error saving individual mapping:', err.message);
+        res.status(500).json({ error: 'Failed to save mapping.', details: err.message });
     }
 });
 
-// **POST /api/mappings/save-bulk - Save Bulk Mappings**
+// **POST /api/mappings/save-bulk - Bulk Mapping Save**
 app.post('/api/mappings/save-bulk', async (req, res) => {
     const { clientId, selectedProducts, mappings } = req.body;
-
-    console.log('Incoming Bulk Payload:', JSON.stringify(req.body, null, 2));
 
     if (!clientId || !selectedProducts || selectedProducts.length === 0 || !mappings) {
         return res.status(400).json({ error: 'Missing required bulk mapping data.' });
     }
 
     try {
-        const bulkOperations = selectedProducts.map((productId) => ({
-            updateOne: {
-                filter: { clientId, productId },
-                update: { mappings, updatedAt: new Date() },
-                upsert: true,
-            },
-        }));
+        const bulkOperations = selectedProducts.map((productId) => {
+            const cleanedMappings = {};
+            for (const key in mappings) {
+                const mappingEntry = mappings[key];
+                cleanedMappings[key] = {
+                    type: mappingEntry?.type || 'Ignore',
+                    value: mappingEntry?.value || '',
+                };
+            }
+
+            return {
+                updateOne: {
+                    filter: { clientId, productId },
+                    update: { mappings: cleanedMappings, updatedAt: new Date() },
+                    upsert: true,
+                },
+            };
+        });
 
         await Mapping.bulkWrite(bulkOperations);
 
@@ -284,59 +286,6 @@ app.get('/api/mappings/get/:clientId', async (req, res) => {
     } catch (err) {
         console.error('Error fetching mappings:', err.message);
         res.status(500).json({ error: 'Failed to fetch mappings.', details: err.message });
-    }
-});
-
-// **Walmart Send API Route**
-app.post('/api/walmart/send', async (req, res) => {
-    try {
-        const { itemData } = req.body;
-        if (!itemData || itemData.length === 0) {
-            return res.status(400).json({ error: 'Item data is required.' });
-        }
-
-        const result = await sendItemToWalmart(itemData);
-        if (result.success) {
-            res.status(200).json({ message: result.message, feedId: result.feedId });
-        } else {
-            res.status(500).json({ error: result.message });
-        }
-    } catch (error) {
-        console.error('Error sending to Walmart:', error.message);
-        res.status(500).json({ error: 'Internal Server Error', details: error.message });
-    }
-});
-
-// **Fetch Shopify Data for Logged-In User**
-app.get('/api/shopify/data', async (req, res) => {
-    const { authorization } = req.headers;
-
-    if (!authorization || !authorization.startsWith('Bearer ')) {
-        return res.status(401).json({ error: 'Authorization token required.' });
-    }
-
-    try {
-        const token = authorization.split(' ')[1];
-        const decoded = jwt.verify(token, JWT_SECRET);
-        const clientId = decoded.clientId;
-
-        if (!clientId) {
-            return res.status(401).json({ error: 'Invalid or missing clientId in token.' });
-        }
-
-        const shopifyData = await ShopifyData.find({ clientId });
-
-        if (!shopifyData || shopifyData.length === 0) {
-            return res.status(404).json({ error: 'No Shopify data found for this user.' });
-        }
-
-        res.status(200).json({
-            message: 'Shopify data fetched successfully.',
-            shopifyData,
-        });
-    } catch (err) {
-        console.error('Error fetching Shopify data:', err.message);
-        res.status(500).json({ error: 'Internal Server Error', details: err.message });
     }
 });
 
