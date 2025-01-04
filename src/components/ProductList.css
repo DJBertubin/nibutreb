@@ -5,12 +5,19 @@
 .button-group-top {
   margin-bottom: 10px;
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between; /* Added space between search and buttons */
 }
 
-.btn-bulk-map {
+.search-input {
+  padding: 10px;
+  font-size: 14px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.btn-bulk-action {
   padding: 10px 16px;
-  background-color: #4caf50;
+  background-color: #007bff;
   color: white;
   border: none;
   border-radius: 4px;
@@ -19,8 +26,8 @@
   cursor: pointer;
 }
 
-.btn-bulk-map:hover {
-  background-color: #3e8e41;
+.btn-bulk-action:hover {
+  background-color: #0056b3;
 }
 
 .modern-table {
@@ -64,7 +71,7 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 350px;
+  max-width: 500px; /* Increased width to show longer product names */
   font-weight: 500;
 }
 
@@ -92,20 +99,20 @@
 
 .button-group-horizontal {
   display: flex;
-  gap: 10px;
+  gap: 15px; /* Added larger gap for spacing */
   justify-content: center;
   align-items: center;
-  flex-wrap: wrap; /* Ensures buttons wrap on smaller screens */
+  flex-wrap: wrap; /* Ensure buttons wrap if the screen is narrow */
 }
 
 .btn-export,
 .btn-edit,
 .btn-map {
-  padding: 8px 12px;
+  padding: 10px 16px; /* Made buttons more clickable */
   border: none;
   cursor: pointer;
   border-radius: 4px;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: bold;
   transition: background-color 0.3s ease;
 }
@@ -128,15 +135,6 @@
   background-color: #e68a00;
 }
 
-.btn-edit {
-  background-color: #28a745;
-  color: white;
-}
-
-.btn-edit:hover {
-  background-color: #218838;
-}
-
 .status-column {
   text-align: center;
   font-size: 14px;
@@ -146,30 +144,6 @@
   overflow: hidden;
   text-overflow: ellipsis;
   position: relative;
-}
-
-/* Tooltip to show full status text */
-.full-status-tooltip {
-  position: relative;
-  cursor: pointer;
-  display: inline-block;
-}
-
-.full-status-tooltip:hover::after {
-  content: attr(data-status);
-  position: absolute;
-  left: 0;
-  bottom: -50px;
-  background-color: rgba(0, 0, 0, 0.8);
-  color: #fff;
-  padding: 8px 10px;
-  border-radius: 4px;
-  width: 320px;
-  white-space: normal;
-  z-index: 100;
-  font-size: 12px;
-  text-align: left;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
 .category-column {
@@ -208,7 +182,7 @@
 /* Responsive layout for mobile screens */
 @media (max-width: 768px) {
   .product-title {
-    max-width: 200px;
+    max-width: 300px;
   }
 
   .category-column {
@@ -227,14 +201,5 @@
 
   .status-column {
     max-width: 100%;
-  }
-
-  .full-status-tooltip {
-    width: 100%;
-  }
-
-  .full-status-tooltip:hover::after {
-    width: 100%;
-    max-width: none;
   }
 }

@@ -58,6 +58,14 @@ const ProductList = ({ products }) => {
         setShowMappingModal(false);
     };
 
+    const handleOpenBulkMappingModal = () => {
+        setShowBulkMappingModal(true);
+    };
+
+    const handleCloseBulkMappingModal = () => {
+        setShowBulkMappingModal(false);
+    };
+
     const getMappedStatus = (productId) => {
         const mapping = existingMappings[productId] || {};
         return Object.values(mapping).some((value) => value !== '') ? 'Yes' : 'No';
@@ -118,9 +126,14 @@ const ProductList = ({ products }) => {
                     value={searchQuery}
                     onChange={handleSearchChange}
                 />
-                <button className="btn-export-selected" onClick={handleExportSelected}>
-                    Export Selected
-                </button>
+                <div className="button-group-top">
+                    <button className="btn-bulk-action" onClick={handleExportSelected}>
+                        Export Selected
+                    </button>
+                    <button className="btn-bulk-action" onClick={handleOpenBulkMappingModal}>
+                        Bulk Map
+                    </button>
+                </div>
             </div>
 
             <table className="modern-table">
@@ -136,7 +149,7 @@ const ProductList = ({ products }) => {
                         <th>Actions</th>
                         <th>Status</th>
                         <th>Mapped</th>
-                        <th>Product</th>
+                        <th className="product-name-column">Product</th>
                         <th>Category</th>
                         <th>Price</th>
                         <th>Inventory</th>
@@ -241,6 +254,39 @@ const ProductList = ({ products }) => {
                             console.error('Error saving mapping:', error);
                         }
                         setShowMappingModal(false);
+                    }}
+                />
+            )}
+
+            {showBulkMappingModal && (
+                <MappingModal
+                    products={products}
+                    onClose={handleCloseBulkMappingModal}
+                    onSave={async (mappingData) => {
+                        try {
+                            const clientId = localStorage.getItem('clientId');
+                            const response = await fetch('/api/mappings/save', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    clientId,
+                                    productId: 'bulk',
+                                    mappings: mappingData.mappings,
+                                    selectedProducts: mappingData.selectedProducts,
+                                }),
+                            });
+
+                            const result = await response.json();
+                            if (response.ok) {
+                                console.log('Bulk Mapping Saved:', result.message);
+                                fetchMappingsFromMongoDB();
+                            } else {
+                                console.error('Error saving bulk mapping:', result.error);
+                            }
+                        } catch (error) {
+                            console.error('Error saving bulk mapping:', error);
+                        }
+                        setShowBulkMappingModal(false);
                     }}
                 />
             )}
