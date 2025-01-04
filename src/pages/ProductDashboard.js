@@ -12,6 +12,7 @@ const Products = () => {
     const [productData, setProductData] = useState([]);
     const [stores, setStores] = useState(['Walmart', 'Shopify']);
     const [error, setError] = useState('');
+    const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -23,6 +24,7 @@ const Products = () => {
                 return;
             }
 
+            setLoading(true); // Start loading
             try {
                 const response = await fetch('/api/shopify/data', {
                     method: 'GET',
@@ -35,15 +37,14 @@ const Products = () => {
                     const errorData = await response.json();
                     if (response.status === 404) {
                         // No Shopify data found for this user
-                        setProductData([]); // Set an empty array to display the table with headers
+                        setProductData([]);
+                        setLoading(false); // Stop loading after fetch
                         return;
                     }
                     throw new Error(errorData.error || 'Failed to fetch Shopify data.');
                 }
 
                 const data = await response.json();
-
-                // Flatten and format products
                 const products = data.shopifyData.flatMap((entry) =>
                     entry.shopifyData?.products.map((product) => ({
                         id: product.id,
@@ -52,12 +53,15 @@ const Products = () => {
                         price: product.variants?.[0]?.price || 'N/A',
                         inventory: product.variants?.[0]?.inventory_quantity || 0,
                         created_at: product.created_at || '',
+                        sourceCategory: product.product_type || 'N/A', // Added category display
                     }))
                 );
 
                 setProductData(products);
+                setLoading(false); // Stop loading after fetch
             } catch (err) {
                 setError(err.message);
+                setLoading(false);
             }
         };
 
@@ -82,6 +86,7 @@ const Products = () => {
             price: product.variants?.[0]?.price || 'N/A',
             inventory: product.variants?.[0]?.inventory_quantity || 0,
             created_at: product.created_at || '',
+            sourceCategory: product.product_type || 'N/A', // Category display for overview
         }));
         setProductData(formattedProducts);
     };
@@ -91,6 +96,10 @@ const Products = () => {
             setStores((prevStores) => [...prevStores, storeName]);
         }
     };
+
+    if (loading) {
+        return <div>Loading products...</div>;
+    }
 
     if (error) {
         return <div>Error: {error}</div>;
@@ -108,13 +117,21 @@ const Products = () => {
                 }}
             >
                 <div className="main-content">
-                    <ClientProfile name="Jane Doe" clientId="98765" imageUrl="https://via.placeholder.com/100" />
+                    <ClientProfile
+                        name="Jane Doe" // Placeholder; replace with dynamic user name
+                        clientId="98765" // Placeholder; replace with dynamic client ID
+                        imageUrl="https://via.placeholder.com/100"
+                    />
                     <MarketplaceDropdowns onAddNewSource={handleShowModal} storeList={stores} />
                     <div className="content">
                         <h2 className="section-title">Products Overview</h2>
-                        <div className="products-table">
-                            <ProductList products={productData} />
-                        </div>
+                        {productData.length === 0 ? (
+                            <div>No products available. Connect a store to get started.</div>
+                        ) : (
+                            <div className="products-table">
+                                <ProductList products={productData} />
+                            </div>
+                        )}
                     </div>
                     {showIntegrationModal && (
                         <IntegrationModal
