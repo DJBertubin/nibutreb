@@ -8,7 +8,7 @@ const ProductList = ({ products }) => {
     const [selectedProduct, setSelectedProduct] = useState(null);
     const [showBulkMappingModal, setShowBulkMappingModal] = useState(false);
     const [mappedStatuses, setMappedStatuses] = useState({}); // Track mapped status for each product
-    const [productMapping, setProductMapping] = useState(null); // Store current product mapping
+    const [existingMappings, setExistingMappings] = useState({}); // Store mappings fetched from MongoDB
     const itemsPerPage = 10;
 
     const indexOfLastItem = currentPage * itemsPerPage;
@@ -20,28 +20,34 @@ const ProductList = ({ products }) => {
         setCurrentPage(pageNumber);
     };
 
-    // Open individual mapping modal
-    const handleOpenMappingModal = async (product) => {
+    // Fetch all existing mappings from MongoDB
+    const fetchMappingsFromMongoDB = async () => {
+        const clientId = localStorage.getItem('clientId');
         try {
-            const clientId = localStorage.getItem('clientId');
             const response = await fetch(`/api/mappings/get/${clientId}`);
             const data = await response.json();
-
             if (response.ok) {
-                const existingMapping = data.mappings.find(
-                    (map) => map.productId === product.id
-                );
-                setProductMapping(existingMapping?.mappings || {}); // Pre-fill the mapping data if available
+                const mappingsObj = {};
+                data.mappings.forEach((mapping) => {
+                    mappingsObj[mapping.productId] = mapping.mappings; // Store mapping by product ID
+                });
+                setExistingMappings(mappingsObj);
             } else {
-                console.error('Error fetching existing mapping:', data.error);
-                setProductMapping(null);
+                console.error('Error fetching mappings:', data.error);
             }
-
-            setSelectedProduct(product);
-            setShowMappingModal(true);
         } catch (error) {
-            console.error('Error fetching product mapping:', error);
+            console.error('Error fetching mappings from MongoDB:', error);
         }
+    };
+
+    useEffect(() => {
+        fetchMappingsFromMongoDB(); // Fetch all mappings when the component loads
+    }, []);
+
+    // Open individual mapping modal
+    const handleOpenMappingModal = (product) => {
+        setSelectedProduct(product);
+        setShowMappingModal(true);
     };
 
     const handleCloseMappingModal = () => {
@@ -49,53 +55,30 @@ const ProductList = ({ products }) => {
         setShowMappingModal(false);
     };
 
-    // Open bulk mapping modal
-    const handleOpenBulkMappingModal = () => {
-        setShowBulkMappingModal(true);
+    // Check if the product has a synced status
+    const getMappedStatus = (productId) => {
+        const mapping = existingMappings[productId] || {};
+        return Object.values(mapping).some((value) => value !== '') ? 'Yes' : 'No';
     };
 
-    const handleCloseBulkMappingModal = () => {
-        setShowBulkMappingModal(false);
-    };
-
-    // Fetch mapping statuses
-    const fetchMappingStatuses = async () => {
-        try {
-            const clientId = localStorage.getItem('clientId');
-            if (!clientId) {
-                console.error('Client ID is missing. Please log in again.');
-                return;
-            }
-
-            const response = await fetch(`/api/mappings/get/${clientId}`);
-            const data = await response.json();
-            if (response.ok) {
-                const statuses = {};
-                data.mappings.forEach((map) => {
-                    statuses[map.productId] = Object.values(map.mappings).every(
-                        (value) => value && value !== ''
-                    )
-                        ? 'Yes'
-                        : 'No';
-                });
-                setMappedStatuses(statuses);
-            } else {
-                console.error('Error fetching mapping statuses:', data.error);
-            }
-        } catch (error) {
-            console.error('Error fetching mapping statuses:', error);
-        }
+    // Fetch mapping statuses to update display
+    const updateMappedStatuses = () => {
+        const statuses = {};
+        products.forEach((product) => {
+            statuses[product.id] = getMappedStatus(product.id);
+        });
+        setMappedStatuses(statuses);
     };
 
     useEffect(() => {
-        fetchMappingStatuses(); // Fetch mapping statuses when the component loads
-    }, []);
+        updateMappedStatuses(); // Update mapped statuses whenever mappings are fetched
+    }, [existingMappings]);
 
     return (
         <div className="product-list-container">
             <h3>Fetched Products</h3>
             <div className="button-group-top">
-                <button className="btn-bulk-map" onClick={handleOpenBulkMappingModal}>
+                <button className="btn-bulk-map" onClick={() => setShowBulkMappingModal(true)}>
                     Bulk Map
                 </button>
             </div>
@@ -104,7 +87,7 @@ const ProductList = ({ products }) => {
             {showBulkMappingModal && (
                 <MappingModal
                     products={products}
-                    onClose={handleCloseBulkMappingModal}
+                    onClose={() => setShowBulkMappingModal(false)}
                     onSave={async (mappingData) => {
                         try {
                             const clientId = localStorage.getItem('clientId');
@@ -122,7 +105,7 @@ const ProductList = ({ products }) => {
                             const result = await response.json();
                             if (response.ok) {
                                 console.log('Bulk Mapping Saved:', result.message);
-                                fetchMappingStatuses(); // Refresh mapped statuses
+                                fetchMappingsFromMongoDB(); // Refresh mapped statuses
                             } else {
                                 console.error('Error saving mapping:', result.error);
                             }
@@ -163,7 +146,7 @@ const ProductList = ({ products }) => {
                                     </div>
                                 </td>
                                 <td className="status-column">
-                                    {mappedStatuses[product.id] ? 'Synced' : 'No Status'}
+                                    {mappedStatuses[product.id] === 'Yes' ? 'Synced' : 'No Status'}
                                 </td>
                                 <td className={`mapped-column ${mappedStatuses[product.id] === 'Yes' ? 'yes' : 'no'}`}>
                                     {mappedStatuses[product.id] || 'No'}
@@ -212,7 +195,7 @@ const ProductList = ({ products }) => {
             {/* Individual Mapping Modal */}
             {showMappingModal && selectedProduct && (
                 <MappingModal
-                    products={[{ ...selectedProduct, mapping: productMapping }]} // Pass existing mapping data
+                    products={[{ ...selectedProduct, mapping: existingMappings[selectedProduct.id] || {} }]} // Pass existing mapping data
                     onClose={handleCloseMappingModal}
                     onSave={async (mappingData) => {
                         try {
@@ -231,7 +214,7 @@ const ProductList = ({ products }) => {
                             const result = await response.json();
                             if (response.ok) {
                                 console.log('Individual Mapping Saved:', result.message);
-                                fetchMappingStatuses(); // Refresh mapped statuses
+                                fetchMappingsFromMongoDB(); // Refresh mapped statuses
                             } else {
                                 console.error('Error saving mapping:', result.error);
                             }

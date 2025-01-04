@@ -7,14 +7,15 @@ const MappingModal = ({ products, onClose, onSave }) => {
     const [searchQuery, setSearchQuery] = useState('');
     const [errorMessage, setErrorMessage] = useState('');
 
-    // Pre-fill mapping data for single product
+    // Pre-fill mapping data for a single product
     useEffect(() => {
         if (products.length > 0 && products[0]?.mapping) {
             const preFilledMapping = {};
             walmartAttributes.forEach((attribute) => {
-                preFilledMapping[attribute.name] = products[0].mapping[attribute.name] || {
-                    type: 'Ignore',
-                    value: '',
+                const attributeMapping = products[0].mapping[attribute.name] || {};
+                preFilledMapping[attribute.name] = {
+                    type: attributeMapping.type || 'Ignore',
+                    value: attributeMapping.value || '',
                 };
             });
             setMapping(preFilledMapping);
@@ -62,7 +63,10 @@ const MappingModal = ({ products, onClose, onSave }) => {
         const sanitizedMappings = {};
         walmartAttributes.forEach((attribute) => {
             const field = mapping[attribute.name];
-            sanitizedMappings[attribute.name] = field?.type === 'Ignore' ? '' : field?.value || '';
+            sanitizedMappings[attribute.name] = {
+                type: field?.type || 'Ignore',
+                value: field?.type === 'Ignore' ? '' : field?.value || '',
+            };
         });
 
         const payload = {
