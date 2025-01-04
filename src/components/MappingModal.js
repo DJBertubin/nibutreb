@@ -16,14 +16,10 @@ const MappingModalPage = ({ products, onClose, onSave }) => {
     ];
 
     const fieldOptions = [
-        'SKU',
-        'UPC',
-        'Title',
-        'Brand',
-        'COLOR',
-        'CASE COLOR',
-        'Ignore',
-        'Set Free Text',
+        'Ignore - The field will not be added to the feed.',
+        'Map to field - Set a product data field from "edit product".',
+        'Set free text - Set free text/number static value.',
+        'Advanced rule - Advanced filters and rules like lookup, combine, etc. to map data.',
     ];
 
     const handleMappingChange = (attributeName, value) => {
@@ -96,7 +92,7 @@ const MappingModalPage = ({ products, onClose, onSave }) => {
                                     </option>
                                 ))}
                             </select>
-                            {mapping[attribute.name] === 'Set Free Text' && (
+                            {mapping[attribute.name] === 'Set free text - Set free text/number static value.' && (
                                 <input
                                     type="text"
                                     placeholder={`Enter static value for ${attribute.name}`}
@@ -109,14 +105,14 @@ const MappingModalPage = ({ products, onClose, onSave }) => {
                         </div>
                     ))}
                 </div>
-            </div>
-            <div className="button-group">
-                <button className="btn-save-mapping" onClick={handleSave}>
-                    Save Mapping
-                </button>
-                <button className="btn-close-mapping" onClick={onClose}>
-                    Cancel
-                </button>
+                <div className="button-group">
+                    <button className="btn-save-mapping" onClick={handleSave}>
+                        Save Mapping
+                    </button>
+                    <button className="btn-close-mapping" onClick={onClose}>
+                        Cancel
+                    </button>
+                </div>
             </div>
         </div>
     );
