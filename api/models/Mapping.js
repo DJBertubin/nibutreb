@@ -1,11 +1,9 @@
 const mongoose = require('mongoose');
 
 const MappingSchema = new mongoose.Schema({
-    clientId: { type: String, required: true },
     productId: { type: String, required: true },
-    mappings: { type: Object, required: true }, // Store attribute mappings
-    createdAt: { type: Date, default: Date.now },
+    mapping: { type: Object, required: true }, // Store attribute mappings as an object
     updatedAt: { type: Date, default: Date.now },
 });
 
-module.exports = mongoose.models.Mapping || mongoose.model('Mapping', MappingSchema);
+module.exports = mongoose.model('Mapping', MappingSchema);

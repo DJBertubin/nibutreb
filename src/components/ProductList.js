@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './ProductList.css';
 import MappingModal from './MappingModal'; // Import the MappingModal component
 
@@ -7,6 +7,7 @@ const ProductList = ({ products }) => {
     const [showMappingModal, setShowMappingModal] = useState(false);
     const [selectedProduct, setSelectedProduct] = useState(null);
     const [showBulkMappingModal, setShowBulkMappingModal] = useState(false);
+    const [mappedStatuses, setMappedStatuses] = useState({}); // Track mapped status for each product
     const itemsPerPage = 10;
 
     const indexOfLastItem = currentPage * itemsPerPage;
@@ -38,6 +39,33 @@ const ProductList = ({ products }) => {
         setShowBulkMappingModal(false);
     };
 
+    // Fetch mapped statuses from MongoDB when the component mounts
+    const fetchMappingStatuses = async () => {
+        try {
+            const response = await fetch('/api/mappings/fetch');
+            const data = await response.json();
+            if (response.ok) {
+                const statuses = {};
+                data.mappings.forEach((map) => {
+                    statuses[map.productId] = Object.values(map.mapping).every(
+                        (attr) => attr.value && attr.value !== 'N/A'
+                    )
+                        ? 'Yes'
+                        : 'No';
+                });
+                setMappedStatuses(statuses);
+            } else {
+                console.error('Error fetching mapping statuses:', data.error);
+            }
+        } catch (error) {
+            console.error('Error fetching mapping statuses:', error);
+        }
+    };
+
+    useEffect(() => {
+        fetchMappingStatuses(); // Fetch mapping statuses when the component loads
+    }, []);
+
     return (
         <div className="product-list-container">
             <h3>Fetched Products</h3>
@@ -55,8 +83,24 @@ const ProductList = ({ products }) => {
                 <MappingModal
                     products={products}
                     onClose={handleCloseBulkMappingModal}
-                    onSave={(mappingData) => {
-                        console.log('Bulk Mapping Saved:', mappingData);
+                    onSave={async (mappingData) => {
+                        try {
+                            const response = await fetch('/api/mappings/save', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify(mappingData),
+                            });
+
+                            const result = await response.json();
+                            if (response.ok) {
+                                console.log('Bulk Mapping Saved:', result.message);
+                                fetchMappingStatuses(); // Refresh mapped statuses
+                            } else {
+                                console.error('Error saving mapping:', result.error);
+                            }
+                        } catch (error) {
+                            console.error('Error saving mapping:', error);
+                        }
                         setShowBulkMappingModal(false);
                     }}
                 />
@@ -81,9 +125,7 @@ const ProductList = ({ products }) => {
                             <tr key={product.id} className="product-row">
                                 <td className="actions-column">
                                     <div className="button-group">
-                                        <button className="btn-export">
-                                            Export
-                                        </button>
+                                        <button className="btn-export">Export</button>
                                         <button
                                             className="btn-map"
                                             onClick={() => handleOpenMappingModal(product)}
@@ -93,8 +135,8 @@ const ProductList = ({ products }) => {
                                     </div>
                                 </td>
                                 <td className="status-column">No Status</td>
-                                <td className="mapped-column">
-                                    No {/* Will dynamically change when saved */}
+                                <td className={`mapped-column ${mappedStatuses[product.id] === 'Yes' ? 'yes' : 'no'}`}>
+                                    {mappedStatuses[product.id] || 'No'}
                                 </td>
                                 <td className="product-details">
                                     <img
@@ -142,8 +184,24 @@ const ProductList = ({ products }) => {
                 <MappingModal
                     products={[selectedProduct]}
                     onClose={handleCloseMappingModal}
-                    onSave={(mappingData) => {
-                        console.log('Individual Mapping Saved:', mappingData);
+                    onSave={async (mappingData) => {
+                        try {
+                            const response = await fetch('/api/mappings/save', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify(mappingData),
+                            });
+
+                            const result = await response.json();
+                            if (response.ok) {
+                                console.log('Individual Mapping Saved:', result.message);
+                                fetchMappingStatuses(); // Refresh mapped statuses
+                            } else {
+                                console.error('Error saving mapping:', result.error);
+                            }
+                        } catch (error) {
+                            console.error('Error saving mapping:', error);
+                        }
                         setShowMappingModal(false);
                     }}
                 />

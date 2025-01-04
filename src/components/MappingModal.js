@@ -37,13 +37,32 @@ const MappingModal = ({ products, onClose, onSave }) => {
     };
 
     const handleSave = async () => {
-        // Saving mapping data and sending to API
         const payload = { mapping, selectedProducts };
-        await onSave(payload);  // Calls the API and persists to MongoDB
-        onClose();
+
+        try {
+            const response = await fetch('/api/mappings/save', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(payload),
+            });
+
+            const result = await response.json();
+            if (response.ok) {
+                console.log('Mapping saved successfully:', result.message);
+                onSave(payload); // Update the status in the parent component
+                onClose(); // Close the modal after save
+            } else {
+                console.error('Error saving mapping:', result.error);
+                alert(`Error: ${result.error}`);
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert(`An unexpected error occurred: ${error.message}`);
+        }
     };
 
-    // Walmart attributes and shopify attributes
     const walmartAttributes = [
         { name: 'SKU', required: true },
         { name: 'Product ID Type', required: true },
@@ -93,7 +112,7 @@ const MappingModal = ({ products, onClose, onSave }) => {
             <div className="popup-content">
                 <h4 className="popup-title">Map Fields to Walmart Attributes</h4>
 
-                {/* Product Selection */}
+                {/* Bulk Product Selection */}
                 <div className="product-dropdown-wrapper">
                     <input
                         type="text"
@@ -130,7 +149,7 @@ const MappingModal = ({ products, onClose, onSave }) => {
                     </div>
                 </div>
 
-                {/* Attribute Mapping */}
+                {/* Attribute Mapping Section */}
                 <div className="attribute-list-container">
                     <h4 className="section-title">Mapping Attributes</h4>
                     {walmartAttributes.map((attribute) => (
