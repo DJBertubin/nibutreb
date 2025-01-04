@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import ProductList from '../components/ProductList';
-import MarketplaceDropdowns from '../components/MarketplaceDropdowns';
-import ClientProfile from '../components/ClientProfile';
-import IntegrationModal from '../components/IntegrationModal';
+//import MarketplaceDropdowns from '../components/MarketplaceDropdowns';
+//import ClientProfile from '../components/ClientProfile';
+//import IntegrationModal from '../components/IntegrationModal';
 
 const Products = () => {
     const [showIntegrationModal, setShowIntegrationModal] = useState(false);
