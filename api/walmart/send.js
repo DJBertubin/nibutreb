@@ -18,7 +18,28 @@ export default async function handler(req, res) {
                 version: "4.8",
                 requestBatchId: `BATCH-${Date.now()}`,
             },
-            MPItem: items,
+            MPItem: items.map((item) => ({
+                sku: item.sku || 'N/A',
+                productName: item.title || 'Unnamed Product',
+                productId: item.productId || '123456789012', // Placeholder for GTIN
+                productIdType: 'GTIN', // Must align with the actual productId type
+                shortDescription: item.shortDescription || 'Short description for the product.',
+                brand: item.brand || 'Unknown Brand',
+                mainImageUrl: item.image || 'https://via.placeholder.com/150',
+                price: {
+                    currency: 'USD',
+                    amount: parseFloat(item.price || 0.0),
+                },
+                condition: 'New', // Typically "New" unless specified otherwise
+                shippingWeight: {
+                    value: 1.0, // Example value, change as needed
+                    unit: 'LB',
+                },
+                inventory: {
+                    quantity: item.inventory || 0,
+                    fulfillmentLagTime: 2, // Example value, change as needed
+                },
+            })),
         };
 
         const result = await sendItemToWalmart(formattedData); // Call the utility function

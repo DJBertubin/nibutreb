@@ -16,7 +16,31 @@ const ProductList = ({ products }) => {
         setCurrentPage(pageNumber);
     };
 
-    const handleExport = async (productId, productData) => {
+    const handleExport = async (productId, product) => {
+        // Prepare the Walmart `MP_ITEM_SPEC` payload
+        const itemData = {
+            sku: product.sku,
+            title: product.title,
+            productId: "123456789012", // Replace with actual GTIN or unique identifier
+            productIdType: "GTIN",
+            shortDescription: "A dietary supplement for gut health.",
+            brand: "HealthX", // Replace with actual brand
+            mainImageUrl: product.image || 'https://via.placeholder.com/150',
+            price: {
+                currency: "USD",
+                amount: parseFloat(product.price),
+            },
+            condition: "New",
+            shippingWeight: {
+                value: 1.0, // Example weight, replace with actual data
+                unit: "LB",
+            },
+            inventory: {
+                quantity: product.inventory,
+                fulfillmentLagTime: 2, // Example fulfillment lag time
+            },
+        };
+
         try {
             setStatuses((prev) => ({ ...prev, [productId]: 'Exporting...' }));
 
@@ -25,7 +49,7 @@ const ProductList = ({ products }) => {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ items: [productData] }),
+                body: JSON.stringify({ items: [itemData] }), // Send formatted data
             });
 
             const result = await response.json();
@@ -33,18 +57,18 @@ const ProductList = ({ products }) => {
             if (result.success) {
                 setStatuses((prev) => ({
                     ...prev,
-                    [productId]: '✅ Successfully sent to Walmart',
+                    [productId]: 'Success: Items successfully sent to Walmart',
                 }));
             } else {
                 setStatuses((prev) => ({
                     ...prev,
-                    [productId]: `❌ Failed: ${result.message}`,
+                    [productId]: `Failed: ${result.message}`,
                 }));
             }
         } catch (error) {
             setStatuses((prev) => ({
                 ...prev,
-                [productId]: `❌ Error: ${error.message}`,
+                [productId]: `Error: ${error.message}`,
             }));
         }
     };
@@ -66,58 +90,63 @@ const ProductList = ({ products }) => {
                 </thead>
                 <tbody>
                     {products.length > 0 ? (
-                        currentProducts.map((product) => (
-                            <tr key={product.id} className="product-row">
-                                <td className="actions-column">
-                                    <div className="button-group">
-                                        <button
-                                            className="btn-export"
-                                            onClick={() => handleExport(product.id, product)}
-                                        >
-                                            Export
-                                        </button>
-                                        <button className="btn-edit">Edit</button>
-                                    </div>
-                                </td>
-                                <td className="status-column">
-                                    <div className="status-wrapper">
-                                        <span
-                                            className="status-text"
-                                            title={statuses[product.id] || 'No status'}
+                        currentProducts.map((product) => {
+                            return (
+                                <tr key={product.id} className="product-row">
+                                    <td className="actions-column">
+                                        <div className="button-group">
+                                            <button
+                                                className="btn-export"
+                                                onClick={() => handleExport(product.id, product)}
+                                            >
+                                                Export
+                                            </button>
+                                            <button className="btn-edit">Edit</button>
+                                        </div>
+                                    </td>
+                                    <td className="status-column">
+                                        <div
+                                            className="full-status-tooltip"
+                                            data-status={statuses[product.id] || 'No status'}
                                         >
                                             {statuses[product.id]?.length > 50
                                                 ? `${statuses[product.id].substring(0, 50)}...`
                                                 : statuses[product.id] || 'No status'}
-                                        </span>
-                                    </div>
-                                </td>
-                                <td className="product-details">
-                                    <img
-                                        src={product.image || 'https://via.placeholder.com/50'}
-                                        alt={product.title || 'Product'}
-                                        className="product-image"
-                                        onError={(e) => (e.target.src = 'https://via.placeholder.com/50')}
-                                    />
-                                    <div className="product-info">
-                                        <strong className="product-title" title={product.title || 'N/A'}>
-                                            {product.title || 'N/A'}
-                                        </strong>
-                                        <div className="sku">SKU: {product.sku || 'N/A'}</div>
-                                    </div>
-                                </td>
-                                <td className="category-column">
-                                    <div className="source-category">
-                                        <strong>Source:</strong> {product.sourceCategory || 'N/A'}
-                                    </div>
-                                    <div className="target-category">
-                                        <strong>Target:</strong> {product.targetCategory || 'N/A'}
-                                    </div>
-                                </td>
-                                <td>${product.price || 'N/A'}</td>
-                                <td>{product.inventory || 'N/A'}</td>
-                                <td>{new Date(product.created_at).toLocaleDateString()}</td>
-                            </tr>
-                        ))
+                                        </div>
+                                    </td>
+                                    <td className="product-details">
+                                        <img
+                                            src={product.image || 'https://via.placeholder.com/50'}
+                                            alt={product.title || 'Product'}
+                                            className="product-image"
+                                            onError={(e) =>
+                                                (e.target.src = 'https://via.placeholder.com/50')
+                                            }
+                                        />
+                                        <div className="product-info">
+                                            <strong
+                                                className="product-title"
+                                                title={product.title || 'N/A'}
+                                            >
+                                                {product.title || 'N/A'}
+                                            </strong>
+                                            <div className="sku">SKU: {product.sku || 'N/A'}</div>
+                                        </div>
+                                    </td>
+                                    <td className="category-column">
+                                        <div className="source-category">
+                                            <strong>Source:</strong> {product.sourceCategory || 'N/A'}
+                                        </div>
+                                        <div className="target-category">
+                                            <strong>Target:</strong> {product.targetCategory || 'N/A'}
+                                        </div>
+                                    </td>
+                                    <td>${product.price || 'N/A'}</td>
+                                    <td>{product.inventory || 'N/A'}</td>
+                                    <td>{new Date(product.created_at).toLocaleDateString()}</td>
+                                </tr>
+                            );
+                        })
                     ) : (
                         <tr>
                             <td colSpan="7" style={{ textAlign: 'center' }}>

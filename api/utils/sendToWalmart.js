@@ -35,29 +35,29 @@ async function getWalmartAccessToken() {
 // **Transform the payload to Walmart MP_ITEM Spec 4.8 format**
 function formatPayloadForWalmart(product) {
     return {
-        MPItem: {
-            sku: product.sku || "N/A",
-            productName: product.title || "Untitled Product",
-            productId: "0123456789012", // Replace with a valid GTIN/UPC/EAN
-            productIdType: "GTIN", // Change to "UPC" or "EAN" as required
-            price: {
-                currency: "USD",
-                amount: parseFloat(product.price) || 0.0,
-            },
-            shortDescription:
-                "A dietary supplement to support gut health with 120 capsules.",
-            mainImageUrl: "https://via.placeholder.com/300", // Replace with product image URL
-            productSecondaryImageURL: [],
-            brand: "HealthX", // Replace with the actual brand name
-            condition: "New",
-            shippingWeight: 0.5, // Add actual weight in pounds
-            fulfillmentLagTime: 2, // Default: 2-day lag
-            category: "Supplements",
-            inventory: {
-                quantity: product.inventory || 0,
-                fulfillmentLagTime: 2,
-            },
+        sku: product.sku || "N/A",  // SKU of the item
+        productName: product.title || "Untitled Product",
+        productId: "0123456789012", // Replace with the actual GTIN/UPC/EAN for the item
+        productIdType: "GTIN", // Valid options: GTIN, UPC, EAN
+        shortDescription: "A dietary supplement to support gut health with 120 capsules.",
+        mainImageUrl: product.image || "https://via.placeholder.com/300", // Replace with actual product image URL
+        productSecondaryImageURL: [],  // Optional secondary images
+        brand: "HealthX",  // Replace with actual brand name
+        price: {
+            currency: "USD",
+            amount: parseFloat(product.price) || 0.0,
         },
+        condition: "New",
+        shippingWeight: {
+            value: 0.5,  // Replace with actual weight in pounds
+            unit: "LB",
+        },
+        fulfillmentLagTime: 2,  // Default: 2-day fulfillment time
+        inventory: {
+            quantity: product.inventory || 0,
+            fulfillmentLagTime: 2,
+        },
+        category: "Supplements",  // Adjust based on product category
     };
 }
 
@@ -67,19 +67,20 @@ export async function sendItemToWalmart(itemData) {
         throw new Error('Item data is required.');
     }
 
+    // Transform the items to match Walmart’s MP_ITEM spec
     const formattedItems = itemData.items.map(formatPayloadForWalmart);
 
     const payload = {
         MPItemFeedHeader: {
-            version: "4.8",
+            version: "4.8",  // Ensure this matches Walmart spec version
             requestBatchId: `BATCH-${crypto.randomUUID()}`,
         },
-        MPItem: formattedItems,
+        MPItem: formattedItems,  // List of formatted items
     };
 
     try {
         const accessToken = await getWalmartAccessToken();
-        const requestId = crypto.randomUUID();
+        const requestId = crypto.randomUUID();  // Unique correlation ID for Walmart API request tracking
 
         const response = await fetch(`${WALMART_API_URL}?feedType=MP_ITEM`, {
             method: 'POST',
@@ -90,7 +91,7 @@ export async function sendItemToWalmart(itemData) {
                 'WM_SVC.NAME': 'Walmart Item Export',
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify(payload), // Send the formatted payload
+            body: JSON.stringify(payload),  // Send the formatted payload as JSON
         });
 
         if (!response.ok) {
