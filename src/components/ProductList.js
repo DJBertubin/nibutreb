@@ -1,12 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import './ProductList.css';
 import MappingModal from './MappingModal'; // Import the MappingModal component
 
 const ProductList = ({ products }) => {
     const [currentPage, setCurrentPage] = useState(1);
     const [showMappingModal, setShowMappingModal] = useState(false);
-    const [selectedProducts, setSelectedProducts] = useState([]);
-    const [mappedStatuses, setMappedStatuses] = useState({});
+    const [selectedProduct, setSelectedProduct] = useState(null);
+    const [showBulkMappingModal, setShowBulkMappingModal] = useState(false);
     const itemsPerPage = 10;
 
     const indexOfLastItem = currentPage * itemsPerPage;
@@ -14,72 +14,53 @@ const ProductList = ({ products }) => {
     const currentProducts = products.slice(indexOfFirstItem, indexOfLastItem);
     const totalPages = Math.ceil(products.length / itemsPerPage);
 
-    useEffect(() => {
-        // Fetch mapped statuses from the backend to show if products are mapped
-        const fetchMappings = async () => {
-            const clientId = localStorage.getItem('clientId');
-            try {
-                const response = await fetch(`http://localhost:5001/api/mappings/get/${clientId}`);
-                const data = await response.json();
-                const mappingStatuses = {};
-                data.mappings.forEach((mapping) => {
-                    const allRequiredMapped = Object.values(mapping.mappings).every(
-                        (attr) => attr && attr !== 'IGNORE'
-                    );
-                    mappingStatuses[mapping.productId] = allRequiredMapped ? 'Yes' : 'No';
-                });
-                setMappedStatuses(mappingStatuses);
-            } catch (error) {
-                console.error('Error fetching mapping statuses:', error.message);
-            }
-        };
-
-        fetchMappings();
-    }, [products]);
-
     const handlePageChange = (pageNumber) => {
         setCurrentPage(pageNumber);
     };
 
-    // Open and close the mapping modal
-    const handleOpenMappingModal = (productId) => {
-        setSelectedProducts([productId]);
+    // Open individual mapping modal
+    const handleOpenMappingModal = (product) => {
+        setSelectedProduct(product);
         setShowMappingModal(true);
     };
-    const handleCloseMappingModal = () => setShowMappingModal(false);
 
-    // Handle save mappings
-    const handleSaveMappings = async (mappingData) => {
-        const clientId = localStorage.getItem('clientId');
-        const productId = selectedProducts[0]; // Single product for simplicity
-        try {
-            const response = await fetch('http://localhost:5001/api/mappings/save', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ clientId, productId, mappings: mappingData }),
-            });
-
-            if (response.ok) {
-                console.log('Mappings saved successfully');
-                setMappedStatuses((prev) => ({ ...prev, [productId]: 'Yes' }));
-            }
-        } catch (error) {
-            console.error('Error saving mappings:', error.message);
-        }
-
+    const handleCloseMappingModal = () => {
+        setSelectedProduct(null);
         setShowMappingModal(false);
     };
 
-    const handleExport = (product) => {
-        console.log('Exporting product:', product);
-        // TODO: Implement export logic
+    // Open bulk mapping modal
+    const handleOpenBulkMappingModal = () => {
+        setShowBulkMappingModal(true);
+    };
+
+    const handleCloseBulkMappingModal = () => {
+        setShowBulkMappingModal(false);
     };
 
     return (
         <div className="product-list-container">
             <h3>Fetched Products</h3>
+            <div className="button-group-top">
+                <button
+                    className="btn-bulk-map"
+                    onClick={handleOpenBulkMappingModal}
+                >
+                    Bulk Map
+                </button>
+            </div>
+
+            {/* Bulk Mapping Modal */}
+            {showBulkMappingModal && (
+                <MappingModal
+                    products={products}
+                    onClose={handleCloseBulkMappingModal}
+                    onSave={(mappingData) => {
+                        console.log('Bulk Mapping Saved:', mappingData);
+                        setShowBulkMappingModal(false);
+                    }}
+                />
+            )}
 
             <table className="modern-table">
                 <thead>
@@ -100,23 +81,20 @@ const ProductList = ({ products }) => {
                             <tr key={product.id} className="product-row">
                                 <td className="actions-column">
                                     <div className="button-group">
-                                        <button
-                                            className="btn-export"
-                                            onClick={() => handleExport(product)}
-                                        >
+                                        <button className="btn-export">
                                             Export
                                         </button>
                                         <button
                                             className="btn-map"
-                                            onClick={() => handleOpenMappingModal(product.id)}
+                                            onClick={() => handleOpenMappingModal(product)}
                                         >
                                             Map
                                         </button>
                                     </div>
                                 </td>
-                                <td className="status-column">No status</td>
+                                <td className="status-column">No Status</td>
                                 <td className="mapped-column">
-                                    {mappedStatuses[product.id] || 'No'}
+                                    No {/* Will dynamically change when saved */}
                                 </td>
                                 <td className="product-details">
                                     <img
@@ -159,12 +137,15 @@ const ProductList = ({ products }) => {
                 </div>
             )}
 
-            {/* Mapping Modal */}
+            {/* Individual Mapping Modal */}
             {showMappingModal && (
                 <MappingModal
-                    products={products.filter((product) => selectedProducts.includes(product.id))}
+                    products={[selectedProduct]}
                     onClose={handleCloseMappingModal}
-                    onSave={handleSaveMappings}
+                    onSave={(mappingData) => {
+                        console.log('Individual Mapping Saved:', mappingData);
+                        setShowMappingModal(false);
+                    }}
                 />
             )}
         </div>

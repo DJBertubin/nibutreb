@@ -2,6 +2,27 @@
   padding: 20px;
 }
 
+.button-group-top {
+  margin-bottom: 10px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.btn-bulk-map {
+  padding: 10px 16px;
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.btn-bulk-map:hover {
+  background-color: #3e8e41;
+}
+
 .modern-table {
   width: 100%;
   border-collapse: collapse;
@@ -59,6 +80,9 @@
 
 .mapped-column {
   font-weight: bold;
+}
+
+.mapped-column.yes {
   color: #28a745; /* Green for "Yes" */
 }
 
@@ -147,32 +171,12 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
-.status-synced,
-.status-not-synced {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 5px;
-}
-
-.status-synced {
-  color: green;
-}
-
-.status-not-synced {
-  color: red;
-}
-
 .category-column {
   font-size: 12px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   max-width: 300px;
-}
-
-.category-column div {
-  margin: 2px 0;
 }
 
 .pagination {
