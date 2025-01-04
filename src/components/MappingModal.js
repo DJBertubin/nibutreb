@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 
 const MappingModal = ({ productData, marketplaceAttributes, onClose, onSave }) => {
     const [mapping, setMapping] = useState({});
+    const [freeTextInputs, setFreeTextInputs] = useState({});
 
     const handleMappingChange = (attributeName, value) => {
         setMapping((prev) => ({
@@ -10,7 +11,22 @@ const MappingModal = ({ productData, marketplaceAttributes, onClose, onSave }) =
         }));
     };
 
+    const handleFreeTextChange = (attributeName, value) => {
+        setFreeTextInputs((prev) => ({
+            ...prev,
+            [attributeName]: value,
+        }));
+        setMapping((prev) => ({
+            ...prev,
+            [attributeName]: value,
+        }));
+    };
+
     const handleSave = () => {
+        if (Object.keys(mapping).length === 0) {
+            alert('Please map at least one attribute.');
+            return;
+        }
         onSave(mapping);
         onClose();
     };
@@ -26,7 +42,7 @@ const MappingModal = ({ productData, marketplaceAttributes, onClose, onSave }) =
             <div className="popup-content">
                 {marketplaceAttributes.map((attribute) => (
                     <div className="attribute-item" key={attribute.name}>
-                        <div>
+                        <div className="attribute-label">
                             <span className="attribute-name">
                                 {attribute.name} {attribute.required && <span className="required-badge">(Required)</span>}
                             </span>
@@ -44,13 +60,40 @@ const MappingModal = ({ productData, marketplaceAttributes, onClose, onSave }) =
                                 <option value="setFreeText">Set Free Text</option>
                                 <option value="advancedRule">Advanced Rule</option>
                             </select>
+                            {mapping[attribute.name] === 'setFreeText' && (
+                                <input
+                                    type="text"
+                                    className="free-text-input"
+                                    placeholder={`Enter value for ${attribute.name}`}
+                                    value={freeTextInputs[attribute.name] || ''}
+                                    onChange={(e) => handleFreeTextChange(attribute.name, e.target.value)}
+                                />
+                            )}
+                            {mapping[attribute.name] === 'mapToField' && (
+                                <select
+                                    className="dropdown-field"
+                                    onChange={(e) => handleMappingChange(attribute.name, e.target.value)}
+                                >
+                                    <option value="">Select Field</option>
+                                    {Object.keys(productData).map((key) => (
+                                        <option key={key} value={productData[key]}>
+                                            {key}
+                                        </option>
+                                    ))}
+                                </select>
+                            )}
                         </div>
                     </div>
                 ))}
             </div>
-            <button className="btn-save-mapping" onClick={handleSave}>
-                Save Mapping
-            </button>
+            <div className="button-group">
+                <button className="btn-save-mapping" onClick={handleSave}>
+                    Save Mapping
+                </button>
+                <button className="btn-close-mapping" onClick={onClose}>
+                    Cancel
+                </button>
+            </div>
         </div>
     );
 };
