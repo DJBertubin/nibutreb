@@ -64,7 +64,8 @@
 }
 
 .btn-export,
-.btn-edit {
+.btn-edit,
+.btn-map-values {
   padding: 8px 12px;
   border: none;
   cursor: pointer;
@@ -90,6 +91,15 @@
 
 .btn-edit:hover {
   background-color: #218838;
+}
+
+.btn-map-values {
+  background-color: #ff7f00;
+  color: white;
+}
+
+.btn-map-values:hover {
+  background-color: #cc6600;
 }
 
 .status-column {
@@ -180,7 +190,57 @@
   color: white;
 }
 
-/* New mobile styling for better layout on smaller screens */
+/* Modal for Attribute Mapping */
+.mapping-popup {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
+  width: 80%;
+  max-width: 600px;
+}
+
+.popup-content {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.attribute-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.required-badge {
+  color: red;
+  margin-left: 8px;
+}
+
+.btn-save-mapping,
+.btn-close-mapping {
+  padding: 8px 12px;
+  margin-top: 15px;
+  border: none;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.btn-save-mapping {
+  background-color: #28a745;
+  color: white;
+}
+
+.btn-close-mapping {
+  background-color: #dc3545;
+  color: white;
+}
+
+/* Responsive layout for mobile screens */
 @media (max-width: 768px) {
   .product-title {
     max-width: 200px;
@@ -211,5 +271,9 @@
   .full-status-tooltip:hover::after {
     width: 100%;
     max-width: none;
+  }
+
+  .mapping-popup {
+    width: 90%;
   }
 }

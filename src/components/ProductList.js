@@ -18,27 +18,30 @@ const ProductList = ({ products }) => {
 
     const totalPages = Math.ceil(products.length / itemsPerPage);
 
+    // Handle pagination change
     const handlePageChange = (pageNumber) => {
         setCurrentPage(pageNumber);
     };
 
+    // Handle field mapping modal input changes
     const handleMappingChange = (e) => {
         const { name, value } = e.target;
         setMappingFields((prev) => ({ ...prev, [name]: value }));
     };
 
+    // Export function for sending data to Walmart
     const handleExport = async (productId, product) => {
         const itemData = {
             sku: product.sku,
             title: product.title,
-            productId: "123456789012", // Replace with dynamic value if needed
+            productId: "123456789012", // Example placeholder, replace dynamically as needed
             productIdType: mappingFields.productIdType || "GTIN",
             shortDescription: mappingFields.shortDescription || "Default description",
             brand: mappingFields.brand || "Default Brand",
             mainImageUrl: product.image || 'https://via.placeholder.com/150',
             price: {
                 currency: "USD",
-                amount: parseFloat(product.price),
+                amount: parseFloat(product.price) || 0.0,
             },
             condition: "New",
             shippingWeight: {
@@ -46,7 +49,7 @@ const ProductList = ({ products }) => {
                 unit: "LB",
             },
             inventory: {
-                quantity: product.inventory,
+                quantity: product.inventory || 0,
                 fulfillmentLagTime: 2,
             },
         };
@@ -93,6 +96,7 @@ const ProductList = ({ products }) => {
                 Map Values
             </button>
 
+            {/* Mapping Modal */}
             {showMappingModal && (
                 <div className="mapping-modal">
                     <div className="modal-content">
@@ -127,7 +131,7 @@ const ProductList = ({ products }) => {
                             </select>
                         </label>
                         <button
-                            className="btn-close"
+                            className="btn-save-mapping"
                             onClick={() => setShowMappingModal(false)}
                         >
                             Save & Close
