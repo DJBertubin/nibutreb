@@ -36,12 +36,14 @@ const MappingModal = ({ products, onClose, onSave }) => {
     };
 
     const handleSave = () => {
-        // Check for missing required fields
-        const missingFields = walmartAttributes.some(
-            (attribute) =>
+        // Validate required fields
+        const missingFields = walmartAttributes.some((attribute) => {
+            const field = mapping[attribute.name];
+            return (
                 attribute.required &&
-                (mapping[attribute.name]?.type === 'Ignore' || !mapping[attribute.name]?.value)
-        );
+                (!field || !field.value || field.value.trim() === '')
+            );
+        });
 
         if (missingFields || selectedProducts.length === 0) {
             setErrorMessage('Please fill in all required fields and select at least one product.');
