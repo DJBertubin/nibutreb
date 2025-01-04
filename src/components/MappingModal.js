@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import './MappingModal.css';
 
-const MappingModal = ({ products, onClose, onSave }) => {
+const MappingModal = ({ products, onClose, onSave, sourceAttributes }) => {
     const [mapping, setMapping] = useState({});
     const [selectedProducts, setSelectedProducts] = useState([]);
     const [searchQuery, setSearchQuery] = useState('');
@@ -9,7 +9,21 @@ const MappingModal = ({ products, onClose, onSave }) => {
     const handleMappingChange = (attributeName, value) => {
         setMapping((prev) => ({
             ...prev,
-            [attributeName]: value,
+            [attributeName]: {
+                ...prev[attributeName],
+                type: value,
+                value: value === 'Ignore' ? '' : prev[attributeName]?.value || '',
+            },
+        }));
+    };
+
+    const handleValueChange = (attributeName, value) => {
+        setMapping((prev) => ({
+            ...prev,
+            [attributeName]: {
+                ...prev[attributeName],
+                value,
+            },
         }));
     };
 
@@ -44,7 +58,6 @@ const MappingModal = ({ products, onClose, onSave }) => {
         'Advanced Rule',
     ];
 
-    // Filtered product list based on search query
     const filteredProducts = products.filter((product) =>
         product.title.toLowerCase().includes(searchQuery.toLowerCase())
     );
@@ -55,10 +68,11 @@ const MappingModal = ({ products, onClose, onSave }) => {
                 <div className="popup-header">
                     <h4>Map Fields to Walmart Attributes</h4>
                     <button className="btn-close-mapping" onClick={onClose}>
-                        Close
+                        ✖
                     </button>
                 </div>
 
+                {/* Product Selection */}
                 <div className="product-dropdown-wrapper">
                     <input
                         type="text"
@@ -95,6 +109,7 @@ const MappingModal = ({ products, onClose, onSave }) => {
                     </div>
                 </div>
 
+                {/* Attribute Mapping */}
                 <h4 className="section-title">Mapping Attributes</h4>
                 <div className="scrollable-attributes">
                     {walmartAttributes.map((attribute) => (
@@ -104,7 +119,7 @@ const MappingModal = ({ products, onClose, onSave }) => {
                             </label>
                             <select
                                 className="mapping-select"
-                                value={mapping[attribute.name] || ''}
+                                value={mapping[attribute.name]?.type || ''}
                                 onChange={(e) => handleMappingChange(attribute.name, e.target.value)}
                             >
                                 <option value="">Select Option</option>
@@ -114,17 +129,43 @@ const MappingModal = ({ products, onClose, onSave }) => {
                                     </option>
                                 ))}
                             </select>
-                            <input
-                                type="text"
-                                placeholder="Enter Value"
-                                className="free-text-input"
-                                value={mapping[attribute.name] || ''}
-                                onChange={(e) => handleMappingChange(attribute.name, e.target.value)}
-                            />
+                            {mapping[attribute.name]?.type === 'Ignore' && (
+                                <input
+                                    type="text"
+                                    disabled
+                                    value="N/A"
+                                    className="free-text-input"
+                                    style={{ backgroundColor: '#e9e9e9', cursor: 'not-allowed' }}
+                                />
+                            )}
+                            {mapping[attribute.name]?.type === 'Map to Field' && (
+                                <select
+                                    className="free-text-input"
+                                    onChange={(e) => handleValueChange(attribute.name, e.target.value)}
+                                >
+                                    <option value="">Select Source Attribute</option>
+                                    {sourceAttributes.map((attr) => (
+                                        <option key={attr} value={attr}>
+                                            {attr}
+                                        </option>
+                                    ))}
+                                </select>
+                            )}
+                            {(mapping[attribute.name]?.type === 'Set Free Text' ||
+                                mapping[attribute.name]?.type === 'Advanced Rule') && (
+                                <input
+                                    type="text"
+                                    placeholder="Enter value or formula"
+                                    className="free-text-input"
+                                    value={mapping[attribute.name]?.value || ''}
+                                    onChange={(e) => handleValueChange(attribute.name, e.target.value)}
+                                />
+                            )}
                         </div>
                     ))}
                 </div>
 
+                {/* Save and Cancel Buttons */}
                 <div className="button-group">
                     <button className="btn-save-mapping" onClick={handleSave}>
                         Save Mapping
