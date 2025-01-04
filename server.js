@@ -199,12 +199,14 @@ app.post('/api/shopify/fetch', async (req, res) => {
 app.post('/api/mappings/save', async (req, res) => {
     const { clientId, productId, mappings } = req.body;
 
+    console.log('Incoming Request Payload:', req.body); // Debugging log
+
     if (!clientId || !productId || !mappings) {
+        console.error('Missing required fields:', { clientId, productId, mappings });
         return res.status(400).json({ error: 'Missing required fields.' });
     }
 
     try {
-        // Allow saving even if required fields are missing
         const cleanedMappings = {};
         for (const key in mappings) {
             cleanedMappings[key] = mappings[key].type === 'Ignore' ? '' : mappings[key];
@@ -216,13 +218,15 @@ app.post('/api/mappings/save', async (req, res) => {
             existingMapping.mappings = cleanedMappings;
             existingMapping.updatedAt = new Date();
             await existingMapping.save();
+            console.log(`Updated mapping for productId: ${productId}`);
         } else {
             const newMapping = new Mapping({ clientId, productId, mappings: cleanedMappings });
             await newMapping.save();
+            console.log(`Saved new mapping for productId: ${productId}`);
         }
 
         res.status(200).json({
-            message: 'Mappings saved successfully, even if required fields are missing.',
+            message: 'Mappings saved successfully.',
         });
     } catch (err) {
         console.error('Error saving mappings:', err.message);
