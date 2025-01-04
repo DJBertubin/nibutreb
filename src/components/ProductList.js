@@ -1,16 +1,15 @@
 import React, { useState } from 'react';
 import './ProductList.css';
 
-const ProductList = ({ products, jwtToken }) => {
+const ProductList = ({ products }) => {
     const [currentPage, setCurrentPage] = useState(1);
-    const itemsPerPage = 10;
     const [selectedProducts, setSelectedProducts] = useState([]);
-    const [isExporting, setIsExporting] = useState(false);
+    const [exportStatus, setExportStatus] = useState(''); // To display the export status
+    const itemsPerPage = 10;
 
     const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
     const currentProducts = products.slice(indexOfFirstItem, indexOfLastItem);
-
     const totalPages = Math.ceil(products.length / itemsPerPage);
 
     const handlePageChange = (pageNumber) => {
@@ -25,48 +24,43 @@ const ProductList = ({ products, jwtToken }) => {
         );
     };
 
-    // Helper function to get the correct image URL
-    const getImageUrl = (product) => {
-        if (product.image) {
-            return product.image;
+    // Handle export to Walmart
+    const handleExport = async () => {
+        if (selectedProducts.length === 0) {
+            setExportStatus('Please select at least one product to export.');
+            return;
         }
 
-        if (product.image_id) {
-            const variantImage = product.images?.find((img) => img.id === product.image_id);
-            if (variantImage) return variantImage.src;
-        }
-
-        return product.images?.[0]?.src || 'https://via.placeholder.com/50';
-    };
-
-    const handleExportToWalmart = async (product) => {
-        setIsExporting(true);
         try {
+            setExportStatus('Exporting selected products...');
+
+            // Prepare the selected products' data
+            const itemData = products.filter((product) => selectedProducts.includes(product.id));
+
             const response = await fetch('/api/walmart/send', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    Authorization: `Bearer ${jwtToken}`, // Pass JWT token for authorization
                 },
-                body: JSON.stringify({
-                    products: [product], // Export a single product for now
-                    feedType: 'MP_ITEM', // Feed type for new Walmart items
-                }),
+                body: JSON.stringify({ itemData }),
             });
 
             const result = await response.json();
 
             if (response.ok) {
-                alert(`Successfully exported product ${product.sku} to Walmart! Feed ID: ${result.feedId}`);
+                setExportStatus(`Success: ${result.message}. Feed ID: ${result.feedId}`);
             } else {
-                alert(`Failed to export product ${product.sku}. Error: ${result.error || 'Unknown error'}`);
+                setExportStatus(`Failed: ${result.error}`);
             }
         } catch (error) {
-            console.error('Error exporting to Walmart:', error);
-            alert(`Error exporting product ${product.sku}: ${error.message}`);
-        } finally {
-            setIsExporting(false);
+            console.error('Error sending to Walmart:', error);
+            setExportStatus('An error occurred while exporting. Please try again.');
         }
+    };
+
+    // Helper function to get the correct image URL
+    const getImageUrl = (product) => {
+        return product.image || 'https://via.placeholder.com/50'; // Default image if none provided
     };
 
     return (
@@ -101,12 +95,8 @@ const ProductList = ({ products, jwtToken }) => {
                                     </td>
                                     <td className="actions-column">
                                         <div className="button-group">
-                                            <button
-                                                className="btn-export"
-                                                onClick={() => handleExportToWalmart(product)}
-                                                disabled={isExporting}
-                                            >
-                                                {isExporting ? 'Exporting...' : 'Export'}
+                                            <button className="btn-export" onClick={handleExport}>
+                                                Export
                                             </button>
                                             <button className="btn-edit">Edit</button>
                                         </div>
@@ -171,6 +161,11 @@ const ProductList = ({ products, jwtToken }) => {
                     ))}
                 </div>
             )}
+
+            {/* Status section for displaying export feedback */}
+            <div className="export-status">
+                <strong>Status:</strong> {exportStatus || 'No actions performed yet.'}
+            </div>
         </div>
     );
 };
