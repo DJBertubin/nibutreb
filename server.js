@@ -204,14 +204,30 @@ app.post('/api/mappings/save', async (req, res) => {
     }
 
     try {
+        const requiredFields = ['SKU', 'Product ID Type', 'Product ID (UPC)', 'Product Name', 'Brand Name'];
+        const missingOrIgnoredFields = requiredFields.filter(
+            (field) => !mappings[field] || mappings[field].type === 'Ignore' || !mappings[field].value?.trim()
+        );
+
+        if (missingOrIgnoredFields.length > 0) {
+            return res.status(400).json({
+                error: `The following required fields cannot be ignored or empty: ${missingOrIgnoredFields.join(', ')}`,
+            });
+        }
+
         const existingMapping = await Mapping.findOne({ clientId, productId });
 
+        const cleanedMappings = {};
+        for (const key in mappings) {
+            cleanedMappings[key] = mappings[key].type === 'Ignore' ? '' : mappings[key];
+        }
+
         if (existingMapping) {
-            existingMapping.mappings = mappings;
+            existingMapping.mappings = cleanedMappings;
             existingMapping.updatedAt = new Date();
             await existingMapping.save();
         } else {
-            const newMapping = new Mapping({ clientId, productId, mappings });
+            const newMapping = new Mapping({ clientId, productId, mappings: cleanedMappings });
             await newMapping.save();
         }
 
