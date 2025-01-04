@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import './ProductList.css';
-import MappingModal from './MappingModal'; // Import MappingModal component
+import MappingModal from './MappingModal'; // Import the MappingModal component
 
 const ProductList = ({ products }) => {
     const [currentPage, setCurrentPage] = useState(1);
     const [showMappingModal, setShowMappingModal] = useState(false);
+    const [selectedProducts, setSelectedProducts] = useState([]);
     const [statuses, setStatuses] = useState({});
     const itemsPerPage = 10;
 
@@ -17,14 +18,17 @@ const ProductList = ({ products }) => {
         setCurrentPage(pageNumber);
     };
 
-    // Handle opening the mapping modal
-    const handleOpenMappingModal = () => {
-        setShowMappingModal(true);
-    };
+    // Open and close the mapping modal
+    const handleOpenMappingModal = () => setShowMappingModal(true);
+    const handleCloseMappingModal = () => setShowMappingModal(false);
 
-    // Handle closing the mapping modal
-    const handleCloseMappingModal = () => {
-        setShowMappingModal(false);
+    // Handle product selection for mapping
+    const handleSelectProduct = (productId) => {
+        setSelectedProducts((prevSelected) =>
+            prevSelected.includes(productId)
+                ? prevSelected.filter((id) => id !== productId)
+                : [...prevSelected, productId]
+        );
     };
 
     return (
@@ -34,11 +38,15 @@ const ProductList = ({ products }) => {
                 Map Values
             </button>
 
+            {/* Mapping Modal Popup */}
             {showMappingModal && (
                 <MappingModal
                     products={products}
                     onClose={handleCloseMappingModal}
-                    onSave={(mappingData) => console.log('Saved Mapping:', mappingData)}
+                    onSave={(mappingData) => {
+                        console.log('Saved Mapping:', mappingData);
+                        setShowMappingModal(false); // Close modal after save
+                    }}
                 />
             )}
 
@@ -60,7 +68,14 @@ const ProductList = ({ products }) => {
                             <tr key={product.id} className="product-row">
                                 <td className="actions-column">
                                     <div className="button-group">
-                                        <button className="btn-export">Export</button>
+                                        <button
+                                            className="btn-export"
+                                            onClick={() => handleSelectProduct(product.id)}
+                                        >
+                                            {selectedProducts.includes(product.id)
+                                                ? 'Deselect'
+                                                : 'Select'}
+                                        </button>
                                         <button className="btn-edit">Edit</button>
                                     </div>
                                 </td>

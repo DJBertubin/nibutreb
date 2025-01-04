@@ -1,32 +1,10 @@
 import React, { useState } from 'react';
 import './MappingModal.css';
 
-const MappingModal = ({ products, onClose, onSave }) => {
+const MappingModalPage = ({ products, onClose, onSave }) => {
     const [mapping, setMapping] = useState({});
-    const [selectedProducts, setSelectedProducts] = useState([]);
-    const [showDropdown, setShowDropdown] = useState(false);
+    const [selectedProduct, setSelectedProduct] = useState(''); // Single product selection
 
-    const handleMappingChange = (attributeName, value) => {
-        setMapping((prev) => ({
-            ...prev,
-            [attributeName]: value,
-        }));
-    };
-
-    const handleProductSelect = (productId) => {
-        setSelectedProducts((prev) =>
-            prev.includes(productId)
-                ? prev.filter((id) => id !== productId)
-                : [...prev, productId]
-        );
-    };
-
-    const handleSave = () => {
-        onSave({ mapping, selectedProducts });
-        onClose();
-    };
-
-    // Walmart attributes based on MP_ITEM_SPEC_4.8
     const walmartAttributes = [
         { name: 'SKU', required: true, description: 'Alphanumeric, 50 characters max' },
         { name: 'Product ID Type', required: true, description: 'Closed list - UPC, GTIN, etc.' },
@@ -48,58 +26,50 @@ const MappingModal = ({ products, onClose, onSave }) => {
         'Set Free Text',
     ];
 
+    const handleMappingChange = (attributeName, value) => {
+        setMapping((prev) => ({
+            ...prev,
+            [attributeName]: value,
+        }));
+    };
+
+    const handleProductSelection = (e) => {
+        setSelectedProduct(e.target.value);
+    };
+
+    const handleSave = () => {
+        if (!selectedProduct) {
+            alert('Please select a product.');
+            return;
+        }
+        onSave({ mapping, selectedProduct });
+        onClose();
+    };
+
     return (
         <div className="mapping-popup">
             <div className="popup-header">
                 <h4>Map Fields to Walmart Attributes</h4>
                 <button className="btn-close-mapping" onClick={onClose}>
-                    Close
+                    ✖
                 </button>
             </div>
             <div className="popup-content">
-                <div className="product-dropdown-wrapper">
-                    <div
-                        className="product-dropdown-header"
-                        onClick={() => setShowDropdown((prev) => !prev)}
+                <div className="product-selection">
+                    <label htmlFor="product-select">Select a Product</label>
+                    <select
+                        id="product-select"
+                        className="mapping-select"
+                        value={selectedProduct}
+                        onChange={handleProductSelection}
                     >
-                        <span>Select Products</span>
-                        <span>{showDropdown ? '▲' : '▼'}</span>
-                    </div>
-                    {showDropdown && (
-                        <div className="product-dropdown open scrollable-dropdown">
-                            <label>
-                                <input
-                                    type="checkbox"
-                                    checked={
-                                        selectedProducts.length === products.length
-                                    }
-                                    onChange={(e) => {
-                                        if (e.target.checked) {
-                                            setSelectedProducts(products.map((p) => p.id));
-                                        } else {
-                                            setSelectedProducts([]);
-                                        }
-                                    }}
-                                />
-                                Select All
-                            </label>
-                            <div className="scrollable-product-list">
-                                {products.map((product) => (
-                                    <div className="product-item" key={product.id}>
-                                        <label className="product-checkbox-label">
-                                            <input
-                                                className="product-checkbox"
-                                                type="checkbox"
-                                                checked={selectedProducts.includes(product.id)}
-                                                onChange={() => handleProductSelect(product.id)}
-                                            />
-                                            {product.title}
-                                        </label>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    )}
+                        <option value="">-- Select Product --</option>
+                        {products.map((product) => (
+                            <option key={product.id} value={product.id}>
+                                {product.title}
+                            </option>
+                        ))}
+                    </select>
                 </div>
 
                 <h4 className="section-title">Mapping Attributes</h4>
@@ -152,4 +122,4 @@ const MappingModal = ({ products, onClose, onSave }) => {
     );
 };
 
-export default MappingModal;
+export default MappingModalPage;

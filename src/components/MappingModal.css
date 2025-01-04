@@ -1,158 +1,83 @@
-/* Modal container */
 .mapping-popup {
-    width: 60%;
-    background-color: white;
-    border-radius: 8px;
-    padding: 20px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-    position: relative;
-    max-height: 80vh;
-    overflow: hidden;
+    position: fixed;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
-/* Header section with close button */
-.popup-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-bottom: 1px solid #ccc;
-    padding-bottom: 10px;
+.popup-content {
+    background-color: white;
+    padding: 20px;
+    border-radius: 8px;
+    width: 80%;
+    max-width: 600px;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+.product-selection {
     margin-bottom: 20px;
 }
 
-.popup-header h4 {
-    margin: 0;
-    font-size: 1.5em;
+.mapping-select {
+    width: 100%;
+    padding: 8px;
+}
+
+.scrollable-attributes {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.attribute-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    justify-content: space-between;
+    margin-bottom: 15px;
+}
+
+.attribute-name {
+    width: 25%;
+    font-weight: 500;
+}
+
+.mapping-select,
+.free-text-input {
+    width: 70%;
+}
+
+button.btn-save-mapping,
+button.btn-close-mapping {
+    padding: 10px 16px;
+    margin-top: 20px;
+    border: none;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.btn-save-mapping {
+    background-color: #28a745;
+    color: white;
+}
+
+.btn-save-mapping:hover {
+    background-color: #218838;
 }
 
 .btn-close-mapping {
-    background: none;
-    border: none;
-    font-size: 1.2em;
-    cursor: pointer;
+    background-color: #dc3545;
+    color: white;
 }
 
-/* Dropdown for product selection */
-.product-dropdown-wrapper {
-    margin-bottom: 20px;
-}
-
-.product-dropdown-header {
-    background-color: #f7f7f7;
-    padding: 10px;
-    border-radius: 5px;
-    cursor: pointer;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.scrollable-dropdown {
-    max-height: 200px;
-    overflow-y: auto;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    padding: 10px;
+.btn-close-mapping:hover {
+    background-color: #c82333;
 }
 
 .scrollable-product-list {
     max-height: 200px;
     overflow-y: auto;
-}
-
-.product-item {
-    padding: 5px 10px;
-}
-
-.product-checkbox-label {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-/* Section for attribute mapping */
-.section-title {
-    font-size: 1.3em;
-    margin: 20px 0 10px 0;
-}
-
-.scrollable-attributes {
-    max-height: 400px;
-    overflow-y: auto;
-    border: 1px solid #ccc;
-    padding: 10px;
-    border-radius: 8px;
-}
-
-.attribute-item.horizontal-line {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-    padding: 10px 0;
-    border-bottom: 1px solid #f1f1f1;
-}
-
-.attribute-name {
-    width: 25%;
-    font-weight: bold;
-}
-
-.attribute-description {
-    font-size: 0.9em;
-    color: #777;
-}
-
-.mapping-select {
-    width: 40%;
-    padding: 8px;
-    border-radius: 4px;
-    border: 1px solid #ddd;
-}
-
-.free-text-input {
-    width: 30%;
-    padding: 8px;
-    border-radius: 4px;
-    border: 1px solid #ddd;
-}
-
-.required-badge {
-    color: red;
-    font-size: 0.9em;
-}
-
-/* Buttons */
-.button-group {
-    margin-top: 20px;
-    display: flex;
-    justify-content: flex-end;
-    gap: 10px;
-}
-
-.btn-save-mapping,
-.btn-close-mapping {
-    padding: 10px 20px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 1em;
-}
-
-.btn-save-mapping {
-    background-color: #4caf50;
-    color: white;
-}
-
-.btn-close-mapping {
-    background-color: #f44336;
-    color: white;
-}
-
-.btn-save-mapping:hover {
-    background-color: #45a049;
-}
-
-.btn-close-mapping:hover {
-    background-color: #e53935;
+    padding-right: 5px;
 }
