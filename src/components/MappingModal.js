@@ -1,10 +1,42 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './MappingModal.css';
 
-const MappingModal = ({ products, onClose, onSave, sourceAttributes }) => {
+const MappingModal = ({ products, onClose, onSave }) => {
     const [mapping, setMapping] = useState({});
     const [selectedProducts, setSelectedProducts] = useState([]);
     const [searchQuery, setSearchQuery] = useState('');
+    const [sourceAttributes, setSourceAttributes] = useState([]);
+    const [loadingAttributes, setLoadingAttributes] = useState(true);
+
+    // Fetch source attributes from MongoDB
+    useEffect(() => {
+        const fetchSourceAttributes = async () => {
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch('http://localhost:5001/api/source-attributes', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json',
+                    },
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to fetch source attributes');
+                }
+
+                const data = await response.json();
+                setSourceAttributes(data.attributes || []); // Set source attributes
+            } catch (error) {
+                console.error('Error fetching source attributes:', error.message);
+                setSourceAttributes([]); // Ensure it's an empty array if an error occurs
+            } finally {
+                setLoadingAttributes(false);
+            }
+        };
+
+        fetchSourceAttributes();
+    }, []);
 
     const handleMappingChange = (attributeName, type) => {
         setMapping((prev) => ({
@@ -106,7 +138,8 @@ const MappingModal = ({ products, onClose, onSave, sourceAttributes }) => {
                     {walmartAttributes.map((attribute) => (
                         <div className="attribute-item" key={attribute.name}>
                             <label className="attribute-name">
-                                {attribute.name} {attribute.required && <span className="required-badge">(Required)</span>}
+                                {attribute.name}{' '}
+                                {attribute.required && <span className="required-badge">(Required)</span>}
                             </label>
                             <select
                                 className="mapping-select"
@@ -128,11 +161,15 @@ const MappingModal = ({ products, onClose, onSave, sourceAttributes }) => {
                                     onChange={(e) => handleValueChange(attribute.name, e.target.value)}
                                 >
                                     <option value="">Select Source Attribute</option>
-                                    {sourceAttributes.map((attr) => (
-                                        <option key={attr} value={attr}>
-                                            {attr}
-                                        </option>
-                                    ))}
+                                    {!loadingAttributes && sourceAttributes.length > 0 ? (
+                                        sourceAttributes.map((attr) => (
+                                            <option key={attr} value={attr}>
+                                                {attr}
+                                            </option>
+                                        ))
+                                    ) : (
+                                        <option disabled>{loadingAttributes ? 'Loading...' : 'No attributes available'}</option>
+                                    )}
                                 </select>
                             ) : (
                                 <input
