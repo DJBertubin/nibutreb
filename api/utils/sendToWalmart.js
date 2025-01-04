@@ -38,26 +38,30 @@ export async function sendItemToWalmart(product) {
         throw new Error('Item data is required.');
     }
 
-    // Ensure all required fields are included in the payload
+    // Format the product according to the Walmart MP_ITEM spec
     const mpItemPayload = {
         MPItem: {
             sku: product.sku || 'N/A',
             productName: product.title || 'Untitled Product',
+            productId: product.productId || '0000000000000',  // Use GTIN/UPC/EAN as required
+            productIdType: 'GTIN',  // Update if you are using UPC or EAN
             price: {
                 currency: 'USD',
                 amount: parseFloat(product.price) || 0,
             },
-            productId: product.productId || '0000000000000',  // Ensure you have a valid GTIN or UPC
-            productIdType: 'GTIN',
             shortDescription: product.shortDescription || 'No description available',
             mainImageUrl: product.image || 'https://via.placeholder.com/300',
             productSecondaryImageURL: product.secondaryImages || [],
-            fulfillmentLagTime: product.fulfillmentLagTime || 1,  // Default lag time
-            condition: product.condition || 'New',
             brand: product.brand || 'Unknown Brand',
+            condition: product.condition || 'New',
             shippingWeight: product.shippingWeight || 1.0,  // Example default weight
+            fulfillmentLagTime: product.fulfillmentLagTime || 1,
             category: product.sourceCategory || 'General Merchandise',
-        },
+            inventory: {
+                quantity: product.inventory || 0,
+                fulfillmentLagTime: product.fulfillmentLagTime || 1
+            }
+        }
     };
 
     try {
