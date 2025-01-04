@@ -1,22 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import './ProductList.css';
 import MappingModal from './MappingModal';
-import QuickEditModal from './QuickEditModal'; // Import Quick Edit Modal
 
 const ProductList = ({ products }) => {
     const [currentPage, setCurrentPage] = useState(1);
     const [showMappingModal, setShowMappingModal] = useState(false);
     const [selectedProduct, setSelectedProduct] = useState(null);
-    const [showQuickEditModal, setShowQuickEditModal] = useState(false);
     const [showBulkMappingModal, setShowBulkMappingModal] = useState(false);
     const [mappedStatuses, setMappedStatuses] = useState({});
     const [existingMappings, setExistingMappings] = useState({});
+    const [searchQuery, setSearchQuery] = useState('');
+    const [selectedProducts, setSelectedProducts] = useState([]); // Track selected products for bulk export
     const itemsPerPage = 10;
 
     const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-    const currentProducts = products.slice(indexOfFirstItem, indexOfLastItem);
-    const totalPages = Math.ceil(products.length / itemsPerPage);
+    const filteredProducts = products.filter((product) =>
+        product.title.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+    const currentProducts = filteredProducts.slice(indexOfFirstItem, indexOfLastItem);
+    const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
 
     const handlePageChange = (pageNumber) => {
         setCurrentPage(pageNumber);
@@ -42,7 +45,7 @@ const ProductList = ({ products }) => {
     };
 
     useEffect(() => {
-        fetchMappingsFromMongoDB(); // Fetch all mappings when the component loads
+        fetchMappingsFromMongoDB();
     }, []);
 
     const handleOpenMappingModal = (product) => {
@@ -72,38 +75,64 @@ const ProductList = ({ products }) => {
         updateMappedStatuses();
     }, [existingMappings]);
 
-    const handleQuickEdit = (product) => {
-        setSelectedProduct(product);
-        setShowQuickEditModal(true);
+    const handleSearchChange = (e) => {
+        setSearchQuery(e.target.value);
+        setCurrentPage(1);
     };
 
-    const handleExport = (product) => {
-        const csvData = [
-            ['Product ID', 'Title', 'SKU', 'Price', 'Inventory'],
-            [product.id, product.title, product.sku, product.price, product.inventory],
-        ];
-        const csvContent = 'data:text/csv;charset=utf-8,' + csvData.map((e) => e.join(',')).join('\n');
-        const encodedUri = encodeURI(csvContent);
-        const link = document.createElement('a');
-        link.setAttribute('href', encodedUri);
-        link.setAttribute('download', `${product.title}_Export.csv`);
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+    const handleSelectProduct = (productId) => {
+        setSelectedProducts((prevSelected) =>
+            prevSelected.includes(productId)
+                ? prevSelected.filter((id) => id !== productId)
+                : [...prevSelected, productId]
+        );
+    };
+
+    const handleSelectAll = (isChecked) => {
+        if (isChecked) {
+            const allProductIds = currentProducts.map((product) => product.id);
+            setSelectedProducts(allProductIds);
+        } else {
+            setSelectedProducts([]);
+        }
+    };
+
+    const handleExportSelected = () => {
+        if (selectedProducts.length === 0) {
+            alert('No products selected for export!');
+            return;
+        }
+        console.log('Exporting Products:', selectedProducts);
+        // Implement the export functionality here
     };
 
     return (
         <div className="product-list-container">
             <h3>Fetched Products</h3>
-            <div className="button-group-top">
-                <button className="btn-bulk-map" onClick={() => setShowBulkMappingModal(true)}>
-                    Bulk Map
+
+            <div className="filter-controls">
+                <input
+                    type="text"
+                    placeholder="Search products..."
+                    className="search-input"
+                    value={searchQuery}
+                    onChange={handleSearchChange}
+                />
+                <button className="btn-export-selected" onClick={handleExportSelected}>
+                    Export Selected
                 </button>
             </div>
 
             <table className="modern-table">
                 <thead>
                     <tr>
+                        <th>
+                            <input
+                                type="checkbox"
+                                checked={selectedProducts.length === currentProducts.length && currentProducts.length > 0}
+                                onChange={(e) => handleSelectAll(e.target.checked)}
+                            />
+                        </th>
                         <th>Actions</th>
                         <th>Status</th>
                         <th>Mapped</th>
@@ -111,23 +140,27 @@ const ProductList = ({ products }) => {
                         <th>Category</th>
                         <th>Price</th>
                         <th>Inventory</th>
-                        <th>Created Date</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {products.length > 0 ? (
+                    {filteredProducts.length > 0 ? (
                         currentProducts.map((product) => (
                             <tr key={product.id} className="product-row">
+                                <td>
+                                    <input
+                                        type="checkbox"
+                                        checked={selectedProducts.includes(product.id)}
+                                        onChange={() => handleSelectProduct(product.id)}
+                                    />
+                                </td>
                                 <td className="actions-column">
                                     <div className="button-group-horizontal">
-                                        <button className="btn-export" onClick={() => handleExport(product)}>
-                                            Export
-                                        </button>
-                                        <button className="btn-map" onClick={() => handleOpenMappingModal(product)}>
+                                        <button className="btn-export">Export</button>
+                                        <button
+                                            className="btn-map"
+                                            onClick={() => handleOpenMappingModal(product)}
+                                        >
                                             Map
-                                        </button>
-                                        <button className="btn-quick-edit" onClick={() => handleQuickEdit(product)}>
-                                            Quick Edit
                                         </button>
                                     </div>
                                 </td>
@@ -145,13 +178,14 @@ const ProductList = ({ products }) => {
                                     />
                                     <div className="product-info">
                                         <strong className="product-title">{product.title || 'N/A'}</strong>
-                                        <div className="sku">SKU: {product.sku || 'N/A'}</div>
+                                        <div className="sku">
+                                            SKU: {product.sku || 'N/A'} | Product ID: {product.id}
+                                        </div>
                                     </div>
                                 </td>
                                 <td className="category-column">{product.sourceCategory || 'N/A'}</td>
                                 <td>${product.price || 'N/A'}</td>
                                 <td>{product.inventory || 'N/A'}</td>
-                                <td>{new Date(product.created_at).toLocaleDateString()}</td>
                             </tr>
                         ))
                     ) : (
@@ -164,7 +198,7 @@ const ProductList = ({ products }) => {
                 </tbody>
             </table>
 
-            {products.length > 0 && (
+            {filteredProducts.length > 0 && (
                 <div className="pagination">
                     {Array.from({ length: totalPages }, (_, index) => (
                         <button
@@ -198,6 +232,7 @@ const ProductList = ({ products }) => {
 
                             const result = await response.json();
                             if (response.ok) {
+                                console.log('Mapping saved successfully.');
                                 fetchMappingsFromMongoDB();
                             } else {
                                 console.error('Error saving mapping:', result.error);
@@ -206,17 +241,6 @@ const ProductList = ({ products }) => {
                             console.error('Error saving mapping:', error);
                         }
                         setShowMappingModal(false);
-                    }}
-                />
-            )}
-
-            {showQuickEditModal && selectedProduct && (
-                <QuickEditModal
-                    product={selectedProduct}
-                    onClose={() => setShowQuickEditModal(false)}
-                    onSave={(updatedProduct) => {
-                        console.log('Quick Edit Saved:', updatedProduct);
-                        setShowQuickEditModal(false);
                     }}
                 />
             )}
