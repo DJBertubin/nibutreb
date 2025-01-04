@@ -12,7 +12,7 @@ const MappingModal = ({ products, onClose, onSave, sourceAttributes }) => {
             [attributeName]: {
                 ...prev[attributeName],
                 type,
-                value: type === 'Ignore' ? '' : prev[attributeName]?.value || '',
+                value: type === 'Ignore' ? 'N/A' : '',
             },
         }));
     };
@@ -40,7 +40,6 @@ const MappingModal = ({ products, onClose, onSave, sourceAttributes }) => {
         onClose();
     };
 
-    // Walmart attributes based on MP_ITEM_SPEC_4.8
     const walmartAttributes = [
         { name: 'SKU', required: true },
         { name: 'Product ID Type', required: true },
@@ -114,25 +113,18 @@ const MappingModal = ({ products, onClose, onSave, sourceAttributes }) => {
                                 value={mapping[attribute.name]?.type || ''}
                                 onChange={(e) => handleMappingChange(attribute.name, e.target.value)}
                             >
-                                <option value="">Select Option</option>
                                 {fieldOptions.map((option) => (
                                     <option key={option} value={option}>
                                         {option}
                                     </option>
                                 ))}
                             </select>
-                            {mapping[attribute.name]?.type === 'Ignore' && (
-                                <input
-                                    type="text"
-                                    disabled
-                                    value="N/A"
-                                    className="free-text-input"
-                                    style={{ backgroundColor: '#e9e9e9', cursor: 'not-allowed' }}
-                                />
-                            )}
-                            {mapping[attribute.name]?.type === 'Map to Field' && (
+
+                            {/* Input field that is always visible */}
+                            {mapping[attribute.name]?.type === 'Map to Field' ? (
                                 <select
                                     className="free-text-input"
+                                    value={mapping[attribute.name]?.value || ''}
                                     onChange={(e) => handleValueChange(attribute.name, e.target.value)}
                                 >
                                     <option value="">Select Source Attribute</option>
@@ -142,15 +134,23 @@ const MappingModal = ({ products, onClose, onSave, sourceAttributes }) => {
                                         </option>
                                     ))}
                                 </select>
-                            )}
-                            {(mapping[attribute.name]?.type === 'Set Free Text' ||
-                                mapping[attribute.name]?.type === 'Advanced Rule') && (
+                            ) : (
                                 <input
                                     type="text"
-                                    placeholder="Enter value or formula"
                                     className="free-text-input"
+                                    placeholder={
+                                        mapping[attribute.name]?.type === 'Set Free Text'
+                                            ? 'Enter static value'
+                                            : 'Enter advanced rule or leave blank'
+                                    }
                                     value={mapping[attribute.name]?.value || ''}
+                                    disabled={mapping[attribute.name]?.type === 'Ignore'}
                                     onChange={(e) => handleValueChange(attribute.name, e.target.value)}
+                                    style={
+                                        mapping[attribute.name]?.type === 'Ignore'
+                                            ? { backgroundColor: '#e9e9e9', cursor: 'not-allowed' }
+                                            : {}
+                                    }
                                 />
                             )}
                         </div>
