@@ -37,7 +37,7 @@ export default async function handler(req, res) {
             console.log(`No Shopify data found for clientId: ${clientId}`);
             return res.status(200).json({
                 message: 'No Shopify data found for this user.',
-                shopifyData: [], // Return an empty array for consistency
+                shopifyData: [], 
             });
         }
 
