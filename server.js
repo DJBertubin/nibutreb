@@ -195,54 +195,60 @@ app.post('/api/shopify/fetch', async (req, res) => {
     }
 });
 
-// **POST /api/mappings/save - Save Mappings**
+// **NEW: Get Source Attribute Value for Mapping**
+app.get('/api/shopify/attribute-value/:clientId/:productId/:attributePath', async (req, res) => {
+    const { clientId, productId, attributePath } = req.params;
+
+    try {
+        const shopifyData = await ShopifyData.findOne({ clientId });
+        if (!shopifyData) {
+            return res.status(404).json({ error: 'Shopify data not found for this client.' });
+        }
+
+        const product = shopifyData.shopifyData.products.find((p) => p.id === parseInt(productId));
+        if (!product) {
+            return res.status(404).json({ error: 'Product not found in Shopify data.' });
+        }
+
+        const value = attributePath.split('.').reduce((obj, key) => (obj ? obj[key] : null), product);
+        res.status(200).json({ value: value || 'N/A' });
+    } catch (error) {
+        console.error('Error fetching attribute value:', error.message);
+        res.status(500).json({ error: 'Failed to fetch attribute value', details: error.message });
+    }
+});
+
+// **POST /api/mappings/save - Save Individual Mapping**
 app.post('/api/mappings/save', async (req, res) => {
     const { clientId, productId, mappings } = req.body;
 
     console.log('Incoming Request Payload:', JSON.stringify(req.body, null, 2));
 
     if (!clientId || !productId || !mappings) {
-        console.error('Missing required fields:', { clientId, productId, mappings });
         return res.status(400).json({ error: 'Missing required fields.' });
     }
 
     try {
         const cleanedMappings = {};
 
-        // Iterate over mappings to ensure proper structure
         for (const key in mappings) {
             const mappingEntry = mappings[key];
-
-            if (typeof mappingEntry === 'string') {
-                cleanedMappings[key] = { type: 'Set Free Text', value: mappingEntry }; // Convert string to object
-            } else if (typeof mappingEntry === 'object' && mappingEntry !== null) {
-                cleanedMappings[key] = {
-                    type: mappingEntry.type || 'Ignore',
-                    value: mappingEntry.value || '',
-                };
-            } else {
-                cleanedMappings[key] = { type: 'Ignore', value: '' }; // Default to "Ignore"
-            }
+            cleanedMappings[key] = {
+                type: mappingEntry?.type || 'Ignore',
+                value: mappingEntry?.value || '',
+            };
         }
 
-        console.log('Cleaned Mappings (to be saved):', cleanedMappings);
-
         const existingMapping = await Mapping.findOne({ clientId, productId });
-
         if (existingMapping) {
             existingMapping.mappings = cleanedMappings;
             existingMapping.updatedAt = new Date();
             await existingMapping.save();
-            console.log(`Updated mapping for productId: ${productId}`);
         } else {
-            const newMapping = new Mapping({ clientId, productId, mappings: cleanedMappings });
-            await newMapping.save();
-            console.log(`Saved new mapping for productId: ${productId}`);
+            await new Mapping({ clientId, productId, mappings: cleanedMappings }).save();
         }
 
-        res.status(200).json({
-            message: 'Mappings saved successfully.',
-        });
+        res.status(200).json({ message: 'Mappings saved successfully.' });
     } catch (err) {
         console.error('Error saving mappings:', err.message);
         res.status(500).json({ error: 'Failed to save mappings.', details: err.message });
@@ -255,15 +261,9 @@ app.get('/api/mappings/get/:clientId', async (req, res) => {
 
     try {
         const mappings = await Mapping.find({ clientId });
-
-        if (!mappings || mappings.length === 0) {
-            return res.status(200).json({ mappings: [] });
-        }
-
         res.status(200).json({ mappings });
     } catch (err) {
-        console.error('Error fetching mappings:', err.message);
-        res.status(500).json({ error: 'Failed to fetch mappings.', details: err.message });
+        res.status(500).json({ error: 'Failed to fetch mappings', details: err.message });
     }
 });
 
@@ -284,39 +284,6 @@ app.post('/api/walmart/send', async (req, res) => {
     } catch (error) {
         console.error('Error sending to Walmart:', error.message);
         res.status(500).json({ error: 'Internal Server Error', details: error.message });
-    }
-});
-
-// **Fetch Shopify Data for Logged-In User**
-app.get('/api/shopify/data', async (req, res) => {
-    const { authorization } = req.headers;
-
-    if (!authorization || !authorization.startsWith('Bearer ')) {
-        return res.status(401).json({ error: 'Authorization token required.' });
-    }
-
-    try {
-        const token = authorization.split(' ')[1];
-        const decoded = jwt.verify(token, JWT_SECRET);
-        const clientId = decoded.clientId;
-
-        if (!clientId) {
-            return res.status(401).json({ error: 'Invalid or missing clientId in token.' });
-        }
-
-        const shopifyData = await ShopifyData.find({ clientId });
-
-        if (!shopifyData || shopifyData.length === 0) {
-            return res.status(404).json({ error: 'No Shopify data found for this user.' });
-        }
-
-        res.status(200).json({
-            message: 'Shopify data fetched successfully.',
-            shopifyData,
-        });
-    } catch (err) {
-        console.error('Error fetching Shopify data:', err.message);
-        res.status(500).json({ error: 'Internal Server Error', details: err.message });
     }
 });
 

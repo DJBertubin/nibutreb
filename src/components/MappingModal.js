@@ -4,10 +4,11 @@ import './MappingModal.css';
 const MappingModal = ({ products, onClose, onSave }) => {
     const [mapping, setMapping] = useState({});
     const [selectedProducts, setSelectedProducts] = useState([]);
+    const [shopifyData, setShopifyData] = useState({});
     const [searchQuery, setSearchQuery] = useState('');
     const [errorMessage, setErrorMessage] = useState('');
 
-    // Pre-fill mapping data for a single product
+    // Pre-fill mapping data and fetch Shopify data for attributes
     useEffect(() => {
         if (products.length > 0 && products[0]?.mapping) {
             const preFilledMapping = {};
@@ -23,7 +24,29 @@ const MappingModal = ({ products, onClose, onSave }) => {
             setMapping({});
         }
         setSelectedProducts(products.map((p) => p.id)); // Select all products by default
+        fetchShopifyData(); // Fetch Shopify product data
     }, [products]);
+
+    const fetchShopifyData = async () => {
+        const clientId = localStorage.getItem('clientId');
+        try {
+            const response = await fetch(`/api/shopify/data?clientId=${clientId}`);
+            const data = await response.json();
+            if (response.ok) {
+                const shopifyProducts = {};
+                data.shopifyData.forEach((entry) => {
+                    entry.shopifyData.products.forEach((product) => {
+                        shopifyProducts[product.id] = product;
+                    });
+                });
+                setShopifyData(shopifyProducts);
+            } else {
+                console.error('Error fetching Shopify data:', data.error);
+            }
+        } catch (error) {
+            console.error('Error fetching Shopify data:', error);
+        }
+    };
 
     const handleMappingChange = (attributeName, type) => {
         setMapping((prev) => ({
@@ -40,17 +63,27 @@ const MappingModal = ({ products, onClose, onSave }) => {
             ...prev,
             [attributeName]: {
                 ...prev[attributeName],
-                value: value || '',
+                value,
             },
         }));
     };
 
-    const handleProductSelect = (productId) => {
-        setSelectedProducts((prev) =>
-            prev.includes(productId)
-                ? prev.filter((id) => id !== productId)
-                : [...prev, productId]
-        );
+    const getShopifyAttributeValue = (productId, attribute) => {
+        const product = shopifyData[productId];
+        if (!product) return 'N/A';
+
+        switch (attribute) {
+            case 'variants[].sku':
+                return product.variants[0]?.sku || 'N/A';
+            case 'variants[].price':
+                return product.variants[0]?.price || 'N/A';
+            case 'title':
+                return product.title || 'N/A';
+            case 'vendor':
+                return product.vendor || 'N/A';
+            default:
+                return 'N/A';
+        }
     };
 
     const handleSave = () => {
@@ -65,7 +98,7 @@ const MappingModal = ({ products, onClose, onSave }) => {
             const field = mapping[attribute.name];
             sanitizedMappings[attribute.name] = {
                 type: field?.type || 'Ignore',
-                value: field?.type === 'Ignore' ? '' : field?.value || '',
+                value: field?.type === 'Map to Field' ? getShopifyAttributeValue(selectedProducts[0], field.value) : field.value || '',
             };
         });
 
@@ -90,34 +123,14 @@ const MappingModal = ({ products, onClose, onSave }) => {
         { name: 'Color Category', required: false },
     ];
 
-    const fieldOptions = [
-        { label: 'Ignore', value: 'Ignore' },
-        { label: 'Map to Field', value: 'Map to Field' },
-        { label: 'Set Free Text', value: 'Set Free Text' },
-        { label: 'Advanced Rule', value: 'Advanced Rule' },
-    ];
-
     const shopifyAttributes = [
-        'id',
         'title',
-        'body_html',
         'vendor',
         'product_type',
-        'tags',
-        'status',
-        'created_at',
-        'updated_at',
-        'published_at',
-        'variants[].title',
         'variants[].sku',
         'variants[].price',
         'variants[].inventory_quantity',
-        'variants[].weight',
-        'variants[].weight_unit',
-        'variants[].barcode',
-        'variants[].grams',
-        'images[].src',
-        'options[].name',
+        'body_html',
     ];
 
     const filteredProducts = products.filter((product) =>
@@ -131,7 +144,6 @@ const MappingModal = ({ products, onClose, onSave }) => {
                     <h4>Map Fields to Walmart Attributes</h4>
                 </div>
 
-                {/* Product Selection */}
                 <div className="product-dropdown-wrapper">
                     <input
                         type="text"
@@ -159,7 +171,11 @@ const MappingModal = ({ products, onClose, onSave }) => {
                                     <input
                                         type="checkbox"
                                         checked={selectedProducts.includes(product.id)}
-                                        onChange={() => handleProductSelect(product.id)}
+                                        onChange={() => setSelectedProducts((prev) =>
+                                            prev.includes(product.id)
+                                                ? prev.filter((id) => id !== product.id)
+                                                : [...prev, product.id]
+                                        )}
                                     />
                                     {product.title}
                                 </label>
@@ -168,7 +184,6 @@ const MappingModal = ({ products, onClose, onSave }) => {
                     </div>
                 </div>
 
-                {/* Attribute Mapping */}
                 <div className="attribute-list-container">
                     <h4 className="section-title">Mapping Attributes</h4>
                     {walmartAttributes.map((attribute) => (
@@ -182,58 +197,46 @@ const MappingModal = ({ products, onClose, onSave }) => {
                                 value={mapping[attribute.name]?.type || 'Ignore'}
                                 onChange={(e) => handleMappingChange(attribute.name, e.target.value)}
                             >
-                                {fieldOptions.map((option) => (
-                                    <option
-                                        key={option.value}
-                                        value={option.value}
-                                        disabled={attribute.required && option.value === 'Ignore'}
-                                    >
-                                        {option.label}
-                                    </option>
-                                ))}
+                                <option value="Ignore">Ignore</option>
+                                <option value="Map to Field">Map to Field</option>
+                                <option value="Set Free Text">Set Free Text</option>
                             </select>
 
-                            {/* Input field */}
-                            {mapping[attribute.name]?.type === 'Map to Field' ? (
-                                <select
-                                    className="free-text-input"
-                                    value={mapping[attribute.name]?.value || ''}
-                                    onChange={(e) => handleValueChange(attribute.name, e.target.value)}
-                                >
-                                    <option value="">Select Source Attribute</option>
-                                    {shopifyAttributes.map((attr) => (
-                                        <option key={attr} value={attr}>
-                                            {attr}
-                                        </option>
-                                    ))}
-                                </select>
-                            ) : (
+                            {mapping[attribute.name]?.type === 'Map to Field' && (
+                                <div>
+                                    <select
+                                        className="free-text-input"
+                                        value={mapping[attribute.name]?.value || ''}
+                                        onChange={(e) => handleValueChange(attribute.name, e.target.value)}
+                                    >
+                                        <option value="">Select Source Attribute</option>
+                                        {shopifyAttributes.map((attr) => (
+                                            <option key={attr} value={attr}>
+                                                {attr}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    <p className="source-value">
+                                        Source Value: {getShopifyAttributeValue(selectedProducts[0], mapping[attribute.name]?.value)}
+                                    </p>
+                                </div>
+                            )}
+
+                            {mapping[attribute.name]?.type === 'Set Free Text' && (
                                 <input
                                     type="text"
                                     className="free-text-input"
-                                    placeholder={
-                                        mapping[attribute.name]?.type === 'Set Free Text'
-                                            ? 'Enter static value'
-                                            : 'Enter advanced rule or leave blank'
-                                    }
+                                    placeholder="Enter static value"
                                     value={mapping[attribute.name]?.value || ''}
-                                    disabled={mapping[attribute.name]?.type === 'Ignore'}
                                     onChange={(e) => handleValueChange(attribute.name, e.target.value)}
-                                    style={
-                                        mapping[attribute.name]?.type === 'Ignore'
-                                            ? { backgroundColor: '#e9e9e9', cursor: 'not-allowed' }
-                                            : {}
-                                    }
                                 />
                             )}
                         </div>
                     ))}
                 </div>
 
-                {/* Error Message */}
                 {errorMessage && <p className="error-message">{errorMessage}</p>}
 
-                {/* Save and Cancel Buttons */}
                 <div className="button-group">
                     <button className="btn-save-mapping" onClick={handleSave}>
                         Save Mapping

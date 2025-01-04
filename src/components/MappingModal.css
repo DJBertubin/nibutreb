@@ -74,6 +74,8 @@
     width: 65%;
     padding: 6px;
     font-size: 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
 }
 
 button.btn-save-mapping,
@@ -82,6 +84,7 @@ button.btn-close-mapping {
     border: none;
     border-radius: 4px;
     font-size: 12px;
+    cursor: pointer;
 }
 
 .button-group {
@@ -115,4 +118,59 @@ button.btn-close-mapping {
     margin-bottom: 10px;
     font-weight: bold;
     color: #333;
+}
+
+/* Source Value Display Styling */
+.source-value {
+    font-size: 13px;
+    margin-top: 8px;
+    color: #007bff;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.source-value::before {
+    content: 'Source Value: ';
+    font-weight: bold;
+    color: #333;
+}
+
+/* Error Message Styling */
+.error-message {
+    color: #dc3545;
+    font-size: 13px;
+    margin-top: 10px;
+}
+
+/* Responsive layout */
+@media (max-width: 768px) {
+    .popup-content {
+        width: 90%;
+        height: auto;
+    }
+
+    .attribute-name {
+        width: 100%;
+        text-align: left;
+    }
+
+    .mapping-select,
+    .free-text-input {
+        width: 100%;
+    }
+
+    .product-dropdown-wrapper {
+        height: auto;
+    }
+
+    .attribute-item {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .button-group {
+        justify-content: center;
+    }
 }
