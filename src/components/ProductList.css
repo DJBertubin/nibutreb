@@ -5,8 +5,7 @@
 .button-group-top {
   margin-bottom: 10px;
   display: flex;
-  justify-content: flex-end;
-  gap: 10px; /* Add spacing between search and button group */
+  justify-content: space-between; /* Added space between search and buttons */
 }
 
 .search-input {
@@ -16,7 +15,7 @@
   border-radius: 4px;
 }
 
-.btn-action {
+.btn-bulk-action {
   padding: 10px 16px;
   background-color: #007bff;
   color: white;
@@ -25,10 +24,9 @@
   font-size: 14px;
   font-weight: bold;
   cursor: pointer;
-  transition: background-color 0.3s ease;
 }
 
-.btn-action:hover {
+.btn-bulk-action:hover {
   background-color: #0056b3;
 }
 
@@ -82,7 +80,8 @@
   color: #666;
 }
 
-.actions-column {
+.actions-column,
+.mapped-column {
   text-align: center;
 }
 
@@ -100,10 +99,31 @@
 
 .button-group-horizontal {
   display: flex;
-  gap: 15px; /* Add spacing between buttons */
+  gap: 15px; /* Added larger gap for spacing */
   justify-content: center;
   align-items: center;
-  flex-wrap: wrap; /* Ensure buttons wrap on smaller screens */
+  flex-wrap: wrap; /* Ensure buttons wrap if the screen is narrow */
+}
+
+.btn-export,
+.btn-edit,
+.btn-map {
+  padding: 10px 16px; /* Made buttons more clickable */
+  border: none;
+  cursor: pointer;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: bold;
+  transition: background-color 0.3s ease;
+}
+
+.btn-export {
+  background-color: #007bff;
+  color: white;
+}
+
+.btn-export:hover {
+  background-color: #0056b3;
 }
 
 .btn-map {
@@ -113,6 +133,25 @@
 
 .btn-map:hover {
   background-color: #e68a00;
+}
+
+.status-column {
+  text-align: center;
+  font-size: 14px;
+  font-weight: bold;
+  max-width: 300px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  position: relative;
+}
+
+.category-column {
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 300px;
 }
 
 .pagination {
@@ -140,9 +179,14 @@
   color: white;
 }
 
+/* Responsive layout for mobile screens */
 @media (max-width: 768px) {
   .product-title {
     max-width: 300px;
+  }
+
+  .category-column {
+    max-width: 200px;
   }
 
   .product-details {
@@ -153,5 +197,9 @@
   .button-group-horizontal {
     flex-direction: column;
     gap: 5px;
+  }
+
+  .status-column {
+    max-width: 100%;
   }
 }

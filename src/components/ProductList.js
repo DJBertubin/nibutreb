@@ -10,7 +10,7 @@ const ProductList = ({ products }) => {
     const [mappedStatuses, setMappedStatuses] = useState({});
     const [existingMappings, setExistingMappings] = useState({});
     const [searchQuery, setSearchQuery] = useState('');
-    const [selectedProducts, setSelectedProducts] = useState([]); // Track selected products for map/export
+    const [selectedProducts, setSelectedProducts] = useState([]); // Track selected products for bulk export
     const itemsPerPage = 10;
 
     const indexOfLastItem = currentPage * itemsPerPage;
@@ -21,7 +21,10 @@ const ProductList = ({ products }) => {
     const currentProducts = filteredProducts.slice(indexOfFirstItem, indexOfLastItem);
     const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
 
-    // Fetch existing mappings from MongoDB
+    const handlePageChange = (pageNumber) => {
+        setCurrentPage(pageNumber);
+    };
+
     const fetchMappingsFromMongoDB = async () => {
         const clientId = localStorage.getItem('clientId');
         try {
@@ -45,10 +48,6 @@ const ProductList = ({ products }) => {
         fetchMappingsFromMongoDB();
     }, []);
 
-    const handlePageChange = (pageNumber) => {
-        setCurrentPage(pageNumber);
-    };
-
     const handleOpenMappingModal = (product) => {
         setSelectedProduct(product);
         setShowMappingModal(true);
@@ -59,12 +58,34 @@ const ProductList = ({ products }) => {
         setShowMappingModal(false);
     };
 
-    const handleMapSelected = () => {
-        if (selectedProducts.length === 0) {
-            alert('No products selected for mapping!');
-            return;
-        }
+    const handleOpenBulkMappingModal = () => {
         setShowBulkMappingModal(true);
+    };
+
+    const handleCloseBulkMappingModal = () => {
+        setShowBulkMappingModal(false);
+    };
+
+    const getMappedStatus = (productId) => {
+        const mapping = existingMappings[productId] || {};
+        return Object.values(mapping).some((value) => value !== '') ? 'Yes' : 'No';
+    };
+
+    const updateMappedStatuses = () => {
+        const statuses = {};
+        products.forEach((product) => {
+            statuses[product.id] = getMappedStatus(product.id);
+        });
+        setMappedStatuses(statuses);
+    };
+
+    useEffect(() => {
+        updateMappedStatuses();
+    }, [existingMappings]);
+
+    const handleSearchChange = (e) => {
+        setSearchQuery(e.target.value);
+        setCurrentPage(1);
     };
 
     const handleSelectProduct = (productId) => {
@@ -90,34 +111,13 @@ const ProductList = ({ products }) => {
             return;
         }
         console.log('Exporting Products:', selectedProducts);
-        alert('Exported selected products successfully.');
+        // Implement the export functionality here
     };
-
-    const handleSearchChange = (e) => {
-        setSearchQuery(e.target.value);
-        setCurrentPage(1);
-    };
-
-    const getMappedStatus = (productId) => {
-        const mapping = existingMappings[productId] || {};
-        return Object.values(mapping).some((value) => value !== '') ? 'Yes' : 'No';
-    };
-
-    const updateMappedStatuses = () => {
-        const statuses = {};
-        products.forEach((product) => {
-            statuses[product.id] = getMappedStatus(product.id);
-        });
-        setMappedStatuses(statuses);
-    };
-
-    useEffect(() => {
-        updateMappedStatuses();
-    }, [existingMappings]);
 
     return (
         <div className="product-list-container">
             <h3>Fetched Products</h3>
+
             <div className="filter-controls">
                 <input
                     type="text"
@@ -126,12 +126,12 @@ const ProductList = ({ products }) => {
                     value={searchQuery}
                     onChange={handleSearchChange}
                 />
-                <div className="button-group-horizontal">
-                    <button className="btn-action" onClick={handleExportSelected}>
+                <div className="button-group-top">
+                    <button className="btn-bulk-action" onClick={handleExportSelected}>
                         Export Selected
                     </button>
-                    <button className="btn-action btn-map" onClick={handleMapSelected}>
-                        Map Selected
+                    <button className="btn-bulk-action" onClick={handleOpenBulkMappingModal}>
+                        Bulk Map
                     </button>
                 </div>
             </div>
@@ -204,7 +204,7 @@ const ProductList = ({ products }) => {
                     ) : (
                         <tr>
                             <td colSpan="8" style={{ textAlign: 'center' }}>
-                                No products found.
+                                No products fetched yet.
                             </td>
                         </tr>
                     )}
@@ -225,27 +225,67 @@ const ProductList = ({ products }) => {
                 </div>
             )}
 
-            {/* Individual Mapping Modal */}
             {showMappingModal && selectedProduct && (
                 <MappingModal
                     products={[{ ...selectedProduct, mapping: existingMappings[selectedProduct.id] || {} }]}
                     onClose={handleCloseMappingModal}
-                    onSave={() => {
-                        console.log('Individual mapping saved.');
-                        fetchMappingsFromMongoDB();
+                    onSave={async (mappingData) => {
+                        try {
+                            const clientId = localStorage.getItem('clientId');
+                            const response = await fetch('/api/mappings/save', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    clientId,
+                                    productId: selectedProduct.id,
+                                    mappings: mappingData.mappings,
+                                    selectedProducts: [selectedProduct.id],
+                                }),
+                            });
+
+                            const result = await response.json();
+                            if (response.ok) {
+                                console.log('Mapping saved successfully.');
+                                fetchMappingsFromMongoDB();
+                            } else {
+                                console.error('Error saving mapping:', result.error);
+                            }
+                        } catch (error) {
+                            console.error('Error saving mapping:', error);
+                        }
                         setShowMappingModal(false);
                     }}
                 />
             )}
 
-            {/* Bulk Mapping Modal */}
             {showBulkMappingModal && (
                 <MappingModal
-                    products={filteredProducts.filter((product) => selectedProducts.includes(product.id))}
-                    onClose={() => setShowBulkMappingModal(false)}
-                    onSave={() => {
-                        console.log('Bulk mapping saved.');
-                        fetchMappingsFromMongoDB();
+                    products={products}
+                    onClose={handleCloseBulkMappingModal}
+                    onSave={async (mappingData) => {
+                        try {
+                            const clientId = localStorage.getItem('clientId');
+                            const response = await fetch('/api/mappings/save', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    clientId,
+                                    productId: 'bulk',
+                                    mappings: mappingData.mappings,
+                                    selectedProducts: mappingData.selectedProducts,
+                                }),
+                            });
+
+                            const result = await response.json();
+                            if (response.ok) {
+                                console.log('Bulk Mapping Saved:', result.message);
+                                fetchMappingsFromMongoDB();
+                            } else {
+                                console.error('Error saving bulk mapping:', result.error);
+                            }
+                        } catch (error) {
+                            console.error('Error saving bulk mapping:', error);
+                        }
                         setShowBulkMappingModal(false);
                     }}
                 />
