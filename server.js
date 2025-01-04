@@ -199,7 +199,7 @@ app.post('/api/shopify/fetch', async (req, res) => {
 app.post('/api/mappings/save', async (req, res) => {
     const { clientId, productId, mappings } = req.body;
 
-    console.log('Incoming Request Payload:', req.body); // Debugging log
+    console.log('Incoming Request Payload:', JSON.stringify(req.body, null, 2)); // Debugging log
 
     if (!clientId || !productId || !mappings) {
         console.error('Missing required fields:', { clientId, productId, mappings });
@@ -209,8 +209,14 @@ app.post('/api/mappings/save', async (req, res) => {
     try {
         const cleanedMappings = {};
         for (const key in mappings) {
-            cleanedMappings[key] = mappings[key].type === 'Ignore' ? '' : mappings[key].value || '';
+            if (mappings[key] && mappings[key].type !== 'Ignore') {
+                cleanedMappings[key] = mappings[key].value || ''; // Store actual value or empty string
+            } else {
+                cleanedMappings[key] = ''; // If "Ignore", set as empty string
+            }
         }
+
+        console.log('Cleaned Mappings:', JSON.stringify(cleanedMappings, null, 2)); // Log cleaned mappings
 
         const existingMapping = await Mapping.findOne({ clientId, productId });
 
