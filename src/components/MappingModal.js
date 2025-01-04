@@ -6,13 +6,13 @@ const MappingModal = ({ products, onClose, onSave, sourceAttributes }) => {
     const [selectedProducts, setSelectedProducts] = useState([]);
     const [searchQuery, setSearchQuery] = useState('');
 
-    const handleMappingChange = (attributeName, value) => {
+    const handleMappingChange = (attributeName, type) => {
         setMapping((prev) => ({
             ...prev,
             [attributeName]: {
                 ...prev[attributeName],
-                type: value,
-                value: value === 'Ignore' ? '' : prev[attributeName]?.value || '',
+                type,
+                value: type === 'Ignore' ? '' : prev[attributeName]?.value || '',
             },
         }));
     };
@@ -40,7 +40,7 @@ const MappingModal = ({ products, onClose, onSave, sourceAttributes }) => {
         onClose();
     };
 
-    // Walmart attributes
+    // Walmart attributes based on MP_ITEM_SPEC_4.8
     const walmartAttributes = [
         { name: 'SKU', required: true },
         { name: 'Product ID Type', required: true },
@@ -51,12 +51,7 @@ const MappingModal = ({ products, onClose, onSave, sourceAttributes }) => {
         { name: 'Color Category', required: false },
     ];
 
-    const fieldOptions = [
-        'Ignore',
-        'Map to Field',
-        'Set Free Text',
-        'Advanced Rule',
-    ];
+    const fieldOptions = ['Ignore', 'Map to Field', 'Set Free Text', 'Advanced Rule'];
 
     const filteredProducts = products.filter((product) =>
         product.title.toLowerCase().includes(searchQuery.toLowerCase())
@@ -67,9 +62,6 @@ const MappingModal = ({ products, onClose, onSave, sourceAttributes }) => {
             <div className="popup-content">
                 <div className="popup-header">
                     <h4>Map Fields to Walmart Attributes</h4>
-                    <button className="btn-close-mapping" onClick={onClose}>
-                        ✖
-                    </button>
                 </div>
 
                 {/* Product Selection */}
@@ -110,8 +102,8 @@ const MappingModal = ({ products, onClose, onSave, sourceAttributes }) => {
                 </div>
 
                 {/* Attribute Mapping */}
-                <h4 className="section-title">Mapping Attributes</h4>
-                <div className="scrollable-attributes">
+                <div className="attribute-list-container">
+                    <h4 className="section-title">Mapping Attributes</h4>
                     {walmartAttributes.map((attribute) => (
                         <div className="attribute-item" key={attribute.name}>
                             <label className="attribute-name">
