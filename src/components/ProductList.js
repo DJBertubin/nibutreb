@@ -1,125 +1,117 @@
 import React, { useState, useEffect } from 'react';
 import './ProductList.css';
-import MappingModal from './MappingModal'; // Import the MappingModal component
+import MappingModal from './MappingModal';
+import QuickEditModal from './QuickEditModal'; // New component for quick edits
+import ImportModal from './ImportModal'; // New component for CSV import
 
-const ProductList = ({ products }) => {
+const ProductList = ({ products, onAddNewProduct }) => {
     const [currentPage, setCurrentPage] = useState(1);
     const [showMappingModal, setShowMappingModal] = useState(false);
+    const [showQuickEditModal, setShowQuickEditModal] = useState(false);
+    const [showImportModal, setShowImportModal] = useState(false);
     const [selectedProduct, setSelectedProduct] = useState(null);
-    const [showBulkMappingModal, setShowBulkMappingModal] = useState(false);
-    const [mappedStatuses, setMappedStatuses] = useState({}); // Track mapped status for each product
-    const [existingMappings, setExistingMappings] = useState({}); // Store mappings fetched from MongoDB
-    const itemsPerPage = 10;
+    const [selectedProducts, setSelectedProducts] = useState([]);
+    const [filteredProducts, setFilteredProducts] = useState(products);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [itemsPerPage, setItemsPerPage] = useState(10);
 
-    const indexOfLastItem = currentPage * itemsPerPage;
-    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-    const currentProducts = products.slice(indexOfFirstItem, indexOfLastItem);
-    const totalPages = Math.ceil(products.length / itemsPerPage);
+    useEffect(() => {
+        const filtered = products.filter((product) =>
+            product.title.toLowerCase().includes(searchQuery.toLowerCase())
+        );
+        setFilteredProducts(filtered);
+    }, [searchQuery, products]);
 
     const handlePageChange = (pageNumber) => {
         setCurrentPage(pageNumber);
     };
 
-    // Fetch all existing mappings from MongoDB
-    const fetchMappingsFromMongoDB = async () => {
-        const clientId = localStorage.getItem('clientId');
-        try {
-            const response = await fetch(`/api/mappings/get/${clientId}`);
-            const data = await response.json();
-            if (response.ok) {
-                const mappingsObj = {};
-                data.mappings.forEach((mapping) => {
-                    mappingsObj[mapping.productId] = mapping.mappings; // Store mapping by product ID
-                });
-                setExistingMappings(mappingsObj);
-            } else {
-                console.error('Error fetching mappings:', data.error);
-            }
-        } catch (error) {
-            console.error('Error fetching mappings from MongoDB:', error);
+    const handleSelectProduct = (productId) => {
+        if (selectedProducts.includes(productId)) {
+            setSelectedProducts(selectedProducts.filter((id) => id !== productId));
+        } else {
+            setSelectedProducts([...selectedProducts, productId]);
         }
     };
 
-    useEffect(() => {
-        fetchMappingsFromMongoDB(); // Fetch all mappings when the component loads
-    }, []);
+    const handleBulkExport = () => {
+        const selected = products.filter((product) => selectedProducts.includes(product.id));
+        const csvContent =
+            'data:text/csv;charset=utf-8,' +
+            ['Title,SKU,Price,Category,Inventory'].join(',') +
+            '\n' +
+            selected
+                .map((product) =>
+                    [product.title, product.sku, product.price, product.category, product.inventory].join(',')
+                )
+                .join('\n');
 
-    // Open individual mapping modal
-    const handleOpenMappingModal = (product) => {
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement('a');
+        link.setAttribute('href', encodedUri);
+        link.setAttribute('download', 'product_data.csv');
+        document.body.appendChild(link);
+        link.click();
+    };
+
+    const handleOpenQuickEdit = (product) => {
         setSelectedProduct(product);
-        setShowMappingModal(true);
+        setShowQuickEditModal(true);
     };
 
-    const handleCloseMappingModal = () => {
-        setSelectedProduct(null);
-        setShowMappingModal(false);
+    const handleSaveQuickEdit = (updatedProduct) => {
+        console.log('Updated product', updatedProduct);
+        setShowQuickEditModal(false);
     };
-
-    // Check if the product has a synced status
-    const getMappedStatus = (productId) => {
-        const mapping = existingMappings[productId] || {};
-        return Object.values(mapping).some((value) => value !== '') ? 'Yes' : 'No';
-    };
-
-    // Fetch mapping statuses to update display
-    const updateMappedStatuses = () => {
-        const statuses = {};
-        products.forEach((product) => {
-            statuses[product.id] = getMappedStatus(product.id);
-        });
-        setMappedStatuses(statuses);
-    };
-
-    useEffect(() => {
-        updateMappedStatuses(); // Update mapped statuses whenever mappings are fetched
-    }, [existingMappings]);
 
     return (
         <div className="product-list-container">
             <h3>Fetched Products</h3>
-            <div className="button-group-top">
-                <button className="btn-bulk-map" onClick={() => setShowBulkMappingModal(true)}>
-                    Bulk Map
+
+            <div className="actions-bar">
+                <button className="btn-green" onClick={onAddNewProduct}>
+                    Add New Product
+                </button>
+                <input
+                    type="text"
+                    placeholder="Search Products..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="search-bar"
+                />
+                <button
+                    className="btn-blue"
+                    onClick={handleBulkExport}
+                    disabled={!selectedProducts.length}
+                >
+                    Export Selected
+                </button>
+                <button
+                    className="btn-orange"
+                    onClick={() => setShowImportModal(true)}
+                >
+                    Import CSV
+                </button>
+                <button
+                    className="btn-gray"
+                    onClick={() => alert('Advanced Mapping Rule Placeholder')}
+                >
+                    Advanced Rule
                 </button>
             </div>
-
-            {/* Bulk Mapping Modal */}
-            {showBulkMappingModal && (
-                <MappingModal
-                    products={products}
-                    onClose={() => setShowBulkMappingModal(false)}
-                    onSave={async (mappingData) => {
-                        try {
-                            const clientId = localStorage.getItem('clientId');
-                            const response = await fetch('/api/mappings/save', {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({
-                                    clientId,
-                                    productId: 'bulk',
-                                    mappings: mappingData.mappings,
-                                    selectedProducts: mappingData.selectedProducts,
-                                }),
-                            });
-
-                            const result = await response.json();
-                            if (response.ok) {
-                                console.log('Bulk Mapping Saved:', result.message);
-                                fetchMappingsFromMongoDB(); // Refresh mapped statuses
-                            } else {
-                                console.error('Error saving mapping:', result.error);
-                            }
-                        } catch (error) {
-                            console.error('Error saving mapping:', error);
-                        }
-                        setShowBulkMappingModal(false);
-                    }}
-                />
-            )}
 
             <table className="modern-table">
                 <thead>
                     <tr>
+                        <th>
+                            <input
+                                type="checkbox"
+                                onChange={(e) =>
+                                    setSelectedProducts(e.target.checked ? products.map((p) => p.id) : [])
+                                }
+                                checked={selectedProducts.length === products.length}
+                            />
+                        </th>
                         <th>Actions</th>
                         <th>Status</th>
                         <th>Mapped</th>
@@ -131,97 +123,103 @@ const ProductList = ({ products }) => {
                     </tr>
                 </thead>
                 <tbody>
-                    {products.length > 0 ? (
-                        currentProducts.map((product) => (
-                            <tr key={product.id} className="product-row">
-                                <td className="actions-column">
-                                    <div className="button-group">
-                                        <button className="btn-export">Export</button>
+                    {filteredProducts.length > 0 ? (
+                        filteredProducts
+                            .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+                            .map((product) => (
+                                <tr key={product.id}>
+                                    <td>
+                                        <input
+                                            type="checkbox"
+                                            checked={selectedProducts.includes(product.id)}
+                                            onChange={() => handleSelectProduct(product.id)}
+                                        />
+                                    </td>
+                                    <td>
+                                        <button
+                                            className="btn-orange"
+                                            onClick={() => handleOpenQuickEdit(product)}
+                                        >
+                                            Quick Edit
+                                        </button>
                                         <button
                                             className="btn-map"
-                                            onClick={() => handleOpenMappingModal(product)}
+                                            onClick={() => {
+                                                setSelectedProduct(product);
+                                                setShowMappingModal(true);
+                                            }}
                                         >
                                             Map
                                         </button>
-                                    </div>
-                                </td>
-                                <td className="status-column">
-                                    {mappedStatuses[product.id] === 'Yes' ? 'Synced' : 'No Status'}
-                                </td>
-                                <td className={`mapped-column ${mappedStatuses[product.id] === 'Yes' ? 'yes' : 'no'}`}>
-                                    {mappedStatuses[product.id] || 'No'}
-                                </td>
-                                <td className="product-details">
-                                    <img
-                                        src={product.image || 'https://via.placeholder.com/50'}
-                                        alt={product.title || 'Product'}
-                                        className="product-image"
-                                    />
-                                    <div className="product-info">
-                                        <strong className="product-title">{product.title || 'N/A'}</strong>
-                                        <div className="sku">SKU: {product.sku || 'N/A'}</div>
-                                    </div>
-                                </td>
-                                <td className="category-column">{product.sourceCategory || 'N/A'}</td>
-                                <td>${product.price || 'N/A'}</td>
-                                <td>{product.inventory || 'N/A'}</td>
-                                <td>{new Date(product.created_at).toLocaleDateString()}</td>
-                            </tr>
-                        ))
+                                    </td>
+                                    <td>{product.synced ? 'Synced' : 'Pending'}</td>
+                                    <td className={`mapped ${product.mapped ? 'yes' : 'no'}`}>
+                                        {product.mapped ? 'Yes' : 'No'}
+                                    </td>
+                                    <td>
+                                        <strong>{product.title}</strong>
+                                    </td>
+                                    <td>{product.category || 'N/A'}</td>
+                                    <td>${product.price || 'N/A'}</td>
+                                    <td>{product.inventory || 'N/A'}</td>
+                                    <td>{new Date(product.created_at).toLocaleDateString()}</td>
+                                </tr>
+                            ))
                     ) : (
                         <tr>
-                            <td colSpan="8" style={{ textAlign: 'center' }}>
-                                No products fetched yet.
+                            <td colSpan="9" style={{ textAlign: 'center' }}>
+                                No products found.
                             </td>
                         </tr>
                     )}
                 </tbody>
             </table>
 
-            {products.length > 0 && (
-                <div className="pagination">
-                    {Array.from({ length: totalPages }, (_, index) => (
-                        <button
-                            key={index}
-                            onClick={() => handlePageChange(index + 1)}
-                            className={currentPage === index + 1 ? 'active' : ''}
-                        >
-                            {index + 1}
-                        </button>
-                    ))}
-                </div>
+            <div className="pagination">
+                <span>Items per page: </span>
+                <select
+                    value={itemsPerPage}
+                    onChange={(e) => setItemsPerPage(Number(e.target.value))}
+                >
+                    <option value={10}>10</option>
+                    <option value={25}>25</option>
+                    <option value={50}>50</option>
+                </select>
+                <button
+                    onClick={() => setCurrentPage(currentPage - 1)}
+                    disabled={currentPage === 1}
+                >
+                    Previous
+                </button>
+                <button
+                    onClick={() => setCurrentPage(currentPage + 1)}
+                    disabled={currentPage * itemsPerPage >= filteredProducts.length}
+                >
+                    Next
+                </button>
+            </div>
+
+            {/* Quick Edit Modal */}
+            {showQuickEditModal && (
+                <QuickEditModal
+                    product={selectedProduct}
+                    onClose={() => setShowQuickEditModal(false)}
+                    onSave={handleSaveQuickEdit}
+                />
+            )}
+
+            {/* CSV Import Modal */}
+            {showImportModal && (
+                <ImportModal onClose={() => setShowImportModal(false)} />
             )}
 
             {/* Individual Mapping Modal */}
             {showMappingModal && selectedProduct && (
                 <MappingModal
-                    products={[{ ...selectedProduct, mapping: existingMappings[selectedProduct.id] || {} }]} // Pass existing mapping data
-                    onClose={handleCloseMappingModal}
-                    onSave={async (mappingData) => {
-                        try {
-                            const clientId = localStorage.getItem('clientId');
-                            const response = await fetch('/api/mappings/save', {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({
-                                    clientId,
-                                    productId: selectedProduct.id,
-                                    mappings: mappingData.mappings,
-                                    selectedProducts: [selectedProduct.id],
-                                }),
-                            });
-
-                            const result = await response.json();
-                            if (response.ok) {
-                                console.log('Individual Mapping Saved:', result.message);
-                                fetchMappingsFromMongoDB(); // Refresh mapped statuses
-                            } else {
-                                console.error('Error saving mapping:', result.error);
-                            }
-                        } catch (error) {
-                            console.error('Error saving mapping:', error);
-                        }
-                        setShowMappingModal(false);
+                    products={[selectedProduct]}
+                    onClose={() => setShowMappingModal(false)}
+                    onSave={(mappingData) => {
+                        console.log('Mapping saved:', mappingData);
                     }}
                 />
             )}
