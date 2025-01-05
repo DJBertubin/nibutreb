@@ -2,17 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import ProductList from '../components/ProductList';
-import MarketplaceDropdowns from '../components/MarketplaceDropdowns';
-import ClientProfile from '../components/ClientProfile';
 import IntegrationModal from '../components/IntegrationModal';
 
 const Products = () => {
     const [showIntegrationModal, setShowIntegrationModal] = useState(false);
     const [integrationType, setIntegrationType] = useState('');
     const [productData, setProductData] = useState([]);
-    const [stores, setStores] = useState(['Walmart', 'Shopify']);
     const [error, setError] = useState('');
-    const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -24,7 +20,6 @@ const Products = () => {
                 return;
             }
 
-            setLoading(true); // Start loading
             try {
                 const response = await fetch('/api/shopify/data', {
                     method: 'GET',
@@ -38,7 +33,6 @@ const Products = () => {
                     if (response.status === 404) {
                         // No Shopify data found for this user
                         setProductData([]);
-                        setLoading(false); // Stop loading after fetch
                         return;
                     }
                     throw new Error(errorData.error || 'Failed to fetch Shopify data.');
@@ -58,10 +52,8 @@ const Products = () => {
                 );
 
                 setProductData(products);
-                setLoading(false); // Stop loading after fetch
             } catch (err) {
                 setError(err.message);
-                setLoading(false);
             }
         };
 
@@ -91,16 +83,6 @@ const Products = () => {
         setProductData(formattedProducts);
     };
 
-    const handleAddStoreName = (storeName) => {
-        if (!stores.includes(storeName)) {
-            setStores((prevStores) => [...prevStores, storeName]);
-        }
-    };
-
-    if (loading) {
-        return <div>Loading products...</div>;
-    }
-
     if (error) {
         return <div>Error: {error}</div>;
     }
@@ -117,12 +99,6 @@ const Products = () => {
                 }}
             >
                 <div className="main-content">
-                    <ClientProfile
-                        name="Jane Doe" // Placeholder; replace with dynamic user name
-                        clientId="98765" // Placeholder; replace with dynamic client ID
-                        imageUrl="https://via.placeholder.com/100"
-                    />
-                    <MarketplaceDropdowns onAddNewSource={handleShowModal} storeList={stores} />
                     <div className="content">
                         <h2 className="section-title">Products Overview</h2>
                         {productData.length === 0 ? (
@@ -137,7 +113,6 @@ const Products = () => {
                         <IntegrationModal
                             onClose={handleCloseModal}
                             onFetchSuccess={handleShopifyConnect}
-                            onAddStoreName={handleAddStoreName}
                         />
                     )}
                 </div>
