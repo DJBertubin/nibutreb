@@ -15,11 +15,9 @@ const ProductList = ({ products = [] }) => {
 
     const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-    const filteredProducts = Array.isArray(products)
-        ? products.filter((product) =>
-              (product.title || '').toLowerCase().includes(searchQuery.toLowerCase())
-          )
-        : [];
+    const filteredProducts = products.filter((product) =>
+        (product.title || '').toLowerCase().includes(searchQuery.toLowerCase())
+    );
     const currentProducts = filteredProducts.slice(indexOfFirstItem, indexOfLastItem);
     const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
 
@@ -65,6 +63,10 @@ const ProductList = ({ products = [] }) => {
     };
 
     const handleOpenBulkMappingModal = () => {
+        if (selectedProducts.length === 0) {
+            alert('Please select products for bulk mapping.');
+            return;
+        }
         setShowBulkMappingModal(true);
     };
 
@@ -163,8 +165,8 @@ const ProductList = ({ products = [] }) => {
                 </thead>
                 <tbody>
                     {filteredProducts.length > 0 ? (
-                        currentProducts.map((product) => (
-                            <tr key={product.id || `product-${Math.random()}`} className="product-row">
+                        currentProducts.map((product, index) => (
+                            <tr key={product.id || `product-${index}`} className="product-row">
                                 <td>
                                     <input
                                         type="checkbox"
@@ -266,7 +268,7 @@ const ProductList = ({ products = [] }) => {
 
             {showBulkMappingModal && (
                 <MappingModal
-                    products={products}
+                    products={products.filter((product) => selectedProducts.includes(product.id))}
                     onClose={handleCloseBulkMappingModal}
                     onSave={async (mappingData) => {
                         try {

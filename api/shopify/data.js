@@ -19,10 +19,9 @@ export default async function handler(req, res) {
     }
 
     try {
-        // Extract the token and decode it
+        // Decode the token and get clientId
         const token = authorization.split(' ')[1];
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
         const clientId = decoded.clientId;
 
         if (!clientId) {
@@ -30,10 +29,10 @@ export default async function handler(req, res) {
             return res.status(401).json({ error: 'Invalid or missing clientId in token.' });
         }
 
-        // Fetch all Shopify data linked to the user's clientId
-        const shopifyData = await ShopifyData.find({ clientId });
+        // Fetch the Shopify data for this clientId
+        const shopifyData = await ShopifyData.findOne({ clientId });
 
-        if (!shopifyData.length) {
+        if (!shopifyData) {
             console.log(`No Shopify data found for clientId: ${clientId}`);
             return res.status(200).json({
                 message: 'No Shopify data found for this user.',
@@ -41,32 +40,30 @@ export default async function handler(req, res) {
             });
         }
 
-        // Ensure a consistent structure for frontend
-        const formattedData = shopifyData.map((dataEntry) => {
-            const formattedProducts = (dataEntry.products || []).map((product) => ({
-                id: product.id || '',
-                product_id: product.product_id || '',
-                title: product.title || 'Untitled Product',
-                price: product.price || 'N/A',
-                sku: product.sku || 'N/A',
-                inventory: product.inventory || 0,
-                created_at: product.created_at || '',
-                sourceCategory: product.sourceCategory || 'N/A',
-                image: product.image || 'https://via.placeholder.com/50',
-                description: product.description || '',
-            }));
+        // Format data to be consistent with frontend expectations
+        const formattedProducts = (shopifyData.products || []).map((product) => ({
+            id: product.id || '',
+            product_id: product.product_id || '',
+            title: product.title || 'Untitled Product',
+            price: product.price || 'N/A',
+            sku: product.sku || 'N/A',
+            inventory: product.inventory || 0,
+            created_at: product.created_at || '',
+            sourceCategory: product.sourceCategory || 'N/A',
+            image: product.image || 'https://via.placeholder.com/50',
+            description: product.description || '',
+        }));
 
-            return {
-                shopifyUrl: dataEntry.shopifyUrl || 'N/A',
-                lastUpdated: dataEntry.lastUpdated || new Date(),
-                products: formattedProducts,
-            };
-        });
+        const formattedData = {
+            shopifyUrl: shopifyData.shopifyUrl || 'N/A',
+            lastUpdated: shopifyData.lastUpdated || new Date(),
+            products: formattedProducts,
+        };
 
         console.log(`Shopify data fetched successfully for clientId: ${clientId}`);
         res.status(200).json({
             message: 'Shopify data fetched successfully.',
-            shopifyData: formattedData,
+            shopifyData: [formattedData], // Frontend expects an array
         });
     } catch (err) {
         console.error('Error fetching Shopify data:', err.message);

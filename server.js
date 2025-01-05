@@ -5,10 +5,11 @@ const bcrypt = require('bcryptjs');
 const fetch = require('node-fetch');
 const dotenv = require('dotenv');
 const mongoose = require('mongoose');
-const cron = require('node-cron');
+const rateLimit = require('express-rate-limit');
+const helmet = require('helmet');
 const User = require('./api/models/User');
 const ShopifyData = require('./api/models/ShopifyData');
-const Mapping = require('./api/models/Mapping'); // Import Mapping model
+const Mapping = require('./api/models/Mapping');
 const walmartRoutes = require('./api/walmart/walmart');
 const { sendItemToWalmart } = require('./api/utils/sendToWalmart');
 
@@ -16,12 +17,27 @@ dotenv.config();
 
 const app = express();
 const JWT_SECRET = process.env.JWT_SECRET;
+const PORT = process.env.PORT || 5000;
 
-// Middleware
-app.use(cors());
+// **Security Middleware**
+app.use(helmet());
+
+// **Rate Limiting Middleware**
+const apiLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // Limit each IP to 100 requests per windowMs
+    message: 'Too many requests, please try again later.',
+});
+app.use('/api/', apiLimiter);
+
+// **CORS Policy**
+app.use(cors({ origin: process.env.FRONTEND_URL || '*', credentials: true }));
+
+// **Body Parsing Middleware**
 app.use(express.json());
 
-// MongoDB Connection
+// **MongoDB Connection**
+mongoose.set('strictQuery', false); // Avoid deprecated warnings
 mongoose
     .connect(process.env.MONGO_URI, {
         useNewUrlParser: true,
@@ -32,6 +48,23 @@ mongoose
 
 // **Use Walmart API routes**
 app.use('/api/walmart', walmartRoutes);
+
+// **Helper function to verify JWT**
+const verifyToken = (req, res, next) => {
+    const { authorization } = req.headers;
+
+    if (!authorization || !authorization.startsWith('Bearer ')) {
+        return res.status(401).json({ error: 'Authorization token required.' });
+    }
+
+    const token = authorization.split(' ')[1];
+    try {
+        req.user = jwt.verify(token, JWT_SECRET);
+        next();
+    } catch (error) {
+        return res.status(401).json({ error: 'Invalid or expired token.' });
+    }
+};
 
 // **Login Route**
 app.post('/api/login', async (req, res) => {
@@ -53,8 +86,11 @@ app.post('/api/login', async (req, res) => {
             { expiresIn: '1h' }
         );
 
+        const refreshToken = jwt.sign({ clientId: user.clientId }, JWT_SECRET, { expiresIn: '7d' });
+
         res.status(200).json({
             token,
+            refreshToken,
             role: user.role,
             name: user.name,
             clientId: user.clientId,
@@ -101,21 +137,9 @@ app.post('/api/signup', async (req, res) => {
 });
 
 // **Fetch Client Info Route**
-app.get('/api/client/info', async (req, res) => {
-    const { authorization } = req.headers;
-
-    if (!authorization || !authorization.startsWith('Bearer ')) {
-        return res.status(401).json({ error: 'Authorization token required.' });
-    }
-
+app.get('/api/client/info', verifyToken, async (req, res) => {
     try {
-        const token = authorization.split(' ')[1];
-        const decoded = jwt.verify(token, JWT_SECRET);
-        const clientId = decoded.clientId;
-
-        if (!clientId) {
-            return res.status(401).json({ error: 'Invalid or missing clientId in token.' });
-        }
+        const { clientId } = req.user;
 
         const user = await User.findOne({ clientId });
 
@@ -136,28 +160,16 @@ app.get('/api/client/info', async (req, res) => {
 });
 
 // **Shopify Fetch API Route**
-app.post('/api/shopify/fetch', async (req, res) => {
-    const { authorization } = req.headers;
+app.post('/api/shopify/fetch', verifyToken, async (req, res) => {
     const { storeUrl, adminAccessToken } = req.body;
-
-    if (!authorization || !authorization.startsWith('Bearer ')) {
-        return res.status(401).json({ error: 'Authorization token required.' });
-    }
 
     if (!storeUrl || !adminAccessToken) {
         return res.status(400).json({ error: 'Store URL and Admin Access Token are required.' });
     }
 
     try {
-        const token = authorization.split(' ')[1];
-        const decoded = jwt.verify(token, JWT_SECRET);
-        const clientId = decoded.clientId;
-
-        if (!clientId) {
-            return res.status(401).json({ error: 'Invalid or missing clientId in token.' });
-        }
-
-        const shopifyApiUrl = `https://${storeUrl.trim()}/admin/api/2024-01/products.json`;
+        const { clientId } = req.user;
+        const shopifyApiUrl = `https://${storeUrl.trim()}/admin/api/2024-01/products.json?limit=250`;
         const response = await fetch(shopifyApiUrl, {
             method: 'GET',
             headers: {
@@ -195,68 +207,46 @@ app.post('/api/shopify/fetch', async (req, res) => {
     }
 });
 
-// **POST /api/mappings/save - Save Mappings**
-app.post('/api/mappings/save', async (req, res) => {
-    const { clientId, productId, mappings } = req.body;
+// **Save Mappings**
+app.post('/api/mappings/save', verifyToken, async (req, res) => {
+    const { clientId } = req.user;
+    const { productId, mappings } = req.body;
 
-    console.log('Incoming Request Payload:', JSON.stringify(req.body, null, 2));
-
-    if (!clientId || !productId || !mappings) {
-        console.error('Missing required fields:', { clientId, productId, mappings });
+    if (!productId || !mappings) {
         return res.status(400).json({ error: 'Missing required fields.' });
     }
 
     try {
         const cleanedMappings = {};
-
-        // Iterate over mappings to ensure proper structure
         for (const key in mappings) {
             const mappingEntry = mappings[key];
-
-            if (typeof mappingEntry === 'string') {
-                cleanedMappings[key] = { type: 'Set Free Text', value: mappingEntry }; // Convert string to object
-            } else if (typeof mappingEntry === 'object' && mappingEntry !== null) {
-                cleanedMappings[key] = {
-                    type: mappingEntry.type || 'Ignore',
-                    value: mappingEntry.value || '',
-                };
-            } else {
-                cleanedMappings[key] = { type: 'Ignore', value: '' }; // Default to "Ignore"
-            }
+            cleanedMappings[key] = {
+                type: mappingEntry?.type || 'Ignore',
+                value: mappingEntry?.value || '',
+            };
         }
 
-        console.log('Cleaned Mappings (to be saved):', cleanedMappings);
+        const existingMapping = await Mapping.findOneAndUpdate(
+            { clientId, productId },
+            { mappings: cleanedMappings, updatedAt: new Date() },
+            { upsert: true, new: true }
+        );
 
-        const existingMapping = await Mapping.findOne({ clientId, productId });
-
-        if (existingMapping) {
-            existingMapping.mappings = cleanedMappings;
-            existingMapping.updatedAt = new Date();
-            await existingMapping.save();
-            console.log(`Updated mapping for productId: ${productId}`);
-        } else {
-            const newMapping = new Mapping({ clientId, productId, mappings: cleanedMappings });
-            await newMapping.save();
-            console.log(`Saved new mapping for productId: ${productId}`);
-        }
-
-        res.status(200).json({
-            message: 'Mappings saved successfully.',
-        });
+        res.status(200).json({ message: 'Mappings saved successfully.', existingMapping });
     } catch (err) {
         console.error('Error saving mappings:', err.message);
         res.status(500).json({ error: 'Failed to save mappings.', details: err.message });
     }
 });
 
-// **GET /api/mappings/get/:clientId - Get Mappings**
-app.get('/api/mappings/get/:clientId', async (req, res) => {
+// **Get Mappings**
+app.get('/api/mappings/get/:clientId', verifyToken, async (req, res) => {
     const { clientId } = req.params;
 
     try {
         const mappings = await Mapping.find({ clientId });
 
-        if (!mappings || mappings.length === 0) {
+        if (!mappings.length) {
             return res.status(200).json({ mappings: [] });
         }
 
@@ -267,8 +257,8 @@ app.get('/api/mappings/get/:clientId', async (req, res) => {
     }
 });
 
-// **Walmart Send API Route**
-app.post('/api/walmart/send', async (req, res) => {
+// **Send Products to Walmart**
+app.post('/api/walmart/send', verifyToken, async (req, res) => {
     try {
         const { itemData } = req.body;
         if (!itemData || itemData.length === 0) {
@@ -288,25 +278,13 @@ app.post('/api/walmart/send', async (req, res) => {
 });
 
 // **Fetch Shopify Data for Logged-In User**
-app.get('/api/shopify/data', async (req, res) => {
-    const { authorization } = req.headers;
-
-    if (!authorization || !authorization.startsWith('Bearer ')) {
-        return res.status(401).json({ error: 'Authorization token required.' });
-    }
-
+app.get('/api/shopify/data', verifyToken, async (req, res) => {
     try {
-        const token = authorization.split(' ')[1];
-        const decoded = jwt.verify(token, JWT_SECRET);
-        const clientId = decoded.clientId;
-
-        if (!clientId) {
-            return res.status(401).json({ error: 'Invalid or missing clientId in token.' });
-        }
+        const { clientId } = req.user;
 
         const shopifyData = await ShopifyData.find({ clientId });
 
-        if (!shopifyData || shopifyData.length === 0) {
+        if (!shopifyData.length) {
             return res.status(404).json({ error: 'No Shopify data found for this user.' });
         }
 
@@ -326,5 +304,7 @@ app.use((err, req, res, next) => {
     res.status(500).json({ error: 'Internal Server Error', details: err.message });
 });
 
-// **Export app**
+// **Start the Server**
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
 module.exports = app;
