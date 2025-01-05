@@ -54,29 +54,46 @@ export default async function handler(req, res) {
 
         const shopifyData = await response.json();
 
+        if (!shopifyData.products || shopifyData.products.length === 0) {
+            return res.status(404).json({ error: 'No products found in the Shopify store.' });
+        }
+
         // Format data to include all product variants with correct image mapping
         const formattedProducts = shopifyData.products.flatMap((product) => {
-            return product.variants.map((variant) => {
-                // Find the image associated with the variant using image_id or variant_ids
-                let variantImage = product.images.find((img) => img.id === variant.image_id) || 
-                                   product.images.find((img) => img.variant_ids?.includes(variant.id));
+            if (!product.variants || product.variants.length === 0) {
+                return [{
+                    id: product.id,
+                    product_id: product.id,
+                    title: product.title || 'Untitled Product',
+                    price: 'N/A',
+                    sku: 'N/A',
+                    inventory: 0,
+                    created_at: product.created_at || new Date().toISOString(),
+                    sourceCategory: product.product_type || 'N/A',
+                    image: product.images?.[0]?.src || 'https://via.placeholder.com/50',
+                    description: product.body_html || '',
+                }];
+            }
 
-                if (!variantImage && product.images.length > 0) {
-                    // If no variant-specific image, fallback to the first product image
-                    variantImage = product.images[0];
+            return product.variants.map((variant) => {
+                let variantImage = product.images?.find((img) => img.id === variant.image_id) ||
+                                   product.images?.find((img) => img.variant_ids?.includes(variant.id));
+
+                if (!variantImage && product.images?.length > 0) {
+                    variantImage = product.images[0]; // Fallback to the first image
                 }
 
                 return {
-                    id: variant.id,  // Unique variant ID
-                    product_id: product.id,  // Product ID for reference
-                    title: `${product.title} (${variant.title})`,  // Show variant title
+                    id: variant.id,
+                    product_id: product.id,
+                    title: `${product.title} (${variant.title || 'Default Variant'})`,
                     price: variant.price || '0.00',
                     sku: variant.sku || 'N/A',
                     inventory: variant.inventory_quantity || 0,
-                    created_at: product.created_at,
-                    sourceCategory: product.product_type || 'N/A',  // Product type/category
-                    image: variantImage ? variantImage.src : 'https://via.placeholder.com/50',  // Variant image or fallback
-                    description: product.body_html || '',  // Adding description for Walmart
+                    created_at: product.created_at || '',
+                    sourceCategory: product.product_type || 'N/A',
+                    image: variantImage?.src || 'https://via.placeholder.com/50',
+                    description: product.body_html || '',
                 };
             });
         });

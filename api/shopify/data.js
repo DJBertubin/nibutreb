@@ -37,14 +37,36 @@ export default async function handler(req, res) {
             console.log(`No Shopify data found for clientId: ${clientId}`);
             return res.status(200).json({
                 message: 'No Shopify data found for this user.',
-                shopifyData: [], 
+                shopifyData: [],
             });
         }
+
+        // Ensure a consistent structure for frontend
+        const formattedData = shopifyData.map((dataEntry) => {
+            const formattedProducts = (dataEntry.products || []).map((product) => ({
+                id: product.id || '',
+                product_id: product.product_id || '',
+                title: product.title || 'Untitled Product',
+                price: product.price || 'N/A',
+                sku: product.sku || 'N/A',
+                inventory: product.inventory || 0,
+                created_at: product.created_at || '',
+                sourceCategory: product.sourceCategory || 'N/A',
+                image: product.image || 'https://via.placeholder.com/50',
+                description: product.description || '',
+            }));
+
+            return {
+                shopifyUrl: dataEntry.shopifyUrl || 'N/A',
+                lastUpdated: dataEntry.lastUpdated || new Date(),
+                products: formattedProducts,
+            };
+        });
 
         console.log(`Shopify data fetched successfully for clientId: ${clientId}`);
         res.status(200).json({
             message: 'Shopify data fetched successfully.',
-            shopifyData,
+            shopifyData: formattedData,
         });
     } catch (err) {
         console.error('Error fetching Shopify data:', err.message);

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import './ProductList.css';
 import MappingModal from './MappingModal';
 
-const ProductList = ({ products }) => {
+const ProductList = ({ products = [] }) => {
     const [currentPage, setCurrentPage] = useState(1);
     const [showMappingModal, setShowMappingModal] = useState(false);
     const [selectedProduct, setSelectedProduct] = useState(null);
@@ -15,9 +15,11 @@ const ProductList = ({ products }) => {
 
     const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-    const filteredProducts = products.filter((product) =>
-        product.title.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    const filteredProducts = Array.isArray(products)
+        ? products.filter((product) =>
+              (product.title || '').toLowerCase().includes(searchQuery.toLowerCase())
+          )
+        : [];
     const currentProducts = filteredProducts.slice(indexOfFirstItem, indexOfLastItem);
     const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
 
@@ -27,12 +29,16 @@ const ProductList = ({ products }) => {
 
     const fetchMappingsFromMongoDB = async () => {
         const clientId = localStorage.getItem('clientId');
+        if (!clientId) {
+            console.error('Client ID missing in localStorage.');
+            return;
+        }
         try {
             const response = await fetch(`/api/mappings/get/${clientId}`);
             const data = await response.json();
             if (response.ok) {
                 const mappingsObj = {};
-                data.mappings.forEach((mapping) => {
+                data.mappings?.forEach((mapping) => {
                     mappingsObj[mapping.productId] = mapping.mappings;
                 });
                 setExistingMappings(mappingsObj);
@@ -68,7 +74,7 @@ const ProductList = ({ products }) => {
 
     const getMappedStatus = (productId) => {
         const mapping = existingMappings[productId] || {};
-        return Object.values(mapping).some((value) => value !== '') ? 'Yes' : 'No';
+        return Object.values(mapping).some((value) => value) ? 'Yes' : 'No';
     };
 
     const updateMappedStatuses = () => {
@@ -81,7 +87,7 @@ const ProductList = ({ products }) => {
 
     useEffect(() => {
         updateMappedStatuses();
-    }, [existingMappings]);
+    }, [existingMappings, products]);
 
     const handleSearchChange = (e) => {
         setSearchQuery(e.target.value);
@@ -158,7 +164,7 @@ const ProductList = ({ products }) => {
                 <tbody>
                     {filteredProducts.length > 0 ? (
                         currentProducts.map((product) => (
-                            <tr key={product.id} className="product-row">
+                            <tr key={product.id || `product-${Math.random()}`} className="product-row">
                                 <td>
                                     <input
                                         type="checkbox"
@@ -192,7 +198,7 @@ const ProductList = ({ products }) => {
                                     <div className="product-info">
                                         <strong className="product-title">{product.title || 'N/A'}</strong>
                                         <div className="sku">
-                                            SKU: {product.sku || 'N/A'} | Product ID: {product.id}
+                                            SKU: {product.sku || 'N/A'} | Product ID: {product.id || 'N/A'}
                                         </div>
                                     </div>
                                 </td>

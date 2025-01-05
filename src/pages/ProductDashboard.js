@@ -42,21 +42,25 @@ const Products = () => {
                 }
 
                 const data = await response.json();
-                const products = data.shopifyData.flatMap((entry) =>
-                    entry.shopifyData?.products.map((product) => ({
-                        id: product.id,
-                        title: product.title,
-                        sku: product.variants?.[0]?.sku || '',
+
+                // Ensure data.shopifyData is an array
+                const formattedProducts = (data.shopifyData || []).flatMap((entry) =>
+                    (entry.products || []).map((product) => ({
+                        id: product.id || '',
+                        title: product.title || 'Untitled Product',
+                        sku: product.variants?.[0]?.sku || 'N/A',
                         price: product.variants?.[0]?.price || 'N/A',
                         inventory: product.variants?.[0]?.inventory_quantity || 0,
                         created_at: product.created_at || '',
                         sourceCategory: product.product_type || 'N/A', // Added category display
+                        image: product.images?.[0]?.src || 'https://via.placeholder.com/50',
                     }))
                 );
 
-                setProductData(products);
+                setProductData(formattedProducts);
             } catch (err) {
-                setError(err.message);
+                console.error('Error fetching Shopify data:', err.message);
+                setError('Failed to fetch products. Please try again.');
             }
         };
 
@@ -75,13 +79,14 @@ const Products = () => {
 
     const handleShopifyConnect = (data) => {
         const formattedProducts = data.map((product) => ({
-            id: product.id,
-            title: product.title,
-            sku: product.variants?.[0]?.sku || '',
+            id: product.id || '',
+            title: product.title || 'Untitled Product',
+            sku: product.variants?.[0]?.sku || 'N/A',
             price: product.variants?.[0]?.price || 'N/A',
             inventory: product.variants?.[0]?.inventory_quantity || 0,
             created_at: product.created_at || '',
-            sourceCategory: product.product_type || 'N/A', // Category display for overview
+            sourceCategory: product.product_type || 'N/A',
+            image: product.images?.[0]?.src || 'https://via.placeholder.com/50',
         }));
         setProductData(formattedProducts);
     };
