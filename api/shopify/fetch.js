@@ -15,7 +15,7 @@ export default async function handler(req, res) {
     }
 
     const { authorization } = req.headers;
-    const { storeUrl, adminAccessToken, exportToWalmart } = req.body; // Add exportToWalmart flag
+    const { storeUrl, adminAccessToken, exportToWalmart } = req.body;
 
     if (!authorization || !authorization.startsWith('Bearer ')) {
         return res.status(401).json({ error: 'Unauthorized. Token missing.' });
@@ -26,7 +26,7 @@ export default async function handler(req, res) {
     }
 
     const trimmedStoreUrl = storeUrl.trim().toLowerCase();
-    const shopifyApiUrl = `https://${trimmedStoreUrl}/admin/api/2024-01/products.json`;
+    const shopifyApiBaseUrl = `https://${trimmedStoreUrl}/admin/api/2024-01/products.json?limit=250`;
 
     try {
         // Decode JWT token to identify the requesting user
@@ -38,28 +38,45 @@ export default async function handler(req, res) {
             return res.status(401).json({ error: 'Invalid or missing clientId in token.' });
         }
 
-        // Fetch data from Shopify API
-        const response = await fetch(shopifyApiUrl, {
-            method: 'GET',
-            headers: {
-                'X-Shopify-Access-Token': adminAccessToken,
-            },
-        });
+        // Fetch all products from Shopify API (with pagination)
+        let allProducts = [];
+        let nextPageUrl = shopifyApiBaseUrl;
 
-        if (!response.ok) {
-            const errorText = await response.text();
-            console.error('Shopify API Error:', errorText);
-            return res.status(response.status).json({ error: errorText });
+        while (nextPageUrl) {
+            const response = await fetch(nextPageUrl, {
+                method: 'GET',
+                headers: {
+                    'X-Shopify-Access-Token': adminAccessToken,
+                },
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('Shopify API Error:', errorText);
+                return res.status(response.status).json({ error: errorText });
+            }
+
+            const shopifyData = await response.json();
+            const products = shopifyData.products || [];
+
+            allProducts = [...allProducts, ...products];
+
+            // Check for next page link in headers
+            const linkHeader = response.headers.get('link');
+            if (linkHeader && linkHeader.includes('rel="next"')) {
+                const nextLinkMatch = linkHeader.match(/<([^>]+)>;\s*rel="next"/);
+                nextPageUrl = nextLinkMatch ? nextLinkMatch[1] : null;
+            } else {
+                nextPageUrl = null; // No more pages
+            }
         }
 
-        const shopifyData = await response.json();
-
-        if (!shopifyData.products || shopifyData.products.length === 0) {
+        if (allProducts.length === 0) {
             return res.status(404).json({ error: 'No products found in the Shopify store.' });
         }
 
         // Format data to include all product variants with correct image mapping
-        const formattedProducts = shopifyData.products.flatMap((product) => {
+        const formattedProducts = allProducts.flatMap((product) => {
             if (!product.variants || product.variants.length === 0) {
                 return [{
                     id: product.id,
@@ -110,7 +127,7 @@ export default async function handler(req, res) {
             { upsert: true, new: true }
         );
 
-        console.log('Shopify Data Saved:', updatedShopifyData);
+        console.log(`Shopify Data Saved: ${formattedProducts.length} products`);
 
         // Export to Walmart if the flag is set
         if (exportToWalmart) {
@@ -128,7 +145,7 @@ export default async function handler(req, res) {
         }
 
         res.status(201).json({
-            message: 'Shopify data fetched and stored successfully.',
+            message: `Shopify data fetched and stored successfully. Total products: ${formattedProducts.length}`,
             shopifyData: formattedProducts,
         });
     } catch (err) {
