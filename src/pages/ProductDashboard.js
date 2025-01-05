@@ -12,7 +12,6 @@ const Products = () => {
     const [productData, setProductData] = useState([]);
     const [stores, setStores] = useState(['Walmart', 'Shopify']);
     const [error, setError] = useState('');
-    const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -24,7 +23,6 @@ const Products = () => {
                 return;
             }
 
-            setLoading(true); // Start loading
             try {
                 const response = await fetch('/api/shopify/data', {
                     method: 'GET',
@@ -38,7 +36,6 @@ const Products = () => {
                     if (response.status === 404) {
                         // No Shopify data found for this user
                         setProductData([]);
-                        setLoading(false); // Stop loading after fetch
                         return;
                     }
                     throw new Error(errorData.error || 'Failed to fetch Shopify data.');
@@ -58,10 +55,8 @@ const Products = () => {
                 );
 
                 setProductData(products);
-                setLoading(false); // Stop loading after fetch
             } catch (err) {
                 setError(err.message);
-                setLoading(false);
             }
         };
 
@@ -97,14 +92,6 @@ const Products = () => {
         }
     };
 
-    if (loading) {
-        return <div>Loading products...</div>;
-    }
-
-    if (error) {
-        return <div>Error: {error}</div>;
-    }
-
     return (
         <div style={{ display: 'flex', height: '100vh' }}>
             <Sidebar userType="Admin" />
@@ -125,8 +112,10 @@ const Products = () => {
                     <MarketplaceDropdowns onAddNewSource={handleShowModal} storeList={stores} />
                     <div className="content">
                         <h2 className="section-title">Products Overview</h2>
-                        {productData.length === 0 ? (
+                        {productData.length === 0 && !error ? (
                             <div>No products available. Connect a store to get started.</div>
+                        ) : error ? (
+                            <div>Error: {error}</div>
                         ) : (
                             <div className="products-table">
                                 <ProductList products={productData} />
