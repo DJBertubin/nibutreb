@@ -17,11 +17,11 @@ dotenv.config();
 const app = express();
 const JWT_SECRET = process.env.JWT_SECRET;
 
-// === Middleware ===
+// Middleware
 app.use(cors());
-app.use(express.json()); // Allow JSON requests
+app.use(express.json());
 
-// === MongoDB Connection ===
+// MongoDB Connection
 mongoose
     .connect(process.env.MONGO_URI, {
         useNewUrlParser: true,
@@ -30,10 +30,9 @@ mongoose
     .then(() => console.log('Connected to MongoDB Atlas'))
     .catch((err) => console.error('MongoDB connection error:', err));
 
-// === Walmart API routes ===
+// **Use Walmart API routes**
 app.use('/api/walmart', walmartRoutes);
 
-// === User Authentication Routes ===
 // **Login Route**
 app.post('/api/login', async (req, res) => {
     const { username, password } = req.body;
@@ -101,7 +100,7 @@ app.post('/api/signup', async (req, res) => {
     }
 });
 
-// === Fetch Client Info Route ===
+// **Fetch Client Info Route**
 app.get('/api/client/info', async (req, res) => {
     const { authorization } = req.headers;
 
@@ -136,7 +135,7 @@ app.get('/api/client/info', async (req, res) => {
     }
 });
 
-// === Shopify Fetch Data API ===
+// **Shopify Fetch API Route**
 app.post('/api/shopify/fetch', async (req, res) => {
     const { authorization } = req.headers;
     const { storeUrl, adminAccessToken } = req.body;
@@ -196,7 +195,6 @@ app.post('/api/shopify/fetch', async (req, res) => {
     }
 });
 
-// === Mapping Routes ===
 // **POST /api/mappings/save - Save Mappings**
 app.post('/api/mappings/save', async (req, res) => {
     const { clientId, productId, mappings } = req.body;
@@ -211,12 +209,20 @@ app.post('/api/mappings/save', async (req, res) => {
     try {
         const cleanedMappings = {};
 
+        // Iterate over mappings to ensure proper structure
         for (const key in mappings) {
             const mappingEntry = mappings[key];
-            cleanedMappings[key] = {
-                type: mappingEntry?.type || 'Ignore',
-                value: mappingEntry?.value || '',
-            };
+
+            if (typeof mappingEntry === 'string') {
+                cleanedMappings[key] = { type: 'Set Free Text', value: mappingEntry }; // Convert string to object
+            } else if (typeof mappingEntry === 'object' && mappingEntry !== null) {
+                cleanedMappings[key] = {
+                    type: mappingEntry.type || 'Ignore',
+                    value: mappingEntry.value || '',
+                };
+            } else {
+                cleanedMappings[key] = { type: 'Ignore', value: '' }; // Default to "Ignore"
+            }
         }
 
         console.log('Cleaned Mappings (to be saved):', cleanedMappings);
@@ -261,7 +267,7 @@ app.get('/api/mappings/get/:clientId', async (req, res) => {
     }
 });
 
-// **POST /api/walmart/send**
+// **Walmart Send API Route**
 app.post('/api/walmart/send', async (req, res) => {
     try {
         const { itemData } = req.body;
@@ -281,37 +287,44 @@ app.post('/api/walmart/send', async (req, res) => {
     }
 });
 
-// **GET /api/shopify/attribute-value**
-app.get('/api/shopify/attribute-value/:productId/:attributeName', async (req, res) => {
-    const { productId, attributeName } = req.params;
-    const clientId = req.query.clientId;
+// **Fetch Shopify Data for Logged-In User**
+app.get('/api/shopify/data', async (req, res) => {
+    const { authorization } = req.headers;
+
+    if (!authorization || !authorization.startsWith('Bearer ')) {
+        return res.status(401).json({ error: 'Authorization token required.' });
+    }
 
     try {
-        const shopifyData = await ShopifyData.findOne({ clientId });
-        if (!shopifyData) {
-            return res.status(404).json({ error: 'Shopify data not found' });
+        const token = authorization.split(' ')[1];
+        const decoded = jwt.verify(token, JWT_SECRET);
+        const clientId = decoded.clientId;
+
+        if (!clientId) {
+            return res.status(401).json({ error: 'Invalid or missing clientId in token.' });
         }
 
-        const product = shopifyData.shopifyData.products.find((p) => p.id.toString() === productId);
+        const shopifyData = await ShopifyData.find({ clientId });
 
-        if (!product) {
-            return res.status(404).json({ error: 'Product not found' });
+        if (!shopifyData || shopifyData.length === 0) {
+            return res.status(404).json({ error: 'No Shopify data found for this user.' });
         }
 
-        const attributeValue = attributeName.split('.').reduce((obj, key) => obj?.[key], product);
-
-        res.status(200).json({ value: attributeValue || 'N/A' });
+        res.status(200).json({
+            message: 'Shopify data fetched successfully.',
+            shopifyData,
+        });
     } catch (err) {
-        console.error('Error fetching attribute value:', err.message);
+        console.error('Error fetching Shopify data:', err.message);
         res.status(500).json({ error: 'Internal Server Error', details: err.message });
     }
 });
 
-// === Error Handling Middleware ===
+// **Error Handling Middleware**
 app.use((err, req, res, next) => {
     console.error('Server Error:', err.message);
     res.status(500).json({ error: 'Internal Server Error', details: err.message });
 });
 
-// Export the app
+// **Export app**
 module.exports = app;
