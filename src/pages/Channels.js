@@ -10,20 +10,21 @@ const Channels = () => {
     const [walmartClientID, setWalmartClientID] = useState('');
     const [walmartClientSecret, setWalmartClientSecret] = useState('');
     const [showModal, setShowModal] = useState(false);
-    const [modalType, setModalType] = useState(''); // 'addSource' or 'addTarget'
+    const [modalType, setModalType] = useState('');
     const [selectedSource, setSelectedSource] = useState(null);
     const [activeSource, setActiveSource] = useState('');
     const [targetMarketplace, setTargetMarketplace] = useState('');
     const [statusMessage, setStatusMessage] = useState('');
+    const [loading, setLoading] = useState(false);
 
-    // **Fetch sources and Walmart data**
     useEffect(() => {
         const fetchSources = async () => {
             try {
                 const token = localStorage.getItem('token');
                 if (!token) return;
 
-                // Fetch Shopify data
+                setLoading(true);
+
                 const shopifyResponse = await fetch('/api/shopify/data', {
                     method: 'GET',
                     headers: { Authorization: `Bearer ${token}` },
@@ -31,6 +32,7 @@ const Channels = () => {
 
                 if (!shopifyResponse.ok) {
                     setSources([]);
+                    setLoading(false);
                     return;
                 }
 
@@ -45,7 +47,6 @@ const Channels = () => {
                     targetMarketplaces: entry.targetMarketplaces || [],
                 }));
 
-                // Fetch Walmart credentials
                 const walmartResponse = await fetch('/api/walmart/credentials', {
                     method: 'GET',
                     headers: { Authorization: `Bearer ${token}` },
@@ -53,8 +54,6 @@ const Channels = () => {
 
                 if (walmartResponse.ok) {
                     const walmartData = await walmartResponse.json();
-
-                    // Add Walmart to the target marketplaces if credentials exist
                     formattedSources.forEach((source) => {
                         if (!source.targetMarketplaces.includes('Walmart')) {
                             source.targetMarketplaces.push('Walmart');
@@ -63,8 +62,10 @@ const Channels = () => {
                 }
 
                 setSources(formattedSources);
+                setLoading(false);
             } catch (err) {
                 console.error('Error fetching sources or Walmart data:', err);
+                setLoading(false);
             }
         };
 
@@ -100,6 +101,7 @@ const Channels = () => {
 
     const handleShopifyConnect = async () => {
         setStatusMessage('Connecting to Shopify Admin API...');
+        setLoading(true);
 
         try {
             const token = localStorage.getItem('token');
@@ -142,11 +144,14 @@ const Channels = () => {
             setStatusMessage('Successfully connected to Shopify!');
         } catch (error) {
             setStatusMessage(`Failed to connect: ${error.message}`);
+        } finally {
+            setLoading(false);
         }
     };
 
     const handleWalmartTargetConnect = async () => {
         setStatusMessage('Connecting to Walmart API...');
+        setLoading(true);
 
         try {
             const token = localStorage.getItem('token');
@@ -186,10 +191,14 @@ const Channels = () => {
             setStatusMessage('Successfully added Walmart as a target marketplace!');
         } catch (error) {
             setStatusMessage(`Failed to connect: ${error.message}`);
+        } finally {
+            setLoading(false);
         }
     };
 
     const handleDeleteAccount = async (source) => {
+        setLoading(true);
+
         try {
             const response = await fetch(`/api/shopify/delete/${source.id}`, {
                 method: 'DELETE',
@@ -203,6 +212,8 @@ const Channels = () => {
             setShowModal(false);
         } catch (error) {
             console.error(`Error deleting account: ${error.message}`);
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -217,32 +228,36 @@ const Channels = () => {
                         <div className="add-source-box" onClick={handleAddSourceClick}>
                             <h4>Add Source</h4>
                         </div>
-                        {sources.map((source) => (
-                            <div key={source.id} className="source-item">
-                                <div className="source-content">
-                                    <img
-                                        className="marketplace-logo"
-                                        src={`/${source.marketplace.toLowerCase()}-logo.png`}
-                                        alt={`${source.marketplace} logo`}
-                                    />
-                                    <span className="source-name">{source.name}</span>
+                        {loading ? (
+                            <p>Loading sources...</p>
+                        ) : (
+                            sources.map((source) => (
+                                <div key={source.id} className="source-item">
+                                    <div className="source-content">
+                                        <img
+                                            className="marketplace-logo"
+                                            src={`/${source.marketplace.toLowerCase()}-logo.png`}
+                                            alt={`${source.marketplace} logo`}
+                                        />
+                                        <span className="source-name">{source.name}</span>
+                                    </div>
+                                    <p className="target-status">
+                                        {source.targetMarketplaces.length === 0
+                                            ? 'No Targeted Marketplace'
+                                            : `Targeted: ${source.targetMarketplaces.join(', ')}`}
+                                    </p>
+                                    <div className="source-buttons-horizontal">
+                                        <button className="add-target-button" onClick={() => handleAddTargetClick(source)}>
+                                            Add Target
+                                        </button>
+                                        <button className="settings-button" onClick={() => handleSettingsClick(source)}>
+                                            Settings
+                                        </button>
+                                        <span className="status-text">Status: Active</span>
+                                    </div>
                                 </div>
-                                <p className="target-status">
-                                    {source.targetMarketplaces.length === 0
-                                        ? 'No Targeted Marketplace'
-                                        : `Targeted: ${source.targetMarketplaces.join(', ')}`}
-                                </p>
-                                <div className="source-buttons-horizontal">
-                                    <button className="add-target-button" onClick={() => handleAddTargetClick(source)}>
-                                        Add Target
-                                    </button>
-                                    <button className="settings-button" onClick={() => handleSettingsClick(source)}>
-                                        Settings
-                                    </button>
-                                    <span className="status-text">Status: Active</span>
-                                </div>
-                            </div>
-                        ))}
+                            ))
+                        )}
                     </div>
 
                     {/* Modal */}
@@ -254,25 +269,19 @@ const Channels = () => {
                                         <h2>Add New Source</h2>
                                         <div className="source-buttons-horizontal">
                                             <button
-                                                className={`source-button ${
-                                                    activeSource === 'Shopify' ? 'active' : ''
-                                                }`}
+                                                className={`source-button ${activeSource === 'Shopify' ? 'active' : ''}`}
                                                 onClick={() => handleSourceSelection('Shopify')}
                                             >
                                                 Shopify
                                             </button>
                                             <button
-                                                className={`source-button ${
-                                                    activeSource === 'Walmart' ? 'active' : ''
-                                                }`}
+                                                className={`source-button ${activeSource === 'Walmart' ? 'active' : ''}`}
                                                 onClick={() => handleSourceSelection('Walmart')}
                                             >
                                                 Walmart
                                             </button>
                                             <button
-                                                className={`source-button ${
-                                                    activeSource === 'Amazon' ? 'active' : ''
-                                                }`}
+                                                className={`source-button ${activeSource === 'Amazon' ? 'active' : ''}`}
                                                 onClick={() => handleSourceSelection('Amazon')}
                                             >
                                                 Amazon

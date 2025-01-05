@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import './ProductList.css';
 import MappingModal from './MappingModal';
 
-const ProductList = ({ products = [] }) => {
+const ProductList = () => {
+    const [products, setProducts] = useState([]); // Initialize products state to store MongoDB data
     const [currentPage, setCurrentPage] = useState(1);
     const [showMappingModal, setShowMappingModal] = useState(false);
     const [selectedProduct, setSelectedProduct] = useState(null);
@@ -24,6 +25,45 @@ const ProductList = ({ products = [] }) => {
     const handlePageChange = (pageNumber) => {
         setCurrentPage(pageNumber);
     };
+
+    const fetchProductsFromMongoDB = async () => {
+        const token = localStorage.getItem('token');
+        try {
+            const response = await fetch('/api/shopify/data', {
+                method: 'GET',
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+
+            if (!response.ok) {
+                console.error('Error fetching products:', response.statusText);
+                return;
+            }
+
+            const data = await response.json();
+            const fetchedProducts = data.shopifyData.flatMap((entry) =>
+                entry.products.map((product) => ({
+                    id: product.id,
+                    title: product.title,
+                    sku: product.variants?.[0]?.sku || '',
+                    price: product.variants?.[0]?.price || 'N/A',
+                    inventory: product.variants?.[0]?.inventory_quantity || 0,
+                    created_at: product.created_at || '',
+                    sourceCategory: product.product_type || 'N/A',
+                    image: product.image || 'https://via.placeholder.com/50',
+                    description: product.body_html || '',
+                }))
+            );
+            setProducts(fetchedProducts);
+        } catch (error) {
+            console.error('Error fetching products from MongoDB:', error);
+        }
+    };
+
+    useEffect(() => {
+        fetchProductsFromMongoDB(); // Fetch products from MongoDB when the component mounts
+    }, []);
 
     const fetchMappingsFromMongoDB = async () => {
         const clientId = localStorage.getItem('clientId');
