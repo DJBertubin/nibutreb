@@ -1,78 +1,72 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import ProductList from '../components/ProductList';
+import MarketplaceDropdowns from '../components/MarketplaceDropdowns';
+import ClientProfile from '../components/ClientProfile';
 import IntegrationModal from '../components/IntegrationModal';
 
 const Products = () => {
     const [showIntegrationModal, setShowIntegrationModal] = useState(false);
     const [integrationType, setIntegrationType] = useState('');
     const [productData, setProductData] = useState([]);
+    const [stores, setStores] = useState(['Walmart', 'Shopify']);
     const [error, setError] = useState('');
-    const [page, setPage] = useState(1); // For pagination
-    const [hasMore, setHasMore] = useState(true); // Track if more products exist
-    const loader = useRef(null);
+    const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
 
-    const fetchShopifyData = async (currentPage = 1, limit = 250) => {
-        const token = localStorage.getItem('token');
+    useEffect(() => {
+        const fetchShopifyData = async () => {
+            const token = localStorage.getItem('token');
 
-        if (!token) {
-            navigate('/login');
-            return;
-        }
-
-        try {
-            const response = await fetch(`/api/shopify/data?page=${currentPage}&limit=${limit}`, {
-                method: 'GET',
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.error || 'Failed to fetch Shopify data.');
+            if (!token) {
+                navigate('/login');
+                return;
             }
 
-            const data = await response.json();
-            const newProducts = data.shopifyData.flatMap((entry) =>
-                entry.products.map((product) => ({
-                    id: product.id,
-                    title: product.title,
-                    sku: product.variants?.[0]?.sku || '',
-                    price: product.variants?.[0]?.price || 'N/A',
-                    inventory: product.variants?.[0]?.inventory_quantity || 0,
-                    created_at: product.created_at || '',
-                    sourceCategory: product.product_type || 'N/A',
-                }))
-            );
+            setLoading(true); // Start loading
+            try {
+                const response = await fetch('/api/shopify/data', {
+                    method: 'GET',
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                });
 
-            setProductData((prev) => [...prev, ...newProducts]);
-            if (newProducts.length < limit) {
-                setHasMore(false); // No more products to load
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    if (response.status === 404) {
+                        // No Shopify data found for this user
+                        setProductData([]);
+                        setLoading(false); // Stop loading after fetch
+                        return;
+                    }
+                    throw new Error(errorData.error || 'Failed to fetch Shopify data.');
+                }
+
+                const data = await response.json();
+                const products = data.shopifyData.flatMap((entry) =>
+                    entry.shopifyData?.products.map((product) => ({
+                        id: product.id,
+                        title: product.title,
+                        sku: product.variants?.[0]?.sku || '',
+                        price: product.variants?.[0]?.price || 'N/A',
+                        inventory: product.variants?.[0]?.inventory_quantity || 0,
+                        created_at: product.created_at || '',
+                        sourceCategory: product.product_type || 'N/A', // Added category display
+                    }))
+                );
+
+                setProductData(products);
+                setLoading(false); // Stop loading after fetch
+            } catch (err) {
+                setError(err.message);
+                setLoading(false);
             }
-        } catch (err) {
-            setError(err.message);
-        }
-    };
+        };
 
-    useEffect(() => {
-        fetchShopifyData(page); // Fetch products for the current page
-    }, [page]);
-
-    const handleObserver = (entries) => {
-        const target = entries[0];
-        if (target.isIntersecting && hasMore) {
-            setPage((prevPage) => prevPage + 1); // Load next batch when reaching the bottom
-        }
-    };
-
-    useEffect(() => {
-        const observer = new IntersectionObserver(handleObserver, { threshold: 1.0 });
-        if (loader.current) observer.observe(loader.current);
-        return () => observer.disconnect();
-    }, [hasMore]);
+        fetchShopifyData();
+    }, [navigate]);
 
     const handleShowModal = (type) => {
         setIntegrationType(type);
@@ -92,10 +86,20 @@ const Products = () => {
             price: product.variants?.[0]?.price || 'N/A',
             inventory: product.variants?.[0]?.inventory_quantity || 0,
             created_at: product.created_at || '',
-            sourceCategory: product.product_type || 'N/A',
+            sourceCategory: product.product_type || 'N/A', // Category display for overview
         }));
         setProductData(formattedProducts);
     };
+
+    const handleAddStoreName = (storeName) => {
+        if (!stores.includes(storeName)) {
+            setStores((prevStores) => [...prevStores, storeName]);
+        }
+    };
+
+    if (loading) {
+        return <div>Loading products...</div>;
+    }
 
     if (error) {
         return <div>Error: {error}</div>;
@@ -104,8 +108,21 @@ const Products = () => {
     return (
         <div style={{ display: 'flex', height: '100vh' }}>
             <Sidebar userType="Admin" />
-            <div style={{ marginLeft: '200px', padding: '20px', flexGrow: 1, overflow: 'auto' }}>
+            <div
+                style={{
+                    marginLeft: '200px',
+                    padding: '20px',
+                    flexGrow: 1,
+                    overflow: 'auto',
+                }}
+            >
                 <div className="main-content">
+                    <ClientProfile
+                        name="Jane Doe" // Placeholder; replace with dynamic user name
+                        clientId="98765" // Placeholder; replace with dynamic client ID
+                        imageUrl="https://via.placeholder.com/100"
+                    />
+                    <MarketplaceDropdowns onAddNewSource={handleShowModal} storeList={stores} />
                     <div className="content">
                         <h2 className="section-title">Products Overview</h2>
                         {productData.length === 0 ? (
@@ -113,12 +130,15 @@ const Products = () => {
                         ) : (
                             <div className="products-table">
                                 <ProductList products={productData} />
-                                <div ref={loader}>{hasMore && 'Loading more products...'}</div>
                             </div>
                         )}
                     </div>
                     {showIntegrationModal && (
-                        <IntegrationModal onClose={handleCloseModal} onFetchSuccess={handleShopifyConnect} />
+                        <IntegrationModal
+                            onClose={handleCloseModal}
+                            onFetchSuccess={handleShopifyConnect}
+                            onAddStoreName={handleAddStoreName}
+                        />
                     )}
                 </div>
             </div>
