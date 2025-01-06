@@ -36,30 +36,33 @@ const Products = () => {
                 if (!response.ok) {
                     const errorData = await response.json();
                     if (response.status === 404) {
-                        // No Shopify data found for this user
-                        setProductData([]);
-                        setLoading(false); // Stop loading after fetch
+                        setProductData([]); // No data found
+                        setLoading(false);
                         return;
                     }
                     throw new Error(errorData.error || 'Failed to fetch Shopify data.');
                 }
 
                 const data = await response.json();
-                const products = data.shopifyData.flatMap((entry) =>
-                    entry.shopifyData?.products.map((product) => ({
+                console.log('API Response:', data); // Debugging log to check structure
+
+                // Safeguard to ensure shopifyData is always an array
+                const products = (data.shopifyData || []).flatMap((entry) =>
+                    entry?.products?.map((product) => ({
                         id: product.id,
                         title: product.title,
                         sku: product.variants?.[0]?.sku || '',
                         price: product.variants?.[0]?.price || 'N/A',
                         inventory: product.variants?.[0]?.inventory_quantity || 0,
                         created_at: product.created_at || '',
-                        sourceCategory: product.product_type || 'N/A', // Added category display
-                    }))
+                        sourceCategory: product.product_type || 'N/A',
+                    })) || []
                 );
 
                 setProductData(products);
                 setLoading(false); // Stop loading after fetch
             } catch (err) {
+                console.error('Error fetching Shopify data:', err);
                 setError(err.message);
                 setLoading(false);
             }
@@ -79,14 +82,14 @@ const Products = () => {
     };
 
     const handleShopifyConnect = (data) => {
-        const formattedProducts = data.map((product) => ({
+        const formattedProducts = (data || []).map((product) => ({
             id: product.id,
             title: product.title,
             sku: product.variants?.[0]?.sku || '',
             price: product.variants?.[0]?.price || 'N/A',
             inventory: product.variants?.[0]?.inventory_quantity || 0,
             created_at: product.created_at || '',
-            sourceCategory: product.product_type || 'N/A', // Category display for overview
+            sourceCategory: product.product_type || 'N/A',
         }));
         setProductData(formattedProducts);
     };
