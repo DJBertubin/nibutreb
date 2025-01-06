@@ -47,17 +47,15 @@ const Products = () => {
                 console.log('API Response:', data); // Debugging log to check structure
 
                 // Safeguard to ensure shopifyData is always an array
-                const products = (data.shopifyData || []).flatMap((entry) =>
-                    entry?.products?.map((product) => ({
-                        id: product.id,
-                        title: product.title,
-                        sku: product.variants?.[0]?.sku || '',
-                        price: product.variants?.[0]?.price || 'N/A',
-                        inventory: product.variants?.[0]?.inventory_quantity || 0,
-                        created_at: product.created_at || '',
-                        sourceCategory: product.product_type || 'N/A',
-                    })) || []
-                );
+                const products = (data.shopifyData[0]?.products || []).map((product) => ({
+                    id: product.id,
+                    title: product.title,
+                    sku: product.variants?.[0]?.sku || '',
+                    price: product.variants?.[0]?.price || 'N/A',
+                    inventory: product.variants?.[0]?.inventory_quantity || 0,
+                    created_at: product.created_at || '',
+                    sourceCategory: product.product_type || 'N/A',
+                }));
 
                 setProductData(products);
                 setLoading(false); // Stop loading after fetch
