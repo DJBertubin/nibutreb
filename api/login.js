@@ -16,7 +16,7 @@ mongoose.connect(process.env.MONGO_URI, {
 
 // User Schema with clientId
 const UserSchema = new mongoose.Schema({
-    clientId: { type: String, unique: true, required: true }, // Custom unique client ID
+    clientId: { type: String, unique: true, required: true },
     username: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     role: { type: String, default: 'client' },
@@ -34,23 +34,28 @@ export default async function handler(req, res) {
 
     // Check if the required fields are provided
     if (!username || !password) {
+        console.error('Missing username or password');
         return res.status(400).json({ error: 'Username and password are required' });
     }
 
     try {
         console.log('Login request received:', { username });
 
-        // Check if the user exists
+        // Check if the user exists in the database
         const user = await User.findOne({ username });
+        console.log('Database user:', user); // Debugging the returned user document
+
         if (!user) {
-            console.warn('User not found:', username);
+            console.error(`User ${username} not found in the database`);
             return res.status(401).json({ error: 'Invalid username or password' });
         }
 
         // Verify the password
         const isPasswordValid = await bcrypt.compare(password, user.password);
+        console.log('Password validation result:', isPasswordValid);
+
         if (!isPasswordValid) {
-            console.warn('Invalid password attempt for username:', username);
+            console.error('Invalid password attempt');
             return res.status(401).json({ error: 'Invalid username or password' });
         }
 
@@ -69,14 +74,13 @@ export default async function handler(req, res) {
 
         console.log('Login successful for:', username);
 
-        // Send the response back to the client
         res.status(200).json({
             token,
             role: user.role,
             clientId: user.clientId,
         });
     } catch (err) {
-        console.error('Login Error:', err.message);
+        console.error('Login Error:', err);  // Full error log for debugging
         res.status(500).json({ error: 'Internal server error', details: err.message });
     }
 }
