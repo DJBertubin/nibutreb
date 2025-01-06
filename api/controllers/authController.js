@@ -62,4 +62,6 @@ exports.signup = async (req, res) => {
         res.status(201).json({ message: 'User created successfully' });
     } catch (error) {
         console.error('Error during signup:', error.message); // Log the error message
-       
+        res.status(500).json({ error: 'Internal Server Error', details: error.message });
+    }
+};
