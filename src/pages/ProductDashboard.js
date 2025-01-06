@@ -12,16 +12,19 @@ const Products = () => {
     const [productData, setProductData] = useState([]);
     const [stores, setStores] = useState(['Walmart', 'Shopify']);
     const [error, setError] = useState('');
+    const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
 
     useEffect(() => {
         const fetchShopifyData = async () => {
             const token = localStorage.getItem('token');
+
             if (!token) {
                 navigate('/login');
                 return;
             }
-    
+
+            setLoading(true); // Start loading
             try {
                 const response = await fetch('/api/shopify/data', {
                     method: 'GET',
@@ -29,19 +32,39 @@ const Products = () => {
                         Authorization: `Bearer ${token}`,
                     },
                 });
-    
+
                 if (!response.ok) {
-                    throw new Error('Failed to fetch Shopify data.');
+                    const errorData = await response.json();
+                    if (response.status === 404) {
+                        // No Shopify data found for this user
+                        setProductData([]);
+                        setLoading(false); // Stop loading after fetch
+                        return;
+                    }
+                    throw new Error(errorData.error || 'Failed to fetch Shopify data.');
                 }
-    
-                const { shopifyData } = await response.json(); // Ensure this matches the backend structure
-                setProductData(shopifyData); // Directly use the array
+
+                const data = await response.json();
+                const products = data.shopifyData.flatMap((entry) =>
+                    entry.shopifyData?.products.map((product) => ({
+                        id: product.id,
+                        title: product.title,
+                        sku: product.variants?.[0]?.sku || '',
+                        price: product.variants?.[0]?.price || 'N/A',
+                        inventory: product.variants?.[0]?.inventory_quantity || 0,
+                        created_at: product.created_at || '',
+                        sourceCategory: product.product_type || 'N/A', // Added category display
+                    }))
+                );
+
+                setProductData(products);
+                setLoading(false); // Stop loading after fetch
             } catch (err) {
-                console.error('Error fetching Shopify data:', err);
                 setError(err.message);
+                setLoading(false);
             }
         };
-    
+
         fetchShopifyData();
     }, [navigate]);
 
@@ -56,14 +79,14 @@ const Products = () => {
     };
 
     const handleShopifyConnect = (data) => {
-        const formattedProducts = (data || []).map((product) => ({
+        const formattedProducts = data.map((product) => ({
             id: product.id,
             title: product.title,
             sku: product.variants?.[0]?.sku || '',
             price: product.variants?.[0]?.price || 'N/A',
             inventory: product.variants?.[0]?.inventory_quantity || 0,
             created_at: product.created_at || '',
-            sourceCategory: product.product_type || 'N/A',
+            sourceCategory: product.product_type || 'N/A', // Category display for overview
         }));
         setProductData(formattedProducts);
     };
@@ -73,6 +96,10 @@ const Products = () => {
             setStores((prevStores) => [...prevStores, storeName]);
         }
     };
+
+    if (loading) {
+        return <div>Loading products...</div>;
+    }
 
     if (error) {
         return <div>Error: {error}</div>;

@@ -289,24 +289,37 @@ app.post('/api/walmart/send', async (req, res) => {
 
 // **Fetch Shopify Data for Logged-In User**
 app.get('/api/shopify/data', async (req, res) => {
-    // existing code to fetch Shopify data
-    const shopifyData = await ShopifyData.findOne({ clientId });
-    if (!shopifyData || !shopifyData.products) {
-        return res.status(404).json({ error: 'No Shopify data found for this user.' });
+    const { authorization } = req.headers;
+
+    if (!authorization || !authorization.startsWith('Bearer ')) {
+        return res.status(401).json({ error: 'Authorization token required.' });
     }
 
-    const products = shopifyData.products.map(product => ({
-        id: product.id,
-        title: product.title,
-        sku: (product.variants[0] || {}).sku,
-        price: (product.variants[0] || {}).price,
-        inventory: (product.variants[0] || {}).inventory,
-        created_at: product.created_at,
-        sourceCategory: product.product_type,
-    }));
+    try {
+        const token = authorization.split(' ')[1];
+        const decoded = jwt.verify(token, JWT_SECRET);
+        const clientId = decoded.clientId;
 
-    res.status(200).json({ shopifyData: products });
+        if (!clientId) {
+            return res.status(401).json({ error: 'Invalid or missing clientId in token.' });
+        }
+
+        const shopifyData = await ShopifyData.find({ clientId });
+
+        if (!shopifyData || shopifyData.length === 0) {
+            return res.status(404).json({ error: 'No Shopify data found for this user.' });
+        }
+
+        res.status(200).json({
+            message: 'Shopify data fetched successfully.',
+            shopifyData,
+        });
+    } catch (err) {
+        console.error('Error fetching Shopify data:', err.message);
+        res.status(500).json({ error: 'Internal Server Error', details: err.message });
+    }
 });
+
 // **Error Handling Middleware**
 app.use((err, req, res, next) => {
     console.error('Server Error:', err.message);
