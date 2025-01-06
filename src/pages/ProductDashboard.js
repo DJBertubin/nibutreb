@@ -17,12 +17,11 @@ const Products = () => {
     useEffect(() => {
         const fetchShopifyData = async () => {
             const token = localStorage.getItem('token');
-
             if (!token) {
                 navigate('/login');
                 return;
             }
-
+    
             try {
                 const response = await fetch('/api/shopify/data', {
                     method: 'GET',
@@ -30,37 +29,19 @@ const Products = () => {
                         Authorization: `Bearer ${token}`,
                     },
                 });
-
+    
                 if (!response.ok) {
-                    const errorData = await response.json();
-                    if (response.status === 404) {
-                        setProductData([]); // No data found
-                        return;
-                    }
-                    throw new Error(errorData.error || 'Failed to fetch Shopify data.');
+                    throw new Error('Failed to fetch Shopify data.');
                 }
-
-                const data = await response.json();
-                console.log('API Response:', data); // Debugging log to check structure
-
-                // Iterate over the shopifyData array instead of `products`
-                const products = (data.shopifyData || []).map((entry) => ({
-                    id: entry.id || 'N/A',
-                    title: entry.title || 'Untitled Product',
-                    sku: entry.variants?.[0]?.sku || '',
-                    price: entry.variants?.[0]?.price || 'N/A',
-                    inventory: entry.variants?.[0]?.inventory_quantity || 0,
-                    created_at: entry.created_at || '',
-                    sourceCategory: entry.product_type || 'N/A',
-                }));
-
-                setProductData(products);
+    
+                const { shopifyData } = await response.json(); // Ensure this matches the backend structure
+                setProductData(shopifyData); // Directly use the array
             } catch (err) {
                 console.error('Error fetching Shopify data:', err);
                 setError(err.message);
             }
         };
-
+    
         fetchShopifyData();
     }, [navigate]);
 
