@@ -13,11 +13,15 @@ const Login = ({ setLoggedIn }) => {
         setError(''); // Clear previous error messages
         setLoading(true); // Set loading state to true while processing
 
+        console.log('Login attempt:', { username, password });
+
         try {
             // Validate inputs before sending request
             if (!username || !password) {
                 throw new Error('Please enter both username and password.');
             }
+
+            console.log('Sending request to /api/login...');
 
             // Make the API request to the backend login endpoint
             const response = await fetch('/api/login', {
@@ -26,19 +30,23 @@ const Login = ({ setLoggedIn }) => {
                 body: JSON.stringify({ username, password }),
             });
 
+            console.log('Response status:', response.status);
+
             // Handle non-200 responses
             if (!response.ok) {
                 const contentType = response.headers.get('Content-Type');
+                let errorMessage = 'An unexpected error occurred. Please try again.';
                 if (contentType && contentType.includes('application/json')) {
                     const errorData = await response.json();
-                    throw new Error(errorData.error || 'Login failed');
-                } else {
-                    throw new Error('An unexpected error occurred. Please try again.');
+                    errorMessage = errorData.error || 'Login failed';
                 }
+                console.error('Error response:', errorMessage);
+                throw new Error(errorMessage);
             }
 
             // Parse the response JSON
             const data = await response.json();
+            console.log('Login successful:', data);
 
             // Save authentication details in localStorage
             localStorage.setItem('token', data.token);
@@ -57,8 +65,9 @@ const Login = ({ setLoggedIn }) => {
                 navigate('/client-dashboard');
             }
         } catch (err) {
+            console.error('Error during login:', err.message);
             // Set error message to be displayed in the UI
-            setError(err.message);
+            setError(err.message || 'Login failed. Please try again.');
         } finally {
             // Reset loading state
             setLoading(false);
