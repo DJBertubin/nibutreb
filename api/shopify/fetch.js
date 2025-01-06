@@ -38,7 +38,6 @@ export default async function handler(req, res) {
             return res.status(401).json({ error: 'Invalid or missing clientId in token.' });
         }
 
-        // Fetch all products from Shopify API (with pagination)
         let allProducts = [];
         let nextPageUrl = shopifyApiBaseUrl;
         let pageCount = 1;
@@ -69,7 +68,6 @@ export default async function handler(req, res) {
             // Add to the master product list
             allProducts = [...allProducts, ...products];
 
-            // Check for next page link in headers
             const linkHeader = response.headers.get('link');
             if (linkHeader && linkHeader.includes('rel="next"')) {
                 const nextLinkMatch = linkHeader.match(/<([^>]+)>;\s*rel="next"/);
@@ -109,7 +107,7 @@ export default async function handler(req, res) {
 
                 return product.variants.map((variant) => {
                     let variantImage = product.images?.find((img) => img.id === variant.image_id) ||
-                                       product.images?.find((img) => img.variant_ids?.includes(variant.id));
+                        product.images?.find((img) => img.variant_ids?.includes(variant.id));
 
                     if (!variantImage && product.images?.length > 0) {
                         variantImage = product.images[0]; // Fallback to the first image
@@ -155,14 +153,26 @@ export default async function handler(req, res) {
             console.log('Items sent to Walmart successfully:', walmartResponse);
             return res.status(201).json({
                 message: 'Shopify data fetched, stored, and sent to Walmart successfully.',
-                shopifyData: allProducts,
+                shopifyData: [
+                    {
+                        shopifyData: {
+                            products: allProducts,
+                        },
+                    },
+                ],
                 walmartFeedId: walmartResponse.feedId,
             });
         }
 
         res.status(201).json({
             message: `Shopify data fetched and stored successfully. Total products: ${allProducts.length}`,
-            shopifyData: allProducts,
+            shopifyData: [
+                {
+                    shopifyData: {
+                        products: allProducts,
+                    },
+                },
+            ],
         });
     } catch (err) {
         console.error('Error saving Shopify data:', err.message);
