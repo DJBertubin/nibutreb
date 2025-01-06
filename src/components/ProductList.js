@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import './ProductList.css';
 import MappingModal from './MappingModal'; // Import the MappingModal component
 
-const ProductList = ({ products }) => {
+const ProductList = ({ products = [] }) => {
     const [currentPage, setCurrentPage] = useState(1);
     const [showMappingModal, setShowMappingModal] = useState(false);
     const [selectedProduct, setSelectedProduct] = useState(null);
@@ -23,18 +23,24 @@ const ProductList = ({ products }) => {
     // Fetch all existing mappings from MongoDB
     const fetchMappingsFromMongoDB = async () => {
         const clientId = localStorage.getItem('clientId');
+        if (!clientId) {
+            console.error('Client ID is missing. Cannot fetch mappings.');
+            return;
+        }
         try {
+            console.log(`Fetching mappings for clientId: ${clientId}`);
             const response = await fetch(`/api/mappings/get/${clientId}`);
-            const data = await response.json();
-            if (response.ok) {
-                const mappingsObj = {};
-                data.mappings.forEach((mapping) => {
-                    mappingsObj[mapping.productId] = mapping.mappings; // Store mapping by product ID
-                });
-                setExistingMappings(mappingsObj);
-            } else {
-                console.error('Error fetching mappings:', data.error);
+            if (!response.ok) {
+                throw new Error(`Error fetching mappings: ${response.statusText}`);
             }
+            const data = await response.json();
+            console.log('Fetched mappings:', data);
+
+            const mappingsObj = {};
+            data.mappings?.forEach((mapping) => {
+                mappingsObj[mapping.productId] = mapping.mappings; // Store mapping by product ID
+            });
+            setExistingMappings(mappingsObj);
         } catch (error) {
             console.error('Error fetching mappings from MongoDB:', error);
         }
@@ -72,7 +78,7 @@ const ProductList = ({ products }) => {
 
     useEffect(() => {
         updateMappedStatuses(); // Update mapped statuses whenever mappings are fetched
-    }, [existingMappings]);
+    }, [existingMappings, products]);
 
     return (
         <div className="product-list-container">
@@ -91,6 +97,10 @@ const ProductList = ({ products }) => {
                     onSave={async (mappingData) => {
                         try {
                             const clientId = localStorage.getItem('clientId');
+                            if (!clientId) {
+                                console.error('Client ID is missing. Cannot save bulk mappings.');
+                                return;
+                            }
                             const response = await fetch('/api/mappings/save', {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
@@ -103,14 +113,13 @@ const ProductList = ({ products }) => {
                             });
 
                             const result = await response.json();
-                            if (response.ok) {
-                                console.log('Bulk Mapping Saved:', result.message);
-                                fetchMappingsFromMongoDB(); // Refresh mapped statuses
-                            } else {
-                                console.error('Error saving mapping:', result.error);
+                            if (!response.ok) {
+                                throw new Error(result.error || 'Failed to save bulk mappings.');
                             }
+                            console.log('Bulk Mapping Saved:', result.message);
+                            fetchMappingsFromMongoDB(); // Refresh mapped statuses
                         } catch (error) {
-                            console.error('Error saving mapping:', error);
+                            console.error('Error saving bulk mapping:', error);
                         }
                         setShowBulkMappingModal(false);
                     }}
@@ -165,7 +174,7 @@ const ProductList = ({ products }) => {
                                 <td className="category-column">{product.sourceCategory || 'N/A'}</td>
                                 <td>${product.price || 'N/A'}</td>
                                 <td>{product.inventory || 'N/A'}</td>
-                                <td>{new Date(product.created_at).toLocaleDateString()}</td>
+                                <td>{product.created_at ? new Date(product.created_at).toLocaleDateString() : 'N/A'}</td>
                             </tr>
                         ))
                     ) : (
@@ -200,6 +209,10 @@ const ProductList = ({ products }) => {
                     onSave={async (mappingData) => {
                         try {
                             const clientId = localStorage.getItem('clientId');
+                            if (!clientId) {
+                                console.error('Client ID is missing. Cannot save individual mapping.');
+                                return;
+                            }
                             const response = await fetch('/api/mappings/save', {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
@@ -212,14 +225,13 @@ const ProductList = ({ products }) => {
                             });
 
                             const result = await response.json();
-                            if (response.ok) {
-                                console.log('Individual Mapping Saved:', result.message);
-                                fetchMappingsFromMongoDB(); // Refresh mapped statuses
-                            } else {
-                                console.error('Error saving mapping:', result.error);
+                            if (!response.ok) {
+                                throw new Error(result.error || 'Failed to save individual mapping.');
                             }
+                            console.log('Individual Mapping Saved:', result.message);
+                            fetchMappingsFromMongoDB(); // Refresh mapped statuses
                         } catch (error) {
-                            console.error('Error saving mapping:', error);
+                            console.error('Error saving individual mapping:', error);
                         }
                         setShowMappingModal(false);
                     }}
