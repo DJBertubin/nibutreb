@@ -304,15 +304,17 @@ app.get('/api/shopify/data', async (req, res) => {
             return res.status(401).json({ error: 'Invalid or missing clientId in token.' });
         }
 
-        const shopifyData = await ShopifyData.find({ clientId });
+        // Fetch Shopify data for this clientId
+        const shopifyDataRecord = await ShopifyData.findOne({ clientId });
 
-        if (!shopifyData || shopifyData.length === 0) {
+        if (!shopifyDataRecord || !shopifyDataRecord.shopifyData || shopifyDataRecord.shopifyData.length === 0) {
             return res.status(404).json({ error: 'No Shopify data found for this user.' });
         }
 
+        // Return the shopifyData array as the main product data
         res.status(200).json({
             message: 'Shopify data fetched successfully.',
-            shopifyData,
+            shopifyData: shopifyDataRecord.shopifyData, // Use `shopifyData` array instead of `products`
         });
     } catch (err) {
         console.error('Error fetching Shopify data:', err.message);

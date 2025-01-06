@@ -12,7 +12,6 @@ const Products = () => {
     const [productData, setProductData] = useState([]);
     const [stores, setStores] = useState(['Walmart', 'Shopify']);
     const [error, setError] = useState('');
-    const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -24,7 +23,6 @@ const Products = () => {
                 return;
             }
 
-            setLoading(true); // Start loading
             try {
                 const response = await fetch('/api/shopify/data', {
                     method: 'GET',
@@ -37,7 +35,6 @@ const Products = () => {
                     const errorData = await response.json();
                     if (response.status === 404) {
                         setProductData([]); // No data found
-                        setLoading(false);
                         return;
                     }
                     throw new Error(errorData.error || 'Failed to fetch Shopify data.');
@@ -46,23 +43,21 @@ const Products = () => {
                 const data = await response.json();
                 console.log('API Response:', data); // Debugging log to check structure
 
-                // Safeguard to ensure shopifyData is always an array
-                const products = (data.shopifyData[0]?.products || []).map((product) => ({
-                    id: product.id,
-                    title: product.title,
-                    sku: product.variants?.[0]?.sku || '',
-                    price: product.variants?.[0]?.price || 'N/A',
-                    inventory: product.variants?.[0]?.inventory_quantity || 0,
-                    created_at: product.created_at || '',
-                    sourceCategory: product.product_type || 'N/A',
+                // Iterate over the shopifyData array instead of `products`
+                const products = (data.shopifyData || []).map((entry) => ({
+                    id: entry.id || 'N/A',
+                    title: entry.title || 'Untitled Product',
+                    sku: entry.variants?.[0]?.sku || '',
+                    price: entry.variants?.[0]?.price || 'N/A',
+                    inventory: entry.variants?.[0]?.inventory_quantity || 0,
+                    created_at: entry.created_at || '',
+                    sourceCategory: entry.product_type || 'N/A',
                 }));
 
                 setProductData(products);
-                setLoading(false); // Stop loading after fetch
             } catch (err) {
                 console.error('Error fetching Shopify data:', err);
                 setError(err.message);
-                setLoading(false);
             }
         };
 
@@ -97,10 +92,6 @@ const Products = () => {
             setStores((prevStores) => [...prevStores, storeName]);
         }
     };
-
-    if (loading) {
-        return <div>Loading products...</div>;
-    }
 
     if (error) {
         return <div>Error: {error}</div>;
