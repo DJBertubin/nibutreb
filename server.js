@@ -157,11 +157,10 @@ app.post('/api/shopify/fetch', async (req, res) => {
             return res.status(401).json({ error: 'Invalid or missing clientId in token.' });
         }
 
-        const shopifyApiUrl = `https://${storeUrl.trim()}/admin/api/2024-01/products.json`;
+        const shopifyApiUrl = `https://${storeUrl.trim()}/admin/api/2024-01/products.json?limit=250`;
         const response = await fetch(shopifyApiUrl, {
             method: 'GET',
             headers: {
-                'Content-Type': 'application/json',
                 'X-Shopify-Access-Token': adminAccessToken,
             },
         });
@@ -173,14 +172,36 @@ app.post('/api/shopify/fetch', async (req, res) => {
         }
 
         const shopifyData = await response.json();
+        console.log('Fetched Shopify Products:', shopifyData.products.length);
+
+        const formattedProducts = shopifyData.products.map((product) => ({
+            id: product.id,
+            title: product.title,
+            product_type: product.product_type || 'N/A',
+            created_at: product.created_at,
+            variants: product.variants.map((variant) => ({
+                id: variant.id,
+                product_id: product.id,
+                title: variant.title || 'Default Variant',
+                price: variant.price || '0.00',
+                sku: variant.sku || 'N/A',
+                inventory: variant.inventory_quantity || 0,
+                image_id: variant.image_id,
+                image: product.images?.find((img) => img.id === variant.image_id)?.src || '',
+            })),
+            images: product.images || [],
+        }));
+
+        console.log('Formatted Products to Save:', formattedProducts.length);
 
         const updatedData = await ShopifyData.findOneAndUpdate(
             { clientId, shopifyUrl: storeUrl.trim() },
             {
-                shopifyData,
-                shopifyToken: adminAccessToken,
-                lastUpdated: new Date(),
-                targetMarketplaces: [],
+                $set: {
+                    shopifyData: [{ products: formattedProducts }],
+                    shopifyToken: adminAccessToken,
+                    lastUpdated: new Date(),
+                },
             },
             { upsert: true, new: true }
         );
@@ -304,22 +325,24 @@ app.get('/api/shopify/data', async (req, res) => {
             return res.status(401).json({ error: 'Invalid or missing clientId in token.' });
         }
 
-        const shopifyData = await ShopifyData.find({ clientId });
+        const shopifyData = await ShopifyData.findOne({ clientId });
 
-        if (!shopifyData || shopifyData.length === 0) {
+        if (!shopifyData || shopifyData.shopifyData.length === 0) {
             return res.status(404).json({ error: 'No Shopify data found for this user.' });
         }
 
+        const products = shopifyData.shopifyData[0]?.products || [];
+        console.log('Products returned:', products.length);
+
         res.status(200).json({
             message: 'Shopify data fetched successfully.',
-            shopifyData,
+            shopifyData: [{ products }],
         });
     } catch (err) {
         console.error('Error fetching Shopify data:', err.message);
         res.status(500).json({ error: 'Internal Server Error', details: err.message });
     }
 });
-
 // **Error Handling Middleware**
 app.use((err, req, res, next) => {
     console.error('Server Error:', err.message);
