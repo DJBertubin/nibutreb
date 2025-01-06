@@ -22,34 +22,29 @@ mongoose.connect(process.env.MONGO_URI)
     .catch((err) => console.error('MongoDB Connection Error:', err.message));
 
 // Debug Route Types
-console.log('authRoutes type:', typeof authRoutes);
-console.log('shopifyRoutes type:', typeof shopifyRoutes);
-console.log('walmartRoutes type:', typeof walmartRoutes);
-console.log('mappingRoutes type:', typeof mappingRoutes);
+const validateRoute = (route, routeName) => {
+    if (typeof route !== 'function') {
+        console.error(`${routeName} is not a function. Check the export in ${routeName}.js.`);
+        return false;
+    }
+    return true;
+};
 
-// Routes
-if (typeof authRoutes === 'function') {
+// Routes with validation
+if (validateRoute(authRoutes, 'authRoutes')) {
     app.use('/api/auth', authRoutes);
-} else {
-    console.error('authRoutes is not a function. Check the export in authRoutes.js.');
 }
 
-if (typeof shopifyRoutes === 'function') {
+if (validateRoute(shopifyRoutes, 'shopifyRoutes')) {
     app.use('/api/shopify', shopifyRoutes);
-} else {
-    console.error('shopifyRoutes is not a function. Check the export in shopifyRoutes.js.');
 }
 
-if (typeof walmartRoutes === 'function') {
+if (validateRoute(walmartRoutes, 'walmartRoutes')) {
     app.use('/api/walmart', walmartRoutes);
-} else {
-    console.error('walmartRoutes is not a function. Check the export in walmartRoutes.js.');
 }
 
-if (typeof mappingRoutes === 'function') {
+if (validateRoute(mappingRoutes, 'mappingRoutes')) {
     app.use('/api/mappings', mappingRoutes);
-} else {
-    console.error('mappingRoutes is not a function. Check the export in mappingRoutes.js.');
 }
 
 // Error Handling Middleware
