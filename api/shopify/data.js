@@ -40,8 +40,12 @@ export default async function handler(req, res) {
             });
         }
 
+        // **Ensure that products field exists and is an array**
+        const products = Array.isArray(shopifyData.products) ? shopifyData.products : [];
+        console.log(`Fetched ${products.length} products for clientId: ${clientId}`);
+
         // Format data to be consistent with frontend expectations
-        const formattedProducts = (shopifyData.products || []).map((product) => ({
+        const formattedProducts = products.map((product) => ({
             id: product.id || '',
             product_id: product.product_id || '',
             title: product.title || 'Untitled Product',

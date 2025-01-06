@@ -9,6 +9,7 @@ const ProductList = ({ products = [] }) => {
     const [showBulkMappingModal, setShowBulkMappingModal] = useState(false);
     const [mappedStatuses, setMappedStatuses] = useState({}); // Track mapped status for each product
     const [existingMappings, setExistingMappings] = useState({}); // Store mappings fetched from MongoDB
+    const [loading, setLoading] = useState(true); // Loading state
     const itemsPerPage = 10;
 
     const indexOfLastItem = currentPage * itemsPerPage;
@@ -25,6 +26,7 @@ const ProductList = ({ products = [] }) => {
         const clientId = localStorage.getItem('clientId');
         if (!clientId) {
             console.error('Client ID is missing. Cannot fetch mappings.');
+            setLoading(false); // Stop loading if clientId is missing
             return;
         }
         try {
@@ -43,6 +45,8 @@ const ProductList = ({ products = [] }) => {
             setExistingMappings(mappingsObj);
         } catch (error) {
             console.error('Error fetching mappings from MongoDB:', error);
+        } finally {
+            setLoading(false); // Stop loading after fetching
         }
     };
 
@@ -63,7 +67,7 @@ const ProductList = ({ products = [] }) => {
 
     // Check if the product has a synced status
     const getMappedStatus = (productId) => {
-        const mapping = existingMappings[productId] || {};
+        const mapping = existingMappings?.[productId] || {};
         return Object.values(mapping).some((value) => value !== '') ? 'Yes' : 'No';
     };
 
@@ -71,14 +75,20 @@ const ProductList = ({ products = [] }) => {
     const updateMappedStatuses = () => {
         const statuses = {};
         products.forEach((product) => {
-            statuses[product.id] = getMappedStatus(product.id);
+            statuses[product?.id || 'unknown'] = getMappedStatus(product?.id);
         });
         setMappedStatuses(statuses);
     };
 
     useEffect(() => {
-        updateMappedStatuses(); // Update mapped statuses whenever mappings are fetched
-    }, [existingMappings, products]);
+        if (!loading) {
+            updateMappedStatuses(); // Update mapped statuses whenever mappings are fetched
+        }
+    }, [existingMappings, products, loading]);
+
+    if (loading) {
+        return <div className="loading-message">Loading products...</div>; // Show a loader during data fetching
+    }
 
     return (
         <div className="product-list-container">
@@ -140,9 +150,9 @@ const ProductList = ({ products = [] }) => {
                     </tr>
                 </thead>
                 <tbody>
-                    {products.length > 0 ? (
+                    {currentProducts.length > 0 ? (
                         currentProducts.map((product) => (
-                            <tr key={product.id} className="product-row">
+                            <tr key={product?.id || 'unknown'} className="product-row">
                                 <td className="actions-column">
                                     <div className="button-group">
                                         <button className="btn-export">Export</button>
@@ -155,26 +165,26 @@ const ProductList = ({ products = [] }) => {
                                     </div>
                                 </td>
                                 <td className="status-column">
-                                    {mappedStatuses[product.id] === 'Yes' ? 'Synced' : 'No Status'}
+                                    {mappedStatuses[product?.id] === 'Yes' ? 'Synced' : 'No Status'}
                                 </td>
-                                <td className={`mapped-column ${mappedStatuses[product.id] === 'Yes' ? 'yes' : 'no'}`}>
-                                    {mappedStatuses[product.id] || 'No'}
+                                <td className={`mapped-column ${mappedStatuses[product?.id] === 'Yes' ? 'yes' : 'no'}`}>
+                                    {mappedStatuses[product?.id] || 'No'}
                                 </td>
                                 <td className="product-details">
                                     <img
-                                        src={product.image || 'https://via.placeholder.com/50'}
-                                        alt={product.title || 'Product'}
+                                        src={product?.image || 'https://via.placeholder.com/50'}
+                                        alt={product?.title || 'Product'}
                                         className="product-image"
                                     />
                                     <div className="product-info">
-                                        <strong className="product-title">{product.title || 'N/A'}</strong>
-                                        <div className="sku">SKU: {product.sku || 'N/A'}</div>
+                                        <strong className="product-title">{product?.title || 'N/A'}</strong>
+                                        <div className="sku">SKU: {product?.sku || 'N/A'}</div>
                                     </div>
                                 </td>
-                                <td className="category-column">{product.sourceCategory || 'N/A'}</td>
-                                <td>${product.price || 'N/A'}</td>
-                                <td>{product.inventory || 'N/A'}</td>
-                                <td>{product.created_at ? new Date(product.created_at).toLocaleDateString() : 'N/A'}</td>
+                                <td className="category-column">{product?.sourceCategory || 'N/A'}</td>
+                                <td>${product?.price || 'N/A'}</td>
+                                <td>{product?.inventory || 'N/A'}</td>
+                                <td>{product?.created_at ? new Date(product.created_at).toLocaleDateString() : 'N/A'}</td>
                             </tr>
                         ))
                     ) : (
@@ -204,7 +214,7 @@ const ProductList = ({ products = [] }) => {
             {/* Individual Mapping Modal */}
             {showMappingModal && selectedProduct && (
                 <MappingModal
-                    products={[{ ...selectedProduct, mapping: existingMappings[selectedProduct.id] || {} }]} // Pass existing mapping data
+                    products={[{ ...selectedProduct, mapping: existingMappings[selectedProduct?.id] || {} }]} // Pass existing mapping data
                     onClose={handleCloseMappingModal}
                     onSave={async (mappingData) => {
                         try {
