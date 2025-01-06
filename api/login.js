@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs'); // Consistent with other files
 const jwt = require('jsonwebtoken');
 const dotenv = require('dotenv');
 
@@ -12,7 +12,6 @@ mongoose
     .then(() => console.log('✅ Connected to MongoDB'))
     .catch((err) => {
         console.error('❌ MongoDB Connection Error:', err.message);
-        process.exit(1); // Exit the server if MongoDB connection fails
     });
 
 // User Schema with clientId
@@ -27,7 +26,7 @@ const User = mongoose.models.User || mongoose.model('User', UserSchema);
 
 // Main login handler for Express
 module.exports = async function handler(req, res) {
-    if (req.method !== 'POST') {
+    if (req.method && req.method !== 'POST') {
         console.error('❌ Invalid HTTP method');
         return res.status(405).json({ error: 'Method not allowed' });
     }
@@ -44,8 +43,6 @@ module.exports = async function handler(req, res) {
 
         // Check if the user exists in the database
         const user = await User.findOne({ username });
-        console.log('Database user:', user);
-
         if (!user) {
             console.error(`❌ User ${username} not found in the database`);
             return res.status(401).json({ error: 'Invalid username or password' });

@@ -1,60 +1,94 @@
 const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
+const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
+const User = require('./api/models/User');
 const dotenv = require('dotenv');
 
 dotenv.config();
 
-const authRoutes = require('./api/routes/authRoutes');
-const shopifyRoutes = require('./api/routes/shopifyRoutes');
-const walmartRoutes = require('./api/routes/walmartRoutes');
-const mappingRoutes = require('./api/routes/mappingRoutes');
-
 const app = express();
-const PORT = process.env.PORT || 3000;
+const JWT_SECRET = process.env.JWT_SECRET;
 
 // Middleware
-app.use(cors()); // You can restrict origins like this: { origin: 'http://your-frontend-url' }
+app.use(cors());
 app.use(express.json());
 
 // MongoDB Connection
 mongoose
-    .connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
-    .then(() => console.log('✅ Connected to MongoDB'))
-    .catch((err) => {
-        console.error('❌ MongoDB Connection Error:', err.message);
-        process.exit(1); // Exit the app if unable to connect
-    });
+    .connect(process.env.MONGO_URI, {
+        useNewUrlParser: true,
+        useUnifiedTopology: true,
+    })
+    .then(() => console.log('Connected to MongoDB'))
+    .catch((err) => console.error('MongoDB Connection Error:', err.message));
 
-// Routes
-app.use('/api/auth', authRoutes);  // Auth routes: /login, /signup
-app.use('/api/shopify', shopifyRoutes);  // Shopify API routes
-app.use('/api/walmart', walmartRoutes);  // Walmart API routes
-app.use('/api/mappings', mappingRoutes);  // Mapping-related routes
+// **Main Login Route (Restored `/api/login`):**
+app.post('/api/login', async (req, res) => {
+    const { username, password } = req.body;
 
-// Catch-All for Undefined Routes
-app.use((req, res) => {
-    res.status(404).json({ error: 'Endpoint not found' });
+    if (!username || !password) {
+        return res.status(400).json({ error: 'Username and password are required' });
+    }
+
+    try {
+        const user = await User.findOne({ username });
+        if (!user || !(await bcrypt.compare(password, user.password))) {
+            return res.status(401).json({ error: 'Invalid credentials' });
+        }
+
+        const token = jwt.sign(
+            { clientId: user.clientId, username: user.username, role: user.role },
+            JWT_SECRET,
+            { expiresIn: '1h' }
+        );
+
+        res.status(200).json({
+            token,
+            role: user.role,
+            clientId: user.clientId,
+        });
+    } catch (error) {
+        console.error('Login Error:', error.message);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
 });
 
-// Error Handling Middleware
-app.use((err, req, res, next) => {
-    console.error('❗ Unhandled Server Error:', err.message);
-    res.status(500).json({ error: 'Internal Server Error', details: err.message });
+// **Also keep `/api/auth/login` if needed for refactor:**
+app.post('/api/auth/login', async (req, res) => {
+    const { username, password } = req.body;
+
+    if (!username || !password) {
+        return res.status(400).json({ error: 'Username and password are required' });
+    }
+
+    try {
+        const user = await User.findOne({ username });
+        if (!user || !(await bcrypt.compare(password, user.password))) {
+            return res.status(401).json({ error: 'Invalid credentials' });
+        }
+
+        const token = jwt.sign(
+            { clientId: user.clientId, username: user.username, role: user.role },
+            JWT_SECRET,
+            { expiresIn: '1h' }
+        );
+
+        res.status(200).json({
+            token,
+            role: user.role,
+            clientId: user.clientId,
+        });
+    } catch (error) {
+        console.error('Login Error:', error.message);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
 });
+
+// **CORS Configuration:**
+app.use(cors({ origin: '*' }));
 
 // Start the Server
-const server = app.listen(PORT, () => {
-    console.log(`🚀 Server running on http://localhost:${PORT}`);
-});
-
-// Graceful Shutdown
-process.on('SIGINT', async () => {
-    console.log('🔄 Gracefully shutting down...');
-    await mongoose.connection.close();
-    console.log('🔌 MongoDB connection closed');
-    server.close(() => {
-        console.log('🛑 Server terminated');
-        process.exit(0);
-    });
-});
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
