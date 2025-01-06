@@ -199,22 +199,18 @@ app.post('/api/shopify/fetch', async (req, res) => {
 app.post('/api/mappings/save', async (req, res) => {
     const { clientId, productId, mappings } = req.body;
 
-    console.log('Incoming Request Payload:', JSON.stringify(req.body, null, 2));
-
     if (!clientId || !productId || !mappings) {
-        console.error('Missing required fields:', { clientId, productId, mappings });
-        return res.status(400).json({ error: 'Missing required fields.' });
+        return res.status 400).json({ error: 'Missing required fields.' });
     }
 
     try {
+        const existingMapping = await Mapping.findOne({ clientId, productId });
         const cleanedMappings = {};
 
-        // Iterate over mappings to ensure proper structure
         for (const key in mappings) {
             const mappingEntry = mappings[key];
-
             if (typeof mappingEntry === 'string') {
-                cleanedMappings[key] = { type: 'Set Free Text', value: mappingEntry }; // Convert string to object
+                cleanedMappings[key] = { type: 'Set Free Text', value: mappingEntry };
             } else if (typeof mappingEntry === 'object' && mappingEntry !== null) {
                 cleanedMappings[key] = {
                     type: mappingEntry.type || 'Ignore',
@@ -225,19 +221,12 @@ app.post('/api/mappings/save', async (req, res) => {
             }
         }
 
-        console.log('Cleaned Mappings (to be saved):', cleanedMappings);
-
-        const existingMapping = await Mapping.findOne({ clientId, productId });
-
         if (existingMapping) {
             existingMapping.mappings = cleanedMappings;
-            existingMapping.updatedAt = new Date();
             await existingMapping.save();
-            console.log(`Updated mapping for productId: ${productId}`);
         } else {
             const newMapping = new Mapping({ clientId, productId, mappings: cleanedMappings });
             await newMapping.save();
-            console.log(`Saved new mapping for productId: ${productId}`);
         }
 
         res.status(200).json({
@@ -269,15 +258,18 @@ app.get('/api/mappings/get/:clientId', async (req, res) => {
 
 // **Walmart Send API Route**
 app.post('/api/walmart/send', async (req, res) => {
-    try {
-        const { itemData } = req.body;
-        if (!itemData || itemData.length === 0) {
-            return res.status(400).json({ error: 'Item data is required.' });
-        }
+    const { itemData } = req.body;
+    if (!itemData || itemData.length === 0) {
+        return res.status(400).json({ error: 'Item data is required.' });
+    }
 
+    try {
         const result = await sendItemToWalmart(itemData);
         if (result.success) {
-            res.status(200).json({ message: result.message, feedId: result.feedId });
+            res.status(200).json({
+                message: result.message,
+                feedId: result.feedId
+            });
         } else {
             res.status(500).json({ error: result.message });
         }
@@ -300,20 +292,12 @@ app.get('/api/shopify/data', async (req, res) => {
         const decoded = jwt.verify(token, JWT_SECRET);
         const clientId = decoded.clientId;
 
-        if (!clientId) {
-            return res.status(401).json({ error: 'Invalid or missing clientId in token.' });
-        }
-
-        const shopifyData = await ShopifyData.find({ clientId });
-
-        if (!shopifyData || shopifyData.length === 0) {
+        const shopifyData = await ShopifyData.findOne({ clientId });
+        if (!shopifyData) {
             return res.status(404).json({ error: 'No Shopify data found for this user.' });
         }
 
-        res.status(200).json({
-            message: 'Shopify data fetched successfully.',
-            shopifyData,
-        });
+        res.json({ shopifyData: shopifyData.shopifyData });
     } catch (err) {
         console.error('Error fetching Shopify data:', err.message);
         res.status(500).json({ error: 'Internal Server Error', details: err.message });
