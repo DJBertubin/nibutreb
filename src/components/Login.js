@@ -21,10 +21,10 @@ const Login = ({ setLoggedIn }) => {
                 throw new Error('Please enter both username and password.');
             }
 
-            console.log('Sending request to /api/login...');
+            console.log('Sending request to /api/auth/login...');
 
             // Make the API request to the backend login endpoint
-            const response = await fetch('/api/login', {
+            const response = await fetch('/api/auth/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username, password }),
