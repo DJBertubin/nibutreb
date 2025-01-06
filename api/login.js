@@ -1,16 +1,13 @@
-import mongoose from 'mongoose';
-import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
-import dotenv from 'dotenv';
+const mongoose = require('mongoose');
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
+const dotenv = require('dotenv');
 
-// Load environment variables from .env file
+// Load environment variables
 dotenv.config();
 
-// MongoDB connection
-mongoose.connect(process.env.MONGO_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-})
+// MongoDB connection (removed deprecated options)
+mongoose.connect(process.env.MONGO_URI)
     .then(() => console.log('Connected to MongoDB'))
     .catch((err) => console.error('MongoDB Connection Error:', err.message));
 
@@ -24,15 +21,14 @@ const UserSchema = new mongoose.Schema({
 
 const User = mongoose.models.User || mongoose.model('User', UserSchema);
 
-// Main login handler
-export default async function handler(req, res) {
+// Main login handler for Express
+module.exports = async function handler(req, res) {
     if (req.method !== 'POST') {
         return res.status(405).json({ error: 'Method not allowed' });
     }
 
     const { username, password } = req.body;
 
-    // Check if the required fields are provided
     if (!username || !password) {
         console.error('Missing username or password');
         return res.status(400).json({ error: 'Username and password are required' });
@@ -43,7 +39,7 @@ export default async function handler(req, res) {
 
         // Check if the user exists in the database
         const user = await User.findOne({ username });
-        console.log('Database user:', user); // Debugging the returned user document
+        console.log('Database user:', user);
 
         if (!user) {
             console.error(`User ${username} not found in the database`);
@@ -59,9 +55,8 @@ export default async function handler(req, res) {
             return res.status(401).json({ error: 'Invalid username or password' });
         }
 
-        // Check if JWT_SECRET is present
         if (!process.env.JWT_SECRET) {
-            console.error('JWT_SECRET is not defined in environment variables');
+            console.error('JWT_SECRET is missing in environment variables');
             return res.status(500).json({ error: 'Server configuration error' });
         }
 
@@ -80,7 +75,7 @@ export default async function handler(req, res) {
             clientId: user.clientId,
         });
     } catch (err) {
-        console.error('Login Error:', err);  // Full error log for debugging
+        console.error('Login Error:', err);
         res.status(500).json({ error: 'Internal server error', details: err.message });
     }
-}
+};
