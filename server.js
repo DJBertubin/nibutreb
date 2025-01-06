@@ -5,7 +5,7 @@ const dotenv = require('dotenv');
 
 dotenv.config();
 
-const authRoutes = require('./api/routes/authRoutes');  // Should export a router function
+const authRoutes = require('./api/routes/authRoutes');
 const shopifyRoutes = require('./api/routes/shopifyRoutes');
 const walmartRoutes = require('./api/routes/walmartRoutes');
 const mappingRoutes = require('./api/routes/mappingRoutes');
@@ -21,14 +21,36 @@ mongoose.connect(process.env.MONGO_URI)
     .then(() => console.log('Connected to MongoDB'))
     .catch((err) => console.error('MongoDB Connection Error:', err.message));
 
-// Ensure the imported routes are functions
-console.log('authRoutes type:', typeof authRoutes);  // Should print "function"
+// Debug Route Types
+console.log('authRoutes type:', typeof authRoutes);
+console.log('shopifyRoutes type:', typeof shopifyRoutes);
+console.log('walmartRoutes type:', typeof walmartRoutes);
+console.log('mappingRoutes type:', typeof mappingRoutes);
 
 // Routes
-app.use('/api/auth', authRoutes);  // Ensure this is a function
-app.use('/api/shopify', shopifyRoutes);
-app.use('/api/walmart', walmartRoutes);
-app.use('/api/mappings', mappingRoutes);
+if (typeof authRoutes === 'function') {
+    app.use('/api/auth', authRoutes);
+} else {
+    console.error('authRoutes is not a function. Check the export in authRoutes.js.');
+}
+
+if (typeof shopifyRoutes === 'function') {
+    app.use('/api/shopify', shopifyRoutes);
+} else {
+    console.error('shopifyRoutes is not a function. Check the export in shopifyRoutes.js.');
+}
+
+if (typeof walmartRoutes === 'function') {
+    app.use('/api/walmart', walmartRoutes);
+} else {
+    console.error('walmartRoutes is not a function. Check the export in walmartRoutes.js.');
+}
+
+if (typeof mappingRoutes === 'function') {
+    app.use('/api/mappings', mappingRoutes);
+} else {
+    console.error('mappingRoutes is not a function. Check the export in mappingRoutes.js.');
+}
 
 // Error Handling Middleware
 app.use((err, req, res, next) => {
@@ -37,4 +59,4 @@ app.use((err, req, res, next) => {
 });
 
 // Start the Server
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
