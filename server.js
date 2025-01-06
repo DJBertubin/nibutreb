@@ -313,6 +313,7 @@ app.get('/api/shopify/data', async (req, res) => {
     const { authorization } = req.headers;
 
     if (!authorization || !authorization.startsWith('Bearer ')) {
+        console.error('Authorization header missing or invalid');
         return res.status(401).json({ error: 'Authorization token required.' });
     }
 
@@ -322,24 +323,27 @@ app.get('/api/shopify/data', async (req, res) => {
         const clientId = decoded.clientId;
 
         if (!clientId) {
+            console.error('ClientId is missing in token');
             return res.status(401).json({ error: 'Invalid or missing clientId in token.' });
         }
 
+        console.log(`Fetching Shopify data for clientId: ${clientId}`);
         const shopifyData = await ShopifyData.findOne({ clientId });
 
         if (!shopifyData || shopifyData.shopifyData.length === 0) {
+            console.warn(`No Shopify data found for clientId: ${clientId}`);
             return res.status(404).json({ error: 'No Shopify data found for this user.' });
         }
 
         const products = shopifyData.shopifyData[0]?.products || [];
-        console.log('Products returned:', products.length);
+        console.log('Number of products returned:', products.length);
 
         res.status(200).json({
             message: 'Shopify data fetched successfully.',
             shopifyData: [{ products }],
         });
     } catch (err) {
-        console.error('Error fetching Shopify data:', err.message);
+        console.error('Error fetching Shopify data:', err); // Improved error logging
         res.status(500).json({ error: 'Internal Server Error', details: err.message });
     }
 });
