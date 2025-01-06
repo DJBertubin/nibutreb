@@ -136,19 +136,32 @@ app.get('/api/client/info', async (req, res) => {
 });
 
 // **Shopify Fetch API Route**
-app.post('/api/shopify/fetch', authorize, async (req, res) => {
+app.post('/api/shopify/fetch', async (req, res) => {
+    const { authorization } = req.headers;
     const { storeUrl, adminAccessToken } = req.body;
+
+    if (!authorization || !authorization.startsWith('Bearer ')) {
+        return res.status(401).json({ error: 'Authorization token required.' });
+    }
 
     if (!storeUrl || !adminAccessToken) {
         return res.status(400).json({ error: 'Store URL and Admin Access Token are required.' });
     }
 
     try {
-        const clientId = req.user.clientId;
-        const shopifyApiUrl = `https://${storeUrl.trim()}/admin/api/2024-01/products.json?limit=250`;
+        const token = authorization.split(' ')[1];
+        const decoded = jwt.verify(token, JWT_SECRET);
+        const clientId = decoded.clientId;
+
+        if (!clientId) {
+            return res.status(401).json({ error: 'Invalid or missing clientId in token.' });
+        }
+
+        const shopifyApiUrl = `https://${storeUrl.trim()}/admin/api/2024-01/products.json`;
         const response = await fetch(shopifyApiUrl, {
             method: 'GET',
             headers: {
+                'Content-Type': 'application/json',
                 'X-Shopify-Access-Token': adminAccessToken,
             },
         });
@@ -160,42 +173,22 @@ app.post('/api/shopify/fetch', authorize, async (req, res) => {
         }
 
         const shopifyData = await response.json();
-        console.log('Fetched Shopify Products:', shopifyData.products); // Debug log
 
-        const formattedProducts = shopifyData.products.map((product) => ({
-            id: product.id,
-            title: product.title,
-            product_type: product.product_type || 'N/A',
-            created_at: product.created_at || new Date(),
-            variants: product.variants.map((variant) => ({
-                id: variant.id,
-                product_id: product.id,
-                title: variant.title || 'Default Variant',
-                price: variant.price || 'N/A',
-                sku: variant.sku || 'N/A',
-                inventory: variant.inventory_quantity || 0,
-                image_id: variant.image_id,
-                image: product.images?.find((img) => img.id === variant.image_id)?.src || '',
-            })),
-            images: product.images || [],
-        }));
-
-        console.log('Formatted Products:', formattedProducts); // Debug to ensure correct format
-
-        // Save data to MongoDB
-        await ShopifyData.findOneAndUpdate(
+        const updatedData = await ShopifyData.findOneAndUpdate(
             { clientId, shopifyUrl: storeUrl.trim() },
             {
-                $set: {
-                    shopifyData: [{ products: formattedProducts, updatedAt: new Date() }],
-                    shopifyToken: adminAccessToken,
-                    lastUpdated: new Date(),
-                },
+                shopifyData,
+                shopifyToken: adminAccessToken,
+                lastUpdated: new Date(),
+                targetMarketplaces: [],
             },
             { upsert: true, new: true }
         );
 
-        res.status(201).json({ message: 'Shopify data fetched and stored successfully.' });
+        res.status(201).json({
+            message: 'Shopify data fetched and stored successfully.',
+            shopifyData: updatedData,
+        });
     } catch (err) {
         console.error('Error fetching Shopify data:', err.message);
         res.status(500).json({ error: 'Internal Server Error', details: err.message });
