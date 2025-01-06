@@ -23,8 +23,11 @@ const Login = ({ setLoggedIn }) => {
 
             console.log('Sending request to /api/auth/login...');
 
+            const apiBaseUrl =
+                process.env.REACT_APP_API_BASE_URL || 'http://localhost:3000';
+
             // Make the API request to the backend login endpoint
-            const response = await fetch('/api/auth/login', {
+            const response = await fetch(`${apiBaseUrl}/api/auth/login`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username, password }),
@@ -32,13 +35,12 @@ const Login = ({ setLoggedIn }) => {
 
             console.log('Response status:', response.status);
 
-            // Handle non-200 responses
             if (!response.ok) {
                 const contentType = response.headers.get('Content-Type');
                 let errorMessage = 'An unexpected error occurred. Please try again.';
                 if (contentType && contentType.includes('application/json')) {
                     const errorData = await response.json();
-                    errorMessage = errorData.error || 'Login failed';
+                    errorMessage = errorData.error || 'Login failed. Please check your credentials.';
                 }
                 console.error('Error response:', errorMessage);
                 throw new Error(errorMessage);
